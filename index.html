@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MANTHY — Survive or Get Caught</title>
+<link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@400;600;700;900&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080e08;--bg2:#0c140c;--bg3:#111a11;
+  --green:#2d7a2d;--gl:#4caf50;--gb:#76ff03;--gn:#00e676;
+  --amber:#ffb300;--red:#f44336;
+  --text:#d0e8d0;--tm:#81c784;--td:#4caf50;
+  --border:rgba(118,255,3,0.12);--border2:rgba(118,255,3,0.25);
+  --card:rgba(12,20,12,0.95);
+  --danger:#ff1744;--warn:#ff9100;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* MARQUEE */
+.marquee-bar{background:rgba(118,255,3,0.08);overflow:hidden;white-space:nowrap;padding:3px 0;border-bottom:1px solid var(--border2);}
+.marquee-track{display:inline-block;animation:marquee 45s linear infinite;}
+.marquee-track span{font-family:'Space Mono',monospace;font-size:9px;font-weight:400;color:var(--gb);letter-spacing:1px;padding:0 14px;text-transform:uppercase;}
+.marquee-track .sep{color:var(--green);opacity:.5;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-content:space-between;padding:0;padding-left:2rem;height:56px;background:rgba(8,14,8,0.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border2);}
+.logo{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gb);letter-spacing:3px;cursor:pointer;display:flex;align-items:center;}
+.logo span{color:var(--gn);}
+.nav-links{display:flex;gap:0;align-items:stretch;border-left:1px solid var(--border2);margin-left:auto;height:100%;}
+.nb{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:8px 16px;border-radius:0;font-family:'Space Mono',monospace;font-weight:400;font-size:13px;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;}
+.nb:hover{color:var(--gb);background:rgba(118,255,3,.04);}
+.nb.active{color:var(--gb);background:rgba(118,255,3,.1);font-weight:700;}
+.bal-box{display:flex;align-items:center;gap:7px;background:rgba(118,255,3,0.06);border:none;border-right:1px solid var(--border2);border-radius:0;padding:5px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--gb);}
+.btn-pri{background:var(--gb);color:#080e08;border:none;padding:8px 18px;border-radius:0;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
+.btn-pri:hover{box-shadow:0 0 20px rgba(118,255,3,.3);transform:translateY(-1px);}
+.btn-sec{background:transparent;color:var(--gb);border:1px solid var(--gb);padding:8px 18px;border-radius:0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
+.btn-sec:hover{background:rgba(118,255,3,.06);}
+.wc-btn{display:flex;align-items:center;gap:7px;background:rgba(118,255,3,0.06);border:none;border-right:1px solid var(--border2);border-radius:0;padding:5px 12px;cursor:pointer;transition:all .15s;}
+.wc-btn:hover{border-color:var(--danger);background:rgba(255,23,68,.06);}
+.dc-popup{display:none;position:absolute;top:100%;right:0;background:var(--bg2);border:1px solid var(--danger);padding:6px;z-index:300;white-space:nowrap;}
+.dc-popup.show{display:block;}
+.dc-popup-btn{background:rgba(255,23,68,.1);border:1px solid var(--danger);color:var(--danger);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:8px 14px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;width:100%;}
+.dc-popup-btn:hover{background:rgba(255,23,68,.25);}
+.wdot{width:6px;height:6px;border-radius:50%;background:var(--gb);animation:pdot 2s infinite;flex-shrink:0;}
+@keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(118,255,3,.4);}50%{box-shadow:0 0 0 4px rgba(118,255,3,0);}}
+.waddr{font-family:'Space Mono',monospace;font-size:13px;color:var(--gb);}
+
+/* PAGES */
+.page{display:none;padding:2rem;padding-bottom:80px;position:relative;z-index:1;max-width:1200px;margin:0 auto;}
+.page.active{display:block;}
+
+/* OVERLAY / MODAL */
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(4,7,4,.94);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.overlay.show{opacity:1;pointer-events:all;}
+.wmodal{background:#0c140c;border:1px solid var(--border2);border-radius:0;padding:2.5rem 2rem;width:100%;max-width:400px;text-align:center;transform:translateY(16px);transition:transform .25s;}
+.overlay.show .wmodal{transform:translateY(0);}
+</style>
+<style>
+.wm-logo{font-family:'Inconsolata',monospace;font-size:18px;font-weight:700;color:var(--gb);margin-bottom:4px;letter-spacing:3px;}
+.wm-sub{font-family:'VT323',monospace;font-size:20px;color:var(--tm);margin-bottom:2rem;letter-spacing:1px;}
+.wopts{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem;}
+.wopt{display:flex;align-items:center;gap:12px;background:rgba(118,255,3,.03);border:1px solid var(--border);border-radius:0;padding:12px 14px;cursor:pointer;transition:all .15s;text-align:left;width:100%;}
+.wopt:hover{border-color:var(--gb);background:rgba(118,255,3,.06);transform:translateX(3px);}
+.wopt-icon{width:36px;height:36px;border-radius:0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:rgba(118,255,3,.06);border:1px solid var(--border);}
+.wopt-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px;letter-spacing:1px;}
+.wopt-desc{font-size:12px;color:var(--tm);}
+.wopt-arrow{margin-left:auto;color:var(--td);font-size:16px;font-family:'Space Mono',monospace;}
+.wdiscl{font-size:12px;color:var(--td);line-height:1.7;}
+.wdiscl a{color:var(--gn);}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--gb);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== ANIMATIONS ===== */
+/* Entrance */
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeUpStagger{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes scaleIn{from{opacity:0;transform:scale(1.05);}to{opacity:1;transform:scale(1);}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);}}
+@keyframes bounceIn{0%{opacity:0;transform:translateY(30px) scale(.9);}60%{transform:translateY(-4px) scale(1.02);}100%{opacity:1;transform:translateY(0) scale(1);}}
+@keyframes btnGlow{0%,100%{box-shadow:0 0 0 0 rgba(118,255,3,0);}50%{box-shadow:0 0 12px rgba(118,255,3,.2);}}
+
+/* Hero entrance */
+.hero-banner{animation:scaleIn 1s ease-out both;}
+.hero .htitle{animation:fadeUp .8s ease-out .3s both;}
+.hero .hsub{animation:fadeUp .8s ease-out .5s both;}
+.hero .hbtns{animation:fadeUp .8s ease-out .7s both;}
+
+/* Page transition */
+.page.active{animation:fadeUp .4s ease-out both;}
+
+/* Button hover glow */
+.btn-pri:hover{animation:btnGlow 1.5s ease-in-out infinite;}
+.btn-sec:hover{animation:btnGlow 1.5s ease-in-out infinite;}
+
+/* Stagger cards */
+.ncard,.honor-card,.stake-card{animation:fadeUpStagger .4s ease-out both;}
+.lbrow:not(.lhdr){animation:slideLeft .3s ease-out both;}
+.podium-item{animation:bounceIn .6s ease-out both;}
+
+/* BG blur blob */
+.bg-blob{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(80px);opacity:.08;animation:blobFloat 20s ease-in-out infinite alternate;}
+.bg-blob-1{width:400px;height:400px;background:var(--gb);top:10%;left:10%;animation-delay:0s;}
+.bg-blob-2{width:300px;height:300px;background:var(--gn);bottom:20%;right:15%;animation-delay:5s;}
+.bg-blob-3{width:350px;height:350px;background:#4caf50;top:50%;left:50%;animation-delay:10s;}
+@keyframes heroFloat{0%{transform:translate(0,0);}25%{transform:translate(1px,-2px);}50%{transform:translate(-1px,1px);}75%{transform:translate(2px,1px);}100%{transform:translate(0,0);}}
+@keyframes blobFloat{0%{transform:translate(0,0) scale(1);}25%{transform:translate(30px,-20px) scale(1.1);}50%{transform:translate(-20px,30px) scale(.95);}75%{transform:translate(20px,20px) scale(1.05);}100%{transform:translate(-30px,-10px) scale(1);}}
+
+/* HERO — Banner overlaps title, full viewport */
+.hero-section{position:relative;min-height:auto;display:flex;flex-direction:column;overflow:hidden;}
+.hero-banner{position:relative;z-index:2;overflow:hidden;flex:0 0 auto;width:100%;max-width:1000px;margin:0 auto;}
+.hero-banner img{width:100%;height:auto;display:block;animation:heroFloat 6s ease-in-out infinite;}
+/* Banner dust particles */
+.hero-banner{cursor:pointer;}
+.dust-particle{position:absolute;width:3px;height:3px;background:var(--gb);border-radius:50%;pointer-events:none;opacity:0;z-index:3;}
+.tear-mark{position:absolute;pointer-events:none;z-index:2;overflow:hidden;}
+.tear-fiber{position:absolute;background:rgba(118,255,3,0.15);border-radius:1px;}
+.hero{text-align:center;padding:0 2rem;margin-top:-1.5rem;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+.htitle{font-family:'Inconsolata',monospace;font-size:clamp(20px,4.5vw,48px);font-weight:700;color:var(--gb);line-height:1.2;margin-bottom:.6rem;letter-spacing:4px;text-shadow:0 2px 20px rgba(0,0,0,.8),0 0 40px rgba(118,255,3,.25);white-space:nowrap;}
+.hsub{font-family:'VT323',monospace;font-size:22px;color:var(--gn);margin-bottom:1.2rem;letter-spacing:4px;}
+.hbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:.5rem;}
+.hbtns .btn-pri,.hbtns .btn-sec{font-size:12px;padding:10px 24px;letter-spacing:1.5px;}
+.hero-ticker{width:100%;flex-shrink:0;margin-top:auto;}
+.home-content{max-width:1200px;margin:0 auto;padding:1rem 2rem;padding-bottom:80px;}
+
+/* STATS */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:1rem 0;background:var(--border);border:1px solid var(--border2);}
+.sc{background:var(--bg2);padding:1.5rem 1rem;text-align:center;}
+.sn{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--gb);display:block;margin-bottom:4px;}
+.sl{font-size:12px;color:var(--tm);text-transform:uppercase;letter-spacing:2px;font-family:'Space Mono',monospace;}
+
+/* SECTION HDR */
+.shdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.stitle{font-family:'Inconsolata',monospace;font-size:16px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;}
+.scnt{font-family:'VT323',monospace;font-size:20px;color:var(--tm);}
+
+/* MECHANICS — 2x2 grid with number beside */
+.mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-bottom:2rem;background:var(--border);border:1px solid var(--border2);}
+.mc{background:var(--bg2);padding:1.5rem;display:flex;gap:16px;align-items:flex-start;}
+.mc-num{font-family:'Space Mono',monospace;font-size:30px;font-weight:700;color:var(--gb);opacity:.4;flex-shrink:0;line-height:1;}
+.mc-body{flex:1;}
+.mi{font-size:24px;margin-bottom:8px;display:block;}
+.mn{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gb);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;}
+.md{font-size:14px;color:var(--tm);line-height:1.6;}
+
+/* HP VISUAL */
+.hp-box{background:var(--bg2);border:1px solid var(--border2);padding:1.5rem;margin-bottom:2rem;}
+.hp-row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:0;}
+.hp-row:last-child{border-bottom:none;}
+.hpbar{height:12px;background:rgba(255,255,255,.06);overflow:hidden;flex:1;border-radius:2px;}
+.hpfill{height:100%;transition:width .5s;animation:hpGlow 2s ease-in-out infinite alternate;}
+.hp100{background:var(--gb);box-shadow:0 0 8px rgba(118,255,3,.4);}
+.hp80{background:var(--amber);box-shadow:0 0 8px rgba(255,179,0,.4);}
+.hp50{background:var(--danger);box-shadow:0 0 8px rgba(255,23,68,.4);animation:pulse 1.5s infinite,hpGlow 2s ease-in-out infinite alternate;}
+@keyframes hpGlow{0%{opacity:.85;}100%{opacity:1;}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+/* ARENA */
+.fbar{display:flex;gap:0;margin-bottom:1.5rem;border:1px solid var(--border2);width:fit-content;}
+.fb{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:7px 16px;font-size:13px;font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+.fb:last-child{border-right:none;}
+.fb:hover{color:var(--gb);}
+.fb.active{color:var(--gb);background:rgba(118,255,3,.08);}
+/* ARENA CARDS — Cosmic Mad Scientists style */
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;}
+.ncard{background:transparent;border:none;position:relative;transition:transform .15s;}
+.ncard:hover{transform:translateY(-3px);}
+.ncard-img-wrap{position:relative;width:100%;aspect-ratio:1;background:var(--bg3);border:2px solid var(--border2);overflow:hidden;margin-bottom:12px;}
+.ncard:hover .ncard-img-wrap{border-color:var(--gb);}
+.ncard.dn .ncard-img-wrap{border-color:rgba(255,23,68,.5);}
+.ncard.wn .ncard-img-wrap{border-color:rgba(255,145,0,.4);}
+.ncard-img-wrap .nft-emoji{font-size:80px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+.ncard-tag{position:absolute;top:8px;left:8px;background:rgba(118,255,3,.15);border:1px solid rgba(118,255,3,.35);color:var(--gb);font-family:'Space Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;letter-spacing:1px;z-index:2;}
+.ncard-tag.tag-warn{background:rgba(255,179,0,.15);border-color:rgba(255,179,0,.4);color:var(--amber);}
+.ncard-tag.tag-danger{background:rgba(255,23,68,.2);border-color:rgba(255,23,68,.5);color:var(--danger);animation:pulse 1s infinite;}
+.ncard-hp-bar{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(0,0,0,.5);}
+.ncard-hp-fill{height:100%;}
+.ncard-body{padding:0 2px;}
+.ncard-name{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;}
+.ncard-desc{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);line-height:1.5;margin-bottom:6px;}
+.ncard-owner{font-family:'Space Mono',monospace;font-size:11px;color:var(--td);margin-bottom:8px;}
+.ncard-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ncard-hp-label{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1px;}
+.status-badge{display:inline-block;padding:4px 10px;border-radius:0;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1px;}
+.sb-safe{background:rgba(118,255,3,.1);color:var(--gb);border:1px solid rgba(118,255,3,.3);}
+.sb-warn{background:rgba(255,179,0,.1);color:var(--amber);border:1px solid rgba(255,179,0,.3);}
+.catch-btn{width:100%;margin-top:6px;background:rgba(255,23,68,.1);border:1px solid rgba(255,23,68,.5);color:var(--danger);padding:8px;border-radius:0;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
+.catch-btn:hover{background:rgba(255,23,68,.2);}
+</style>
+<style>
+/* MUSEUM — Gallery style */
+.museum-banner{background:var(--bg2);border:1px solid rgba(255,23,68,.25);padding:1.5rem 2rem;margin-bottom:1.5rem;text-align:center;}
+.mgrid2{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;}
+.dcard{background:transparent;position:relative;text-align:center;}
+.dcard-frame{background:#0a0606;border:3px solid #1a1012;position:relative;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:56px;margin-bottom:0;box-shadow:0 8px 24px rgba(0,0,0,.6),inset 0 0 30px rgba(0,0,0,.4);}
+.dcard-frame::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,200,200,.04) 0%,transparent 40%,rgba(0,0,0,.3) 100%);pointer-events:none;z-index:1;}
+.dcard-frame .skull-ov{position:absolute;font-size:24px;opacity:.5;bottom:8px;right:8px;z-index:2;}
+.dcard-frame .exhibit-num{position:absolute;top:6px;left:8px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:rgba(255,100,100,.5);letter-spacing:1px;z-index:2;}
+.dcard-plaque{background:#110a0a;border:1px solid rgba(255,23,68,.15);border-top:none;padding:10px 12px;text-align:left;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.dcard-plaque-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#ef9a9a;letter-spacing:.5px;margin-bottom:3px;}
+.dcard-plaque-reason{font-size:12px;color:#ef5350;margin-bottom:2px;}
+.dcard-plaque-day{font-size:10px;color:rgba(255,255,255,.2);font-family:'Space Mono',monospace;}
+@media(max-width:768px){.mgrid2{grid-template-columns:repeat(2,1fr);}
+.dcard-frame{font-size:40px;}}
+
+/* STAKE — Honor Roll grid style */
+.stake-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border2);margin-bottom:1.5rem;}
+.stake-stat{background:var(--bg2);padding:1.2rem 1rem;text-align:center;}
+.stake-stat-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gb);display:block;margin-bottom:3px;}
+.stake-stat-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:2px;}
+.heatmap-wrap{background:var(--bg2);border:1px solid var(--border2);padding:1.2rem 1.5rem;margin-bottom:1.5rem;overflow-x:auto;}
+.heatmap-title{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.heatmap-title b{color:var(--gb);}
+.heatmap-legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--td);}
+.heatmap-legend-box{width:10px;height:10px;}
+.heatmap{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;}
+.hm-cell{width:12px;height:12px;background:rgba(118,255,3,.04);border:1px solid rgba(118,255,3,.06);transition:all .15s;position:relative;cursor:pointer;}
+.hm-cell:hover{border-color:var(--gb);transform:scale(1.3);z-index:10;}
+.hm-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--gb);padding:6px 10px;white-space:nowrap;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);z-index:100;pointer-events:none;}
+.hm-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--gb);}
+.hm-tip span{color:var(--gb);font-weight:700;}
+.hm-cell:hover .hm-tip{display:block;}
+.hm-1{background:rgba(118,255,3,.12);}
+.hm-2{background:rgba(118,255,3,.25);}
+.hm-3{background:rgba(118,255,3,.45);}
+.hm-4{background:var(--gb);}
+.honor-header{background:var(--bg2);border:1px solid var(--border2);padding:1rem 1.5rem;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;}
+.honor-title{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--text);letter-spacing:2px;text-transform:uppercase;}
+.honor-tabs{display:flex;gap:0;border:1px solid var(--border2);}
+.honor-tab{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:6px 16px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
+.honor-tab:last-child{border-right:none;}
+.honor-tab:hover{color:var(--gb);}
+.honor-tab.active{color:var(--gb);background:rgba(118,255,3,.08);}
+.honor-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border:1px solid var(--border2);border-top:none;}
+.honor-card{background:var(--bg2);padding:10px;text-align:center;position:relative;cursor:pointer;transition:background .15s;}
+.honor-card:hover{background:rgba(118,255,3,.05);z-index:10;}
+.honor-card.is-staked{outline:2px solid var(--gb);outline-offset:-2px;}
+.honor-card.is-wallet{outline:2px dashed var(--border2);outline-offset:-2px;}
+.honor-card-img{width:100%;aspect-ratio:1;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:56px;margin-bottom:8px;position:relative;overflow:hidden;}
+.honor-card-img .honor-rank{position:absolute;top:4px;left:4px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--gb);background:rgba(8,14,8,.8);padding:2px 5px;letter-spacing:1px;}
+.honor-card-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text);letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.honor-card-score{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:2px;}
+.honor-card-hp{height:3px;background:rgba(255,255,255,.06);margin-top:6px;}
+.honor-card-hp-fill{height:100%;}
+.honor-card-stake-btn{display:block;width:100%;margin-top:8px;background:var(--gb);color:#080e08;border:none;padding:6px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;}
+.honor-card-stake-btn:hover{box-shadow:0 0 10px rgba(118,255,3,.3);}
+.honor-popup{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--gb);padding:10px 14px;z-index:100;white-space:nowrap;min-width:160px;text-align:left;}
+.honor-popup::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--gb);}
+.honor-card:hover .honor-popup{display:block;}
+.honor-popup-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:1px;}
+.honor-popup-row{font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);display:flex;justify-content:space-between;gap:12px;padding:2px 0;}
+.honor-popup-row span:last-child{color:var(--gb);font-weight:700;}
+.stake-actions{display:flex;gap:8px;margin-top:1.5rem;}
+
+/* NFT Detail Popup */
+.nft-modal-overlay{position:fixed;inset:0;z-index:600;background:rgba(4,7,4,.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.nft-modal-overlay.show{opacity:1;pointer-events:all;}
+.nft-modal{background:var(--bg2);border:1px solid var(--gb);width:100%;max-width:640px;padding:0;transform:translateY(12px);transition:transform .2s;display:grid;grid-template-columns:1fr 1fr;}
+.nft-modal-overlay.show .nft-modal{transform:translateY(0);}
+.nft-modal-img{width:100%;height:100%;min-height:280px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:80px;border-right:1px solid var(--border2);}
+.nft-modal-body{padding:1.5rem;display:flex;flex-direction:column;justify-content:center;}
+.nft-modal-name{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--text);letter-spacing:1px;margin-bottom:2px;}
+.nft-modal-nick{font-family:'Space Mono',monospace;font-size:12px;color:var(--td);margin-bottom:12px;}
+.nft-modal-rows{margin-bottom:14px;}
+.nft-modal-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:12px;}
+.nft-modal-row:last-child{border-bottom:none;}
+.nft-modal-row .label{color:var(--tm);}
+.nft-modal-row .val{color:var(--gb);font-weight:700;}
+.nft-modal-hp{height:6px;background:rgba(255,255,255,.06);margin-bottom:14px;}
+.nft-modal-hp-fill{height:100%;}
+.nft-modal-actions{display:flex;gap:8px;}
+.nft-modal-actions .btn-pri,.nft-modal-actions .btn-sec{flex:1;text-align:center;padding:10px;}
+.nft-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--tm);font-size:22px;cursor:pointer;font-family:'Space Mono',monospace;line-height:1;z-index:2;}
+.nft-modal-close:hover{color:var(--gb);}
+@media(max-width:640px){.nft-modal{grid-template-columns:1fr;max-width:360px;}.nft-modal-img{min-height:200px;border-right:none;border-bottom:1px solid var(--border2);}}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--tm);}
+.mrow:last-child{border-bottom:none;}
+.mval{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gb);}
+@media(max-width:768px){.stake-stats{grid-template-columns:repeat(3,1fr);}.honor-grid{grid-template-columns:repeat(3,1fr);}}
+
+/* RULES — Cosmic 2x2 grid style */
+.rules-wrap{max-width:1000px;margin:0 auto;}
+.rules-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border2);margin-bottom:1.5rem;}
+.rule-card{background:var(--bg2);padding:1.8rem;display:flex;gap:16px;align-items:flex-start;}
+.rule-icon{width:80px;height:80px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;}
+.rule-body{flex:1;}
+.rule-num{font-family:'Space Mono',monospace;font-size:30px;font-weight:700;color:var(--gb);opacity:.35;line-height:1;margin-bottom:6px;}
+.rule-title{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;}
+.rule-desc{font-size:14px;color:var(--tm);line-height:1.7;}
+.rule-desc b{color:var(--text);}
+.rule-desc .red{color:var(--danger);}
+.rule-desc .amber{color:var(--amber);}
+.rule-note{background:var(--bg2);border:1px solid var(--border2);padding:14px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:14px;color:var(--tm);letter-spacing:.5px;}
+.rule-note-tag{background:rgba(255,23,68,.15);border:1px solid rgba(255,23,68,.4);color:var(--danger);font-family:'Space Mono',monospace;font-size:12px;font-weight:700;padding:3px 8px;letter-spacing:1px;flex-shrink:0;}
+.rule-tag{display:inline-block;background:rgba(118,255,3,.06);border:1px solid var(--border2);color:var(--gb);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:3px 8px;border-radius:0;margin:4px 4px 0 0;letter-spacing:1px;}
+.prize-box{background:var(--bg2);border:1px solid rgba(255,179,0,.25);border-radius:0;padding:1.8rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;}
+.prize-left{text-align:left;}
+.prize-right{text-align:right;flex-shrink:0;}
+
+/* LB */
+/* PODIUM */
+.podium-section{margin-bottom:2.5rem;}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:16px;padding:2rem 0 0;}
+.podium-item{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.podium-item .p-emoji{font-size:48px;animation:podFloat 3s ease-in-out infinite;}
+.podium-item:nth-child(1) .p-emoji{animation-delay:.5s;}
+.podium-item:nth-child(3) .p-emoji{animation-delay:1s;}
+.podium-item.p-1st .p-emoji{font-size:60px;}
+@keyframes podFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.p-name{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px;text-align:center;}
+.p-score{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gb);text-align:center;}
+.p-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);text-align:center;}
+.p-bar{width:90px;background:var(--bg3);border:1px solid var(--border2);border-bottom:none;display:flex;align-items:flex-end;justify-content:center;padding-top:8px;position:relative;overflow:hidden;}
+.p-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(118,255,3,.06),transparent);pointer-events:none;}
+.p-bar-inner{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--gb);opacity:.15;padding-bottom:8px;}
+.p-1st .p-bar{height:120px;border-color:rgba(255,179,0,.3);}
+.p-1st .p-bar::after{background:linear-gradient(0deg,rgba(255,179,0,.08),transparent);}
+.p-1st .p-score{color:var(--amber);}
+.p-1st .p-bar-inner{color:var(--amber);}
+.p-2nd .p-bar{height:90px;}
+.p-3rd .p-bar{height:70px;}
+.podium-floor{width:100%;max-width:340px;height:3px;background:var(--border2);margin:0 auto;}
+
+/* LB TABS */
+.lb-tabs{display:flex;gap:0;margin-bottom:1.5rem;border:1px solid var(--border2);max-width:500px;}
+.lb-tab{flex:1;background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:10px 16px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-align:center;text-transform:uppercase;}
+.lb-tab:last-child{border-right:none;}
+.lb-tab:hover{color:var(--gb);}
+.lb-tab.active{color:var(--gb);background:rgba(118,255,3,.08);}
+
+/* LB TABLE */
+.lbtable{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:0;overflow:hidden;}
+.lbrow{display:grid;grid-template-columns:50px 44px 1fr 100px 100px 72px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);transition:background .15s;gap:8px;}
+.lbrow:last-child{border-bottom:none;}
+.lbrow:hover{background:rgba(118,255,3,.03);}
+.lbrow.lhdr{background:rgba(118,255,3,.06);font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:2px;font-family:'Space Mono',monospace;font-weight:700;padding:10px 16px;}
+.lbrank{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--tm);}
+.lbrank.top{color:var(--amber);}
+.lbemoji{font-size:28px;}
+.lbname{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px;}
+.lb-hp-col{text-align:right;}
+.lb-hp-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
+.lb-hp-bar{height:4px;background:rgba(255,255,255,.06);margin-top:3px;}
+.lb-hp-fill{height:100%;transition:width .8s ease-out;}
+.lb-days-col{font-family:'Space Mono',monospace;font-size:13px;color:var(--tm);text-align:right;}
+.lb-chart{width:72px;height:24px;display:flex;align-items:flex-end;gap:2px;}
+.lb-chart-bar{flex:1;background:var(--gb);opacity:.4;min-height:2px;animation:chartGrow .6s ease-out forwards;transform-origin:bottom;transform:scaleY(0);}
+@keyframes chartGrow{to{transform:scaleY(1);}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--gb);color:var(--gb);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:14px 20px;border-radius:0;z-index:999;transform:translateX(240px);opacity:0;transition:all .25s;max-width:260px;line-height:1.8;letter-spacing:.5px;}
+.toast.show{transform:translateX(0);opacity:1;}
+
+/* FOOTER */
+.site-footer{background:var(--bg2);border-top:1px solid var(--border2);padding:2rem;margin-top:0;}
+.footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2rem;align-items:start;}
+.footer-brand .footer-logo{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gb);letter-spacing:3px;margin-bottom:8px;}
+.footer-brand .footer-desc{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);line-height:1.6;max-width:280px;}
+.footer-col-title{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.footer-links a{color:var(--tm);font-size:12px;text-decoration:none;transition:color .15s;font-family:'Space Mono',monospace;font-size:12px;}
+.footer-links a:hover{color:var(--gb);}
+.footer-socials{display:flex;gap:10px;margin-top:10px;}
+.footer-social{width:32px;height:32px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--tm);transition:all .15s;cursor:pointer;}
+.footer-social:hover{border-color:var(--gb);color:var(--gb);background:rgba(118,255,3,.06);}
+.footer-bottom{max-width:1200px;margin:0 auto;padding-top:1.5rem;margin-top:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--td);letter-spacing:1px;}
+
+/* ===== COMPREHENSIVE MOBILE ===== */
+@media(max-width:768px){
+  /* Nav */
+  nav{padding:0 .8rem;height:50px;flex-wrap:nowrap;}
+  .logo{font-size:11px;letter-spacing:2px;}
+  .nav-links{gap:2px;}
+  .nb{padding:4px 8px;font-size:9px;letter-spacing:.5px;}
+  .bal-box{display:none;}
+  .btn-pri#conbtn{font-size:9px;padding:6px 10px;}
+
+  /* Marquee */
+  .marquee-bar{padding:3px 0;}
+  .marquee-track span{font-size:6px;padding:0 12px;}
+
+  /* Pages */
+  .page{padding:1rem;padding-bottom:60px;}
+
+  /* Home */
+  .hero-section{min-height:auto;}
+  .hero{margin-top:-3rem;padding:0 1rem;}
+  .htitle{font-size:clamp(11px,3.8vw,22px);letter-spacing:1px;white-space:nowrap;}
+  .home-content{padding:1rem;}
+  .hsub{font-size:16px;letter-spacing:1px;}
+  .hbtns{gap:8px;}
+  .hbtns .btn-pri,.hbtns .btn-sec{font-size:9px;padding:8px 14px;}
+  .stats-bar{grid-template-columns:repeat(2,1fr);margin:1rem 0;}
+  .sc{padding:1rem .8rem;}
+  .sn{font-size:18px;}
+  .hbtns{gap:8px;}
+  .hbtns .btn-pri,.hbtns .btn-sec{font-size:9px;padding:8px 14px;}
+  .mgrid{grid-template-columns:1fr;gap:1px;}
+  .mc{padding:1.2rem;}
+  .mc-num{font-size:22px;}
+  .hp-box{padding:1rem;}
+
+  /* Stake */
+  .stake-stats{grid-template-columns:repeat(3,1fr);}
+  .stake-stat{padding:.8rem .6rem;}
+  .stake-stat-val{font-size:14px;}
+  .stake-stat-label{font-size:11px;}
+  .heatmap-wrap{padding:1rem;overflow-x:auto;}
+  .heatmap{gap:2px;}
+  .hm-cell{width:9px;height:9px;}
+  .honor-header{flex-direction:column;align-items:flex-start;gap:10px;padding:1rem;}
+  .honor-header>div:last-child{flex-wrap:wrap;width:100%;}
+  .honor-grid{grid-template-columns:repeat(3,1fr);}
+  .honor-card{padding:6px;}
+  .honor-card-img{font-size:40px;}
+  .honor-card-name{font-size:11px;}
+  .honor-card-score{font-size:9px;}
+  .honor-card-stake-btn{font-size:11px;padding:4px;}
+
+  /* Arena */
+  .shdr{flex-direction:column;align-items:flex-start;gap:6px;}
+  .fbar{flex-wrap:wrap;}
+  .fb{padding:5px 10px;font-size:10px;}
+  .agrid{grid-template-columns:repeat(2,1fr);gap:12px;}
+  .ncard-img-wrap .nft-emoji{font-size:60px;}
+  .ncard-name{font-size:9px;}
+  .ncard-desc{font-size:9px;}
+  .catch-btn{font-size:11px;padding:6px;}
+
+  /* Museum */
+  .museum-banner{padding:1rem;}
+  .mgrid2{grid-template-columns:repeat(2,1fr);gap:12px;}
+  .dcard-frame{font-size:40px;}
+
+  /* Ranks */
+  .podium{gap:8px;padding:1rem 0 0;}
+  .podium-item .p-emoji{font-size:36px;}
+  .podium-item.p-1st .p-emoji{font-size:44px;}
+  .p-bar{width:70px;}
+  .p-1st .p-bar{height:90px;}
+  .p-2nd .p-bar{height:65px;}
+  .p-3rd .p-bar{height:50px;}
+  .p-name{font-size:9px;}
+  .p-score{font-size:11px;}
+  .lb-tabs{max-width:100%;}
+  .lb-tab{padding:8px 12px;font-size:9px;}
+  .lbrow{grid-template-columns:36px 32px 1fr 60px;padding:10px 10px;gap:4px;}
+  .lb-days-col,.lb-chart{display:none;}
+  .lbrank{font-size:9px;}
+  .lbemoji{font-size:22px;}
+  .lbname{font-size:9px;}
+
+  /* Rules */
+  .rules-grid{grid-template-columns:1fr;}
+  .rule-card{padding:1.2rem;}
+  .rule-icon{width:60px;height:60px;font-size:28px;}
+  .rule-num{font-size:22px;}
+  .prize-box{flex-direction:column;text-align:center;gap:1rem;}
+  .prize-left{text-align:center;}
+  .prize-right{text-align:center;}
+
+  /* Modal */
+  .nft-modal{grid-template-columns:1fr;max-width:340px;}
+  .nft-modal-img{min-height:180px;border-right:none;border-bottom:1px solid var(--border2);}
+  .nft-modal-body{padding:1rem;}
+
+  /* Footer */
+  .footer-inner{grid-template-columns:1fr;gap:1.5rem;}
+  .footer-bottom{flex-direction:column;gap:8px;text-align:center;}
+
+  /* Toast */
+  .toast{bottom:16px;right:12px;left:12px;max-width:none;font-size:11px;padding:10px 14px;}
+}
+
+@media(max-width:480px){
+  .stats-bar{grid-template-columns:repeat(2,1fr);}
+  .stake-stats{grid-template-columns:repeat(2,1fr);}
+  .honor-grid{grid-template-columns:repeat(2,1fr);}
+  .agrid{grid-template-columns:1fr;}
+  .mgrid2{grid-template-columns:1fr;}
+  .podium-item .p-emoji{font-size:28px;}
+  .podium-item.p-1st .p-emoji{font-size:36px;}
+  .p-bar{width:56px;}
+}
+</style>
+</head>
+<body>
+
+<!-- BG BLOBS -->
+<div class="bg-blob bg-blob-1"></div>
+<div class="bg-blob bg-blob-2"></div>
+<div class="bg-blob bg-blob-3"></div>
+
+<!-- WALLET MODAL -->
+<div class="overlay" id="woverlay">
+  <div class="wmodal">
+    <div class="wm-logo">MANTHY.WTF</div>
+    <div class="wm-sub">// connect wallet to start playing //</div>
+    <div class="wopts">
+      <button class="wopt" onclick="connectWallet('metamask','🦊','MetaMask')">
+        <div class="wopt-icon">🦊</div>
+        <div><div class="wopt-name">METAMASK</div><div class="wopt-desc">Browser extension wallet</div></div>
+        <div class="wopt-arrow">→</div>
+      </button>
+      <button class="wopt" onclick="connectWallet('wc','🔗','WalletConnect')">
+        <div class="wopt-icon">🔗</div>
+        <div><div class="wopt-name">WALLETCONNECT</div><div class="wopt-desc">Mobile and multi-wallet</div></div>
+        <div class="wopt-arrow">→</div>
+      </button>
+      <button class="wopt" onclick="connectWallet('cb','🔵','Coinbase Wallet')">
+        <div class="wopt-icon">🔵</div>
+        <div><div class="wopt-name">COINBASE WALLET</div><div class="wopt-desc">Self-custody wallet</div></div>
+        <div class="wopt-arrow">→</div>
+      </button>
+    </div>
+    <div class="wdiscl">By connecting your wallet, you agree to our<br><a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</div>
+  </div>
+</div>
+
+<!-- CONNECTING OVERLAY -->
+<div class="overlay" id="coverlay">
+  <div class="wmodal" style="padding:3rem 2rem">
+    <div style="font-size:48px;margin-bottom:1rem" id="cicon">🦊</div>
+    <div class="wm-logo" style="font-size:12px;margin-bottom:8px" id="cname">MetaMask</div>
+    <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);margin-bottom:1.5rem;letter-spacing:1px">Waiting for confirmation...</div>
+    <div style="font-size:12px;color:var(--td)"><span class="spinner"></span>Connecting...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<nav>
+  <div class="logo" onclick="showPage('home')"><img src="logo.png" alt="MANTHY.WTF" style="height:28px;width:auto;display:block;"></div>
+  <div class="nav-links">
+    <button class="nb active" onclick="showPage('home')">Home</button>
+    <button class="nb" onclick="gatedNav('stake')">Stake</button>
+    <button class="nb" onclick="gatedNav('arena')">Arena</button>
+    <button class="nb" onclick="gatedNav('museum')">Museum</button>
+    <button class="nb" onclick="gatedNav('ranks')">Ranks</button>
+    <button class="nb" onclick="showPage('rules')">Rules</button>
+    <div class="bal-box" id="balbox" style="display:none">💰 <span id="mbal">1,240</span> $MTHY</div>
+    <div class="wc-btn" id="wcbtn" style="display:none;position:relative;" onclick="toggleDcPopup(event)">
+      <div class="wdot"></div>
+      <span class="waddr" id="waddr"></span>
+      <div class="dc-popup" id="dcpopup">
+        <button class="dc-popup-btn" onclick="disconnect();event.stopPropagation();">DISCONNECT WALLET</button>
+      </div>
+    </div>
+    <button class="btn-pri" id="conbtn" onclick="openWallet()" style="border:none;">CONNECT WALLET</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="page-home" class="page active" style="padding:0;max-width:none;">
+  <div class="hero-section">
+    <div class="hero-banner" id="hero-banner-wrap">
+      <img src="hero.png" alt="MANTHY" id="hero-img">
+    </div>
+    <div class="hero">
+      <div class="htitle">SURVIVE OR GET CAUGHT</div>
+      <div class="hsub">// 200 MANTHY RELEASED. ONLY 20 SURVIVE. //</div>
+      <div class="hbtns">
+        <button class="btn-pri" onclick="gatedNav('stake')">STAKE NFT</button>
+        <button class="btn-sec" onclick="gatedNav('arena')">🌿 VIEW ARENA</button>
+        <button class="btn-sec" onclick="showPage('rules')" style="border-color:var(--amber);color:var(--amber)">HOW TO PLAY</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-content">
+
+  <div class="stats-bar">
+    <div class="sc"><span class="sn" id="h-alive">163</span><span class="sl">Still Alive</span></div>
+    <div class="sc"><span class="sn" style="color:var(--warn)" id="h-danger">18</span><span class="sl">Weak</span></div>
+    <div class="sc"><span class="sn" style="color:var(--danger)" id="h-dead">37</span><span class="sl">In Museum</span></div>
+    <div class="sc"><span class="sn" style="color:var(--amber)">20</span><span class="sl">Win Slots</span></div>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <div class="shdr"><div class="stitle" style="display:none">HOW TO PLAY</div></div>
+  <div class="mgrid">
+    <div class="mc">
+      <div class="mc-num">01</div>
+      <div class="mc-body"><span class="mi">⚡</span><div class="mn">STAKE</div><div class="md">Stake your Manthy NFT. Each NFT generates <b>+80 $MTHY/day</b> while staked.</div></div>
+    </div>
+    <div class="mc">
+      <div class="mc-num">02</div>
+      <div class="mc-body"><span class="mi">🌿</span><div class="mn">FEED</div><div class="md">Use <b>100 $MTHY</b> to feed your Manthy daily. Full HP = fully safe.</div></div>
+    </div>
+    <div class="mc">
+      <div class="mc-num">03</div>
+      <div class="mc-body"><span class="mi">😵</span><div class="mn">DON'T GET WEAK</div><div class="md"><b class="red">Skip 1 day</b> = HP 80%. <b class="red">Skip 2 days</b> = HP 50% = catchable by anyone!</div></div>
+    </div>
+    <div class="mc">
+      <div class="mc-num">04</div>
+      <div class="mc-body"><span class="mi">🏆</span><div class="mn">WIN</div><div class="md">The last <b>20 Manthy</b> out of 200 get <b class="amber">1/1 art + exclusive merch</b>.</div></div>
+    </div>
+  </div>
+
+  <div class="hp-box">
+    <div class="stitle" style="margin-bottom:1rem">HP SYSTEM</div>
+    <div class="hp-row">
+      <span style="font-size:18px">🌿</span>
+      <div style="min-width:100px"><span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--gb)">FULL — 100%</span></div>
+      <div class="hpbar"><div class="hpfill hp100" style="width:100%"></div></div>
+      <span style="font-size:11px;color:var(--tm);white-space:nowrap;min-width:120px;text-align:right">Fed today</span>
+    </div>
+    <div class="hp-row">
+      <span style="font-size:18px">😮‍💨</span>
+      <div style="min-width:100px"><span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--amber)">HUNGRY — 80%</span></div>
+      <div class="hpbar"><div class="hpfill hp80" style="width:80%"></div></div>
+      <span style="font-size:11px;color:var(--tm);white-space:nowrap;min-width:120px;text-align:right">Skipped 1 day</span>
+    </div>
+    <div class="hp-row">
+      <span style="font-size:18px">😵</span>
+      <div style="min-width:100px"><span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--danger)">WEAK — 50%</span></div>
+      <div class="hpbar"><div class="hpfill hp50" style="width:50%"></div></div>
+      <span style="font-size:11px;color:var(--danger);white-space:nowrap;font-weight:700;min-width:120px;text-align:right">⚠️ CATCHABLE</span>
+    </div>
+  </div>
+  </div>
+  </div>
+</div>
+
+<!-- STAKE -->
+<div id="page-stake" class="page">
+  <!-- Stats bar -->
+  <div class="stake-stats">
+    <div class="stake-stat"><span class="stake-stat-val" id="ss-staked">3</span><span class="stake-stat-label">Staked</span></div>
+    <div class="stake-stat"><span class="stake-stat-val" id="ss-unstaked">3</span><span class="stake-stat-label">In Wallet</span></div>
+    <div class="stake-stat"><span class="stake-stat-val" id="ss-balance">1,240</span><span class="stake-stat-label">$MTHY Balance</span></div>
+    <div class="stake-stat"><span class="stake-stat-val" id="ss-pending" style="color:var(--gn)">+700</span><span class="stake-stat-label">Pending</span></div>
+    <div class="stake-stat"><span class="stake-stat-val" id="ss-earnrate">240</span><span class="stake-stat-label">$MTHY / Day</span></div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="heatmap-wrap">
+    <div class="heatmap-title">
+      <span><b id="hm-count">42</b> feedings this year</span>
+      <div class="heatmap-legend">
+        Less
+        <div class="heatmap-legend-box" style="background:rgba(118,255,3,.04);border:1px solid rgba(118,255,3,.06)"></div>
+        <div class="heatmap-legend-box" style="background:rgba(118,255,3,.12)"></div>
+        <div class="heatmap-legend-box" style="background:rgba(118,255,3,.25)"></div>
+        <div class="heatmap-legend-box" style="background:rgba(118,255,3,.45)"></div>
+        <div class="heatmap-legend-box" style="background:var(--gb)"></div>
+        More
+      </div>
+    </div>
+    <div class="heatmap" id="heatmap"></div>
+  </div>
+
+  <!-- Honor Roll header -->
+  <div class="honor-header">
+    <div class="honor-title">YOUR MANTHY</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-sec" onclick="stakeAll()">⚡ STAKE ALL</button>
+      <button class="btn-pri" onclick="feedAllStaked()">🌿 FEED ALL</button>
+      <button class="btn-sec" onclick="claimReward()">💰 CLAIM</button>
+      <div class="honor-tabs">
+        <button class="honor-tab active" onclick="switchHonorTab(this,'all')">All</button>
+        <button class="honor-tab" onclick="switchHonorTab(this,'staked')">Staked</button>
+        <button class="honor-tab" onclick="switchHonorTab(this,'wallet')">Wallet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avatar Grid -->
+  <div class="honor-grid" id="honor-grid"></div>
+
+</div>
+
+<!-- NFT Detail Modal (global) -->
+<div class="nft-modal-overlay" id="nft-modal">
+  <div class="nft-modal" style="position:relative">
+    <button class="nft-modal-close" onclick="closeNftModal()">×</button>
+    <div class="nft-modal-img" id="nm-img"></div>
+    <div class="nft-modal-body">
+      <div class="nft-modal-name" id="nm-name"></div>
+      <div class="nft-modal-nick" id="nm-nick"></div>
+      <div class="nft-modal-hp" id="nm-hp-wrap"><div class="nft-modal-hp-fill" id="nm-hp-fill"></div></div>
+      <div class="nft-modal-rows" id="nm-rows"></div>
+      <div class="nft-modal-actions" id="nm-actions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ARENA -->
+<div id="page-arena" class="page">
+  <div class="shdr">
+    <div class="stitle">🌿 ARENA</div>
+    <div class="scnt" id="arena-cnt">20 Manthy</div>
+  </div>
+  <div class="fbar">
+    <button class="fb active" onclick="filterArena('all',this)">All</button>
+    <button class="fb" onclick="filterArena('safe',this)">🌿 Full</button>
+    <button class="fb" onclick="filterArena('warn',this)">😮‍💨 Hungry</button>
+    <button class="fb" onclick="filterArena('danger',this)">😵 Weak</button>
+  </div>
+  <div class="agrid" id="arena-grid"></div>
+</div>
+
+<!-- MUSEUM -->
+<div id="page-museum" class="page">
+  <div class="museum-banner">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--danger);margin-bottom:6px;letter-spacing:2px">🏛️ MUSEUM OF THE FALLEN</div>
+    <div style="font-family:'Space Mono',monospace;font-size:11px;color:rgba(239,154,154,.6);letter-spacing:1px">// They got weak. Now displayed forever as a warning. //</div>
+  </div>
+  <div class="shdr"><div class="stitle" style="color:var(--danger)">PERMANENT COLLECTION</div><div class="scnt">37 exhibits</div></div>
+  <div class="mgrid2" id="museum-grid"></div>
+</div>
+
+<!-- RANKS -->
+<div id="page-ranks" class="page">
+  <div class="shdr"><div class="stitle">🏆 TOP SURVIVORS</div><div class="scnt">163 still standing</div></div>
+
+  <!-- PODIUM -->
+  <div class="podium-section">
+    <div class="podium" id="podium"></div>
+    <div class="podium-floor"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="lb-tabs">
+    <button class="lb-tab active" onclick="switchLBTab(this,'hp')">By HP</button>
+    <button class="lb-tab" onclick="switchLBTab(this,'days')">By Days</button>
+    <button class="lb-tab" onclick="switchLBTab(this,'score')">Score</button>
+  </div>
+
+  <div class="lbtable" id="lb-table"></div>
+</div>
+
+<!-- RULES -->
+<div id="page-rules" class="page">
+  <div style="text-align:center;margin-bottom:6px"><span style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase">YOUR MOVE</span></div>
+  <div style="font-family:'Space Mono',monospace;font-size:clamp(20px,3vw,32px);font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:1px;line-height:1.3;text-align:center">STAKE YOUR MANTHY. SURVIVE THE ARENA.</div>
+  <div style="font-size:14px;color:var(--tm);margin-bottom:2rem;line-height:1.7;max-width:700px;text-align:center;margin-left:auto;margin-right:auto">200 Manthy entered the arena. Feed them daily or they get weak. When they're weak, anyone can catch them. Only 20 will survive.</div>
+
+  <div class="rules-wrap">
+    <div class="rules-grid">
+      <div class="rule-card">
+        <div class="rule-icon">⚡</div>
+        <div class="rule-body">
+          <div class="rule-num">01</div>
+          <div class="rule-title">STAKE YOUR NFT</div>
+          <div class="rule-desc">Stake your Manthy NFT on this site. Each staked NFT earns <b>+80 $MTHY per day</b>. Unstaked NFTs earn nothing.</div>
+        </div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-icon">🌿</div>
+        <div class="rule-body">
+          <div class="rule-num">02</div>
+          <div class="rule-title">FEED DAILY — 100 $MTHY</div>
+          <div class="rule-desc">Each Manthy needs <b>100 $MTHY/day</b> to stay fed. You earn 80 but spend 100 — that's a <b class="red">-20 $MTHY deficit per day</b>. Manage your reserves wisely.</div>
+        </div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-icon">🪤</div>
+        <div class="rule-body">
+          <div class="rule-num">03</div>
+          <div class="rule-title">CATCH THE WEAK</div>
+          <div class="rule-desc">Skip 1 day → HP drops to <b class="amber">80%</b>. Skip 2 days → HP drops to <b class="red">50%</b> and <b class="red">anyone can catch your Manthy</b>. Caught = gone forever.</div>
+        </div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-icon">🏆</div>
+        <div class="rule-body">
+          <div class="rule-num">04</div>
+          <div class="rule-title">LAST 20 WIN</div>
+          <div class="rule-desc">The last <b>20 Manthy</b> standing out of 200 win <b class="amber">1/1 exclusive art + official merch + permanent Survivor badge</b>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rule-note">
+      <div class="rule-note-tag">ECONOMICS</div>
+      <span>Earn: 80 $MTHY/day — Feed: 100 $MTHY/day — Net: -20/day deficit. Your starting balance is your lifeline. The longer you survive, the harder it gets.</span>
+    </div>
+
+    <div class="rule-note">
+      <div class="rule-note-tag">WARNING</div>
+      <span>Skip 1 day = HP 80%. Skip 2 days = HP 50% = catchable. Only staked NFTs earn $MTHY. Wallet NFTs earn nothing.</span>
+    </div>
+
+    <div class="prize-box">
+      <div class="prize-left">
+        <div style="font-size:18px;color:var(--text);margin-bottom:6px;line-height:1.5"><b>Feed your Manthy. Survive the arena.</b></div>
+        <button class="btn-pri" onclick="gatedNav('stake')">⚡ STAKE NOW</button>
+      </div>
+      <div class="prize-right">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--td);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">REWARDS</div>
+        <div style="font-size:28px;margin-bottom:2px">🏆</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--amber);font-weight:700;letter-spacing:1px">1/1 ART + MERCH</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div style="max-width:1200px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:3rem;flex-wrap:wrap;">
+    <div class="footer-brand">
+      <div class="footer-logo">MANTHY<span style="color:var(--gn)">.</span>WTF</div>
+      <div class="footer-desc">200 Manthy entered the arena. Only 20 will survive. Feed daily, stay alive, win exclusive rewards.</div>
+      <div class="footer-socials">
+        <div class="footer-social">𝕏</div>
+        <div class="footer-social">💬</div>
+        <div class="footer-social">📡</div>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">NAVIGATE</div>
+      <ul class="footer-links" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 48px;">
+        <li><a href="#" onclick="showPage('home')">Home</a></li>
+        <li><a href="#" onclick="gatedNav('arena')">Arena</a></li>
+        <li><a href="#" onclick="gatedNav('stake')">Stake</a></li>
+        <li><a href="#" onclick="gatedNav('museum')">Museum</a></li>
+        <li><a href="#" onclick="gatedNav('ranks')">Ranks</a></li>
+        <li><a href="#" onclick="showPage('rules')">Rules</a></li>
+        <li><a href="#">OpenSea</a></li>
+        <li><a href="#">Terms</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== STATE =====
+let wallet = null, pendingPage = null;
+let mthyBal = 1240;
+
+const EMOJIS = ['🦗','🦟','🐛','🦎','🐸','🐞','🦋','🐜'];
+const NICKS  = ['Deaf','Curly','Slimy','Loner','Flirty','Chubby','Grumpy','Frizzy','Stumpy','Snarky','Thrifty','Plain','Slowpoke','Handsome','Flashy','Corny','Lazy','Moody','Nosy','Smarty'];
+const OWNERS = ['0x1a3f...c4d2','0x9be2...f117','0x47da...3a80','0xc931...e552','0x8f2b...9a01','0x2e7c...1d43'];
+
+const arenaData = Array.from({length:20},(_,i)=>{
+  const hps=[100,100,80,100,50,100,100,80,50,100,100,80,100,100,50,100,80,100,100,50];
+  return{id:i+1,name:`Manthy #${String(i+1).padStart(3,'0')}`,nick:NICKS[i%NICKS.length],emoji:EMOJIS[i%EMOJIS.length],hp:hps[i],owner:OWNERS[i%OWNERS.length],days:Math.floor(Math.random()*18)+2};
+});
+
+const museumData = Array.from({length:14},(_,i)=>({
+  id:i+21,name:`Manthy #${String(i+21).padStart(3,'0')}`,nick:NICKS[(i+5)%NICKS.length],
+  emoji:EMOJIS[(i+3)%EMOJIS.length],
+  reason:['Forgot to feed 2 days','Caught by another holder','Ran out of $MTHY','Too lazy to feed','Caught at 3am raid'][i%5],
+  day:`Day ${Math.floor(Math.random()*12)+1}`
+}));
+
+const walletNFTs=[
+  {id:101,name:'Manthy #101',emoji:'🦗'},
+  {id:102,name:'Manthy #102',emoji:'🦟'},
+  {id:103,name:'Manthy #103',emoji:'🐸'},
+];
+const stakedNFTs=[
+  {id:5,name:'Manthy #005',emoji:'🦗',days:14,hp:100},
+  {id:12,name:'Manthy #012',emoji:'🦟',days:8,hp:80},
+  {id:33,name:'Manthy #033',emoji:'🐛',days:3,hp:50},
+];
+let selectedWallet=null;
+
+// ===== MARQUEE =====
+(function(){
+  const msg='MANTHY <span class="sep">∅</span> SURVIVE <span class="sep">⬥</span> FEED OR DIE <span class="sep">∅</span> LAST 20 WIN <span class="sep">⬥</span> ';
+  const t=document.getElementById('marquee-track');
+  if(t) t.innerHTML=msg.repeat(8);
+  const t2=document.getElementById('marquee-track2');
+  if(t2) t2.innerHTML=msg.repeat(8);
+})();
+
+// ===== WALLET =====
+function openWallet(){document.getElementById('woverlay').classList.add('show');}
+document.getElementById('woverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+
+function connectWallet(type,icon,name){
+  document.getElementById('woverlay').classList.remove('show');
+  document.getElementById('cicon').innerText=icon;
+  document.getElementById('cname').innerText=name;
+  document.getElementById('coverlay').classList.add('show');
+  setTimeout(async()=>{
+    try{
+      let addr;
+      if(type==='metamask'&&window.ethereum){
+        const acc=await window.ethereum.request({method:'eth_requestAccounts'});
+        addr=acc[0];
+      } else {
+        addr='0x'+[...Array(40)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');
+      }
+      onConnected(addr);
+    }catch(e){
+      document.getElementById('coverlay').classList.remove('show');
+      toast('Connection cancelled.');
+    }
+  },1800);
+}
+function onConnected(addr){
+  wallet=addr;
+  document.getElementById('coverlay').classList.remove('show');
+  const s=addr.slice(0,6)+'...'+addr.slice(-4);
+  document.getElementById('waddr').innerText=s;
+  document.getElementById('conbtn').style.display='none';
+  document.getElementById('wcbtn').style.display='flex';
+  document.getElementById('balbox').style.display='flex';
+  toast('Wallet connected!\n'+s+' ✅');
+  if(pendingPage){showPage(pendingPage);pendingPage=null;}
+}
+function disconnect(){
+  wallet=null;
+  document.getElementById('conbtn').style.display='block';
+  document.getElementById('wcbtn').style.display='none';
+  document.getElementById('balbox').style.display='none';
+  document.getElementById('dcpopup').classList.remove('show');
+  showPage('home');
+  toast('Wallet disconnected.');
+}
+function toggleDcPopup(e){
+  e.stopPropagation();
+  document.getElementById('dcpopup').classList.toggle('show');
+}
+document.addEventListener('click',function(){document.getElementById('dcpopup')?.classList.remove('show');});
+function gatedNav(p){
+  if(!wallet){pendingPage=p;openWallet();return;}
+  showPage(p);
+}
+
+// ===== NAV =====
+function showPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('active'));
+  const map={home:0,stake:1,arena:2,museum:3,ranks:4,rules:5};
+  document.querySelectorAll('.nb')[map[p]]?.classList.add('active');
+  closeNftModal();
+  // Show ticker only on home page
+  document.querySelectorAll('.marquee-bar').forEach(el=>{el.style.display=p==='home'?'':'none';});
+}
+</script>
+
+<script>
+// ===== RENDER ARENA =====
+function renderArena(filter='all'){
+  const grid=document.getElementById('arena-grid');
+  const data=arenaData.filter(n=>{
+    if(filter==='safe')return n.hp===100;
+    if(filter==='warn')return n.hp===80;
+    if(filter==='danger')return n.hp===50;
+    return true;
+  });
+  document.getElementById('arena-cnt').innerText=data.length+' Manthy';
+  grid.innerHTML=data.map(n=>{
+    const cls=n.hp===50?'dn':n.hp===80?'wn':'';
+    const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':'var(--danger)';
+    const tagCls=n.hp===100?'':n.hp===80?' tag-warn':' tag-danger';
+    const tagText=n.hp===100?'HP 100%':n.hp===80?'HP 80%':'WEAK!';
+    const statusText=n.hp===100?'Full — safe':n.hp===80?'Hungry — skipped 1 day':'Weak — catchable!';
+    let action='';
+    if(n.hp===50) action=`<button class="catch-btn" onclick="catchManthy(${n.id})">🪤 CATCH NOW</button>`;
+    return `<div class="ncard ${cls}" onclick="openArenaModal(${n.id})" style="cursor:pointer">
+      <div class="ncard-img-wrap">
+        <div class="ncard-tag${tagCls}">${tagText}</div>
+        <div class="nft-emoji">${n.emoji}</div>
+        <div class="ncard-hp-bar"><div class="ncard-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>
+      </div>
+      <div class="ncard-body">
+        <div class="ncard-name">${n.name}</div>
+        <div class="ncard-desc">"${n.nick}" — ${statusText}</div>
+        <div class="ncard-owner">Owner: ${n.owner}</div>
+        ${action}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== RENDER MUSEUM =====
+function renderMuseum(){
+  document.getElementById('museum-grid').innerHTML=museumData.map((n,i)=>`
+    <div class="dcard">
+      <div class="dcard-frame">
+        <div class="exhibit-num">#${String(i+1).padStart(3,'0')}</div>
+        ${n.emoji}
+        <div class="skull-ov">💀</div>
+      </div>
+      <div class="dcard-plaque">
+        <div class="dcard-plaque-name">${n.name} — "${n.nick}"</div>
+        <div class="dcard-plaque-reason">${n.reason}</div>
+        <div class="dcard-plaque-day">Fell: ${n.day}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ===== RENDER LEADERBOARD =====
+let currentSort='hp';
+function renderLB(sortBy){
+  if(sortBy) currentSort=sortBy;
+  let sorted;
+  if(currentSort==='days') sorted=[...arenaData].sort((a,b)=>b.days-a.days);
+  else if(currentSort==='score') sorted=[...arenaData].sort((a,b)=>(b.hp*b.days)-(a.hp*a.days));
+  else sorted=[...arenaData].sort((a,b)=>b.hp!==a.hp?b.hp-a.hp:b.days-a.days);
+
+  // Podium — top 3
+  const top3=sorted.slice(0,3);
+  const podiumOrder=[top3[1],top3[0],top3[2]]; // 2nd, 1st, 3rd
+  const podiumClasses=['p-2nd','p-1st','p-3rd'];
+  const podiumLabels=['🥈','🥇','🥉'];
+  document.getElementById('podium').innerHTML=podiumOrder.map((n,i)=>{
+    if(!n) return '';
+    const score=currentSort==='days'?n.days+'d':currentSort==='score'?(n.hp*n.days).toLocaleString():n.hp+'%';
+    return `<div class="podium-item ${podiumClasses[i]}">
+      <div class="p-emoji">${n.emoji}</div>
+      <div class="p-name">${n.name}</div>
+      <div class="p-score">${score}</div>
+      <div class="p-sub">${podiumLabels[i]} "${n.nick}"</div>
+      <div class="p-bar"><div class="p-bar-inner">${i===1?'1':i===0?'2':'3'}</div></div>
+    </div>`;
+  }).join('');
+
+  // Table — all entries
+  const medals=['🥇','🥈','🥉'];
+  const rows=sorted.map((n,i)=>{
+    const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':'var(--danger)';
+    const score=(n.hp*n.days).toLocaleString();
+    // Mini chart — random-ish bars for visual flair
+    const bars=Array.from({length:7},(_,j)=>{
+      const h=Math.max(4,Math.min(22,n.hp*(0.3+Math.random()*0.7)/100*22));
+      const delay=j*0.08+i*0.03;
+      return `<div class="lb-chart-bar" style="height:${h}px;background:${hcol};animation-delay:${delay.toFixed(2)}s"></div>`;
+    }).join('');
+    return `<div class="lbrow">
+      <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
+      <div class="lbemoji">${n.emoji}</div>
+      <div>
+        <div class="lbname">${n.name}</div>
+        <div style="font-size:10px;color:var(--td);margin-top:2px;font-family:'Space Mono',monospace">"${n.nick}"</div>
+      </div>
+      <div class="lb-hp-col">
+        <div class="lb-hp-val" style="color:${hcol}">${n.hp}%</div>
+        <div class="lb-hp-bar"><div class="lb-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>
+      </div>
+      <div class="lb-days-col">${n.days}d</div>
+      <div class="lb-chart">${bars}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Manthy</div><div>HP</div><div class="lb-days-col">Days</div><div>Chart</div></div>`+rows;
+}
+
+function switchLBTab(btn,sort){
+  document.querySelectorAll('.lb-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLB(sort);
+}
+
+// ===== RENDER STAKE =====
+let stakeFilter='all';
+
+// Generate heatmap with date tooltips
+(function(){
+  const hm=document.getElementById('heatmap');
+  if(!hm)return;
+  let h='';
+  const today=new Date();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let totalFeedings=0;
+  for(let i=363;i>=0;i--){
+    const d=new Date(today);
+    d.setDate(d.getDate()-i);
+    const dateStr=months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+    const r=Math.random();
+    let cls='',count=0;
+    if(r>.92){cls='hm-4';count=Math.floor(Math.random()*2)+4;}
+    else if(r>.82){cls='hm-3';count=3;}
+    else if(r>.7){cls='hm-2';count=2;}
+    else if(r>.55){cls='hm-1';count=1;}
+    totalFeedings+=count;
+    const label=count>0?`<span>${count} feeding${count>1?'s':''}</span>`:' No feedings';
+    h+=`<div class="hm-cell ${cls}"><div class="hm-tip">${dateStr}<br>${label}</div></div>`;
+  }
+  hm.innerHTML=h;
+  const cntEl=document.getElementById('hm-count');
+  if(cntEl) cntEl.innerText=totalFeedings.toLocaleString();
+})();
+
+function renderStake(filter){
+  if(filter) stakeFilter=filter;
+  const allCards=[];
+  walletNFTs.forEach(n=>allCards.push({...n,type:'wallet',hp:null,days:null}));
+  stakedNFTs.forEach(n=>allCards.push({...n,type:'staked'}));
+
+  const filtered=allCards.filter(n=>{
+    if(stakeFilter==='staked') return n.type==='staked';
+    if(stakeFilter==='wallet') return n.type==='wallet';
+    return true;
+  });
+
+  const grid=document.getElementById('honor-grid');
+  grid.innerHTML=filtered.map(n=>{
+    const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':n.hp===50?'var(--danger)':'var(--tm)';
+    const hpCls=n.hp===100?'hp-green':n.hp===80?'hp-amber':n.hp===50?'hp-red':'hp-green';
+    const scoreText=n.type==='staked'?`${n.hp}%`:'NEW';
+    const statusLabel=n.type==='staked'?(n.hp===100?'Fed':n.hp===80?'Hungry':'Weak!'):'In wallet';
+    return `<div class="honor-card ${n.type==='staked'?'is-staked':'is-wallet'}" onclick="openNftModal(${n.id},'${n.type}')">
+      <div class="honor-card-img">
+        ${n.type==='staked'?`<div class="honor-rank">${n.days}d</div>`:''}
+        ${n.emoji}
+      </div>
+      <div class="honor-card-name">${n.name}</div>
+      <div class="honor-card-score ${hpCls}">${scoreText}</div>
+      ${n.type==='staked'?`<div class="honor-card-hp"><div class="honor-card-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>`:`<button class="honor-card-stake-btn" onclick="event.stopPropagation();stakeById(${n.id})">⚡ STAKE</button>`}
+      <div class="honor-popup">
+        <div class="honor-popup-name">${n.name}</div>
+        <div class="honor-popup-row"><span>Status</span><span>${statusLabel}</span></div>
+        ${n.type==='staked'?`
+          <div class="honor-popup-row"><span>HP</span><span style="color:${hcol}">${n.hp}%</span></div>
+          <div class="honor-popup-row"><span>Days</span><span>${n.days}d</span></div>
+          <div class="honor-popup-row"><span>Earn</span><span>80/day</span></div>
+        `:`<div class="honor-popup-row"><span>Action</span><span>Click to Stake</span></div>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  updateBalUI();
+}
+
+function updateBalUI(){
+  const earnRate=stakedNFTs.length*80;
+  const pending=earnRate;
+  document.getElementById('mbal').innerText=mthyBal.toLocaleString();
+  document.getElementById('ss-balance').innerText=mthyBal.toLocaleString();
+  document.getElementById('ss-pending').innerText='+'+pending;
+  document.getElementById('ss-staked').innerText=stakedNFTs.length;
+  document.getElementById('ss-unstaked').innerText=walletNFTs.length;
+  const erEl=document.getElementById('ss-earnrate');
+  if(erEl) erEl.innerText=earnRate;
+}
+
+function switchHonorTab(btn,filter){
+  document.querySelectorAll('.honor-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStake(filter);
+}
+
+function feedOne(id){
+  if(mthyBal<100){toast('Not enough $MTHY!');return;}
+  const nft=stakedNFTs.find(n=>n.id===id);
+  if(!nft||nft.hp>=100)return;
+  mthyBal-=100;
+  nft.hp=100;
+  const a=arenaData.find(x=>x.id===id);if(a)a.hp=100;
+  renderStake();
+  closeNftModal();
+  toast(nft.name+' fed!\nHP 100% ✅');
+}
+
+function stakeById(id){
+  const idx=walletNFTs.findIndex(n=>n.id===id);
+  if(idx<0)return;
+  const nft=walletNFTs.splice(idx,1)[0];
+  stakedNFTs.push({id:nft.id,name:nft.name,emoji:nft.emoji,days:0,hp:100});
+  renderStake();
+  closeNftModal();
+  toast(nft.name+' staked!\n+80 $MTHY/day ✅');
+}
+
+function stakeAll(){
+  if(walletNFTs.length===0){toast('No NFTs to stake!');return;}
+  const count=walletNFTs.length;
+  while(walletNFTs.length>0){
+    const nft=walletNFTs.splice(0,1)[0];
+    stakedNFTs.push({id:nft.id,name:nft.name,emoji:nft.emoji,days:0,hp:100});
+  }
+  renderStake();
+  toast(count+' NFTs staked!\n+80 $MTHY/day each ✅');
+}
+
+function stakeSelected(){
+  if(!selectedWallet){toast('Select an NFT first!');return;}
+  const idx=walletNFTs.findIndex(n=>n.name===selectedWallet);
+  if(idx<0)return;
+  const nft=walletNFTs.splice(idx,1)[0];
+  stakedNFTs.push({id:nft.id,name:nft.name,emoji:nft.emoji,days:0,hp:100});
+  selectedWallet=null;
+  renderStake();
+  toast(nft.name+' staked!\n+80 $MTHY/day ✅');
+}
+
+// ===== NFT MODAL =====
+function openNftModal(id,type){
+  const nft=type==='staked'?stakedNFTs.find(n=>n.id===id):walletNFTs.find(n=>n.id===id);
+  if(!nft)return;
+  const m=document.getElementById('nft-modal');
+  document.getElementById('nm-img').innerHTML=nft.emoji;
+  document.getElementById('nm-name').innerText=nft.name;
+  const nick=NICKS[(nft.id-1)%NICKS.length]||'';
+  document.getElementById('nm-nick').innerText=nick?'"'+nick+'"':'';
+
+  const hpWrap=document.getElementById('nm-hp-wrap');
+  const hpFill=document.getElementById('nm-hp-fill');
+  if(type==='staked'){
+    const hcol=nft.hp===100?'var(--gb)':nft.hp===80?'var(--amber)':'var(--danger)';
+    hpWrap.style.display='block';
+    hpFill.style.width=nft.hp+'%';
+    hpFill.style.background=hcol;
+  } else {
+    hpWrap.style.display='none';
+  }
+
+  let rows='';
+  rows+=`<div class="nft-modal-row"><span class="label">Type</span><span class="val">${type==='staked'?'Staked':'In Wallet'}</span></div>`;
+  if(type==='staked'){
+    const hcol=nft.hp===100?'var(--gb)':nft.hp===80?'var(--amber)':'var(--danger)';
+    const status=nft.hp===100?'Fed ✓':nft.hp===80?'Hungry':'Weak!';
+    rows+=`<div class="nft-modal-row"><span class="label">HP</span><span class="val" style="color:${hcol}">${nft.hp}%</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val" style="color:${hcol}">${status}</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Days Staked</span><span class="val">${nft.days}d</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Earn Rate</span><span class="val">80 $MTHY/day</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Total Earned</span><span class="val">${(nft.days*80).toLocaleString()} $MTHY</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Feed Cost</span><span class="val">100 $MTHY</span></div>`;
+  } else {
+    rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val">Not staked</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Potential</span><span class="val">80 $MTHY/day</span></div>`;
+  }
+  document.getElementById('nm-rows').innerHTML=rows;
+
+  let actions='';
+  if(type==='staked'){
+    if(nft.hp<100) actions+=`<button class="btn-pri" onclick="feedOne(${nft.id})">🌿 FEED (100 $MTHY)</button>`;
+    else actions+=`<button class="btn-sec" style="border-color:var(--gb);color:var(--gb);cursor:default;flex:1;text-align:center;padding:10px">✓ ALREADY FED</button>`;
+  } else {
+    actions+=`<button class="btn-pri" onclick="stakeById(${nft.id})">⚡ STAKE NOW</button>`;
+  }
+  actions+=`<button class="btn-sec" onclick="closeNftModal()">CLOSE</button>`;
+  document.getElementById('nm-actions').innerHTML=actions;
+
+  m.classList.add('show');
+}
+
+function closeNftModal(){
+  document.getElementById('nft-modal').classList.remove('show');
+}
+document.getElementById('nft-modal').addEventListener('click',function(e){if(e.target===this)closeNftModal();});
+
+function openArenaModal(id){
+  const nft=arenaData.find(n=>n.id===id);
+  if(!nft)return;
+  const m=document.getElementById('nft-modal');
+  document.getElementById('nm-img').innerHTML=nft.emoji;
+  document.getElementById('nm-name').innerText=nft.name;
+  document.getElementById('nm-nick').innerText='"'+nft.nick+'"';
+
+  const hcol=nft.hp===100?'var(--gb)':nft.hp===80?'var(--amber)':'var(--danger)';
+  const hpWrap=document.getElementById('nm-hp-wrap');
+  const hpFill=document.getElementById('nm-hp-fill');
+  hpWrap.style.display='block';
+  hpFill.style.width=nft.hp+'%';
+  hpFill.style.background=hcol;
+
+  const status=nft.hp===100?'Full — safe':nft.hp===80?'Hungry — skipped 1 day':'Weak — catchable!';
+  let rows='';
+  rows+=`<div class="nft-modal-row"><span class="label">Owner</span><span class="val">${nft.owner}</span></div>`;
+  rows+=`<div class="nft-modal-row"><span class="label">HP</span><span class="val" style="color:${hcol}">${nft.hp}%</span></div>`;
+  rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val" style="color:${hcol}">${status}</span></div>`;
+  rows+=`<div class="nft-modal-row"><span class="label">Days Survived</span><span class="val">${nft.days}d</span></div>`;
+  document.getElementById('nm-rows').innerHTML=rows;
+
+  let actions='';
+  if(nft.hp===50) actions+=`<button class="btn-pri" style="background:var(--danger);color:#fff" onclick="catchManthy(${nft.id});closeNftModal()">🪤 CATCH NOW</button>`;
+  else actions+=`<button class="btn-sec" style="border-color:${hcol};color:${hcol};cursor:default;flex:1;text-align:center;padding:10px">${nft.hp===100?'🌿 SAFE':'😮‍💨 HUNGRY'}</button>`;
+  actions+=`<button class="btn-sec" onclick="closeNftModal()">CLOSE</button>`;
+  document.getElementById('nm-actions').innerHTML=actions;
+
+  m.classList.add('show');
+}
+
+function claimReward(){
+  const reward=stakedNFTs.length*80;
+  if(reward<=0){toast('No staked NFTs earning!');return;}
+  mthyBal+=reward;
+  updateBalUI();
+  toast('💰 '+reward+' $MTHY claimed!\nFrom '+stakedNFTs.length+' staked NFTs');
+}
+
+function feedAllStaked(){
+  const hungry=stakedNFTs.filter(n=>n.hp<100);
+  if(hungry.length===0){toast('All Manthy already fed!');return;}
+  const cost=hungry.length*100;
+  if(mthyBal<cost){toast('Not enough $MTHY!\nNeed '+cost+' $MTHY.');return;}
+  mthyBal-=cost;
+  hungry.forEach(n=>{n.hp=100;const a=arenaData.find(x=>x.id===n.id);if(a)a.hp=100;});
+  renderStake();
+  toast(hungry.length+' Manthy fed!\nHP 100% ✅\n-'+cost+' $MTHY');
+}
+
+function feedAll(){
+  feedAllStaked();
+}
+
+// ===== CATCH =====
+function catchManthy(id){
+  const idx=arenaData.findIndex(n=>n.id===id);
+  if(idx<0)return;
+  const n=arenaData[idx];
+  if(n.hp>50){toast('HP too high to catch!');return;}
+  const caught=arenaData.splice(idx,1)[0];
+  museumData.unshift({id:caught.id,name:caught.name,nick:caught.nick,emoji:caught.emoji,reason:'Caught in the arena',day:'Today'});
+  renderArena(document.querySelector('.fb.active')?.dataset?.filter||'all');
+  renderMuseum();
+  document.getElementById('h-dead').innerText=museumData.length;
+  document.getElementById('h-alive').innerText=arenaData.length;
+  toast(caught.name+' caught!\n💀 Sent to Museum.');
+}
+
+function filterArena(type,btn){
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.dataset.filter=type;
+  renderArena(type);
+}
+
+// ===== TOAST =====
+let tt;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg.replace(/\n/g,'<br>');
+  t.classList.add('show');
+  clearTimeout(tt);
+  tt=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ===== INIT =====
+renderArena();
+renderMuseum();
+renderLB();
+renderStake();
+
+// ===== ANIMATIONS =====
+
+// Dust hover on banner
+(function(){
+  const banner=document.getElementById('hero-img');
+  const wrap=document.getElementById('hero-banner-wrap');
+  if(!banner||!wrap)return;
+  banner.style.transition='transform .5s ease';
+  let dustInterval=null;
+
+  function spawnDust(x,y){
+    const p=document.createElement('div');
+    p.className='dust-particle';
+    const size=Math.random()*4+1;
+    const angle=Math.random()*Math.PI*2;
+    const dist=Math.random()*60+20;
+    const dx=Math.cos(angle)*dist;
+    const dy=Math.sin(angle)*dist-30;
+    const dur=Math.random()*800+400;
+    p.style.cssText=`left:${x}px;top:${y}px;width:${size}px;height:${size}px;opacity:.8;background:${Math.random()>.5?'var(--gb)':'var(--gn)'};`;
+    wrap.appendChild(p);
+    p.animate([
+      {transform:'translate(0,0) scale(1)',opacity:.8},
+      {transform:`translate(${dx}px,${dy}px) scale(0)`,opacity:0}
+    ],{duration:dur,easing:'ease-out'});
+    setTimeout(()=>p.remove(),dur);
+  }
+
+  wrap.addEventListener('mouseenter',function(){
+    // dust only, no blur/dim
+  });
+  wrap.addEventListener('mousemove',function(e){
+    const rect=wrap.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    const y=e.clientY-rect.top;
+    for(let i=0;i<3;i++) spawnDust(x+(Math.random()-0.5)*40,y+(Math.random()-0.5)*40);
+  });
+  wrap.addEventListener('mouseleave',function(){
+    // nothing to reset
+  });
+})();
+
+// Fabric tear/scratch effect on hero banner — localized to mouse trail
+(function(){
+  const wrap=document.getElementById('hero-banner-wrap');
+  if(!wrap)return;
+  let prevX=-1,prevY=-1;
+
+  wrap.addEventListener('mousemove',function(e){
+    const rect=wrap.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    const y=e.clientY-rect.top;
+
+    let speed=0,angle=0;
+    if(prevX>=0){
+      const dx=x-prevX,dy=y-prevY;
+      speed=Math.sqrt(dx*dx+dy*dy);
+      angle=Math.atan2(dy,dx)*180/Math.PI;
+    }
+    prevX=x;prevY=y;
+    if(speed<3)return;
+
+    // Spawn fabric fibers — multiple thin lines like torn cloth threads
+    const fiberCount=3+Math.floor(Math.random()*4);
+    const container=document.createElement('div');
+    container.className='tear-mark';
+    container.style.cssText=`left:${x}px;top:${y}px;width:0;height:0;`;
+
+    for(let i=0;i<fiberCount;i++){
+      const fiber=document.createElement('div');
+      fiber.className='tear-fiber';
+      const len=Math.min(speed*1.8,70)+Math.random()*30;
+      const thick=1+Math.random()*1.5;
+      // Spread fibers with slight angle variation like fabric threads
+      const spread=(Math.random()-0.5)*25;
+      const offsetY=(Math.random()-0.5)*14;
+      const brightness=0.08+Math.random()*0.15;
+      const isWhite=Math.random()>0.6;
+      const color=isWhite
+        ?`rgba(255,255,255,${brightness})`
+        :`rgba(118,255,3,${brightness+0.05})`;
+      fiber.style.cssText=`width:${len}px;height:${thick}px;left:${-len/2}px;top:${offsetY}px;background:linear-gradient(90deg,transparent 0%,${color} 15%,${color} 50%,${color} 85%,transparent 100%);transform:rotate(${angle+spread}deg);filter:blur(${Math.random()>.5?'0.5':'0'}px);border-radius:${thick}px;`;
+      container.appendChild(fiber);
+    }
+
+    // Add a subtle center glow
+    const glow=document.createElement('div');
+    glow.style.cssText=`position:absolute;width:${speed*1.2}px;height:8px;left:${-speed*0.6}px;top:-4px;background:radial-gradient(ellipse,rgba(118,255,3,0.06),transparent);transform:rotate(${angle}deg);pointer-events:none;border-radius:50%;`;
+    container.appendChild(glow);
+
+    wrap.appendChild(container);
+
+    // Animate fibers spreading apart then fading
+    const fibers=container.querySelectorAll('.tear-fiber');
+    fibers.forEach((f,i)=>{
+      const spreadDir=(Math.random()-0.5)*8;
+      const dur=400+Math.random()*400;
+      f.animate([
+        {opacity:1,transform:f.style.transform+' translateY(0px) scaleX(1)'},
+        {opacity:0.5,transform:f.style.transform+` translateY(${spreadDir}px) scaleX(1.1)`},
+        {opacity:0,transform:f.style.transform+` translateY(${spreadDir*2.5}px) scaleX(0.3)`}
+      ],{duration:dur,easing:'ease-out'});
+    });
+
+    glow.animate([{opacity:1},{opacity:0}],{duration:500,easing:'ease-out'});
+
+    setTimeout(()=>container.remove(),800);
+  });
+
+  wrap.addEventListener('mouseleave',function(){prevX=-1;prevY=-1;});
+})();
+
+// Stagger delay for cards
+function applyStagger(selector,baseDelay){
+  document.querySelectorAll(selector).forEach((el,i)=>{
+    el.style.animationDelay=(baseDelay+i*0.06)+'s';
+  });
+}
+
+// Count-up animation (starts near the target number)
+function countUp(el,target){
+  const start=Math.max(0,target-Math.ceil(target*0.3));
+  let current=start;
+  const step=Math.max(1,Math.ceil((target-start)/30));
+  const timer=setInterval(()=>{
+    current+=step;
+    if(current>=target){current=target;clearInterval(timer);}
+    el.innerText=current.toLocaleString();
+  },30);
+}
+
+// Apply staggers after render
+function applyAllAnimations(){
+  applyStagger('.agrid .ncard',0.1);
+  applyStagger('.honor-grid .honor-card',0.05);
+  applyStagger('#lb-table .lbrow:not(.lhdr)',0.05);
+  applyStagger('.podium .podium-item',0.15);
+}
+applyAllAnimations();
+
+// Count-up on stats
+const statsObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&!e.target.dataset.counted){
+      e.target.dataset.counted='1';
+      const val=parseInt(e.target.innerText.replace(/,/g,''));
+      if(!isNaN(val))countUp(e.target,val);
+    }
+  });
+},{threshold:0.5});
+document.querySelectorAll('.sn').forEach(el=>statsObserver.observe(el));
+
+// Re-apply staggers on page switch
+const origShowPage=showPage;
+showPage=function(p){
+  origShowPage(p);
+  setTimeout(()=>{
+    applyAllAnimations();
+    // Count-up for stake stats
+    document.querySelectorAll('.stake-stat-val').forEach(el=>{
+      const val=parseInt(el.innerText.replace(/[^0-9]/g,''));
+      if(!isNaN(val)&&val>0&&!el.dataset.counted){
+        el.dataset.counted='1';
+        countUp(el,val);
+      }
+    });
+  },50);
+};
+</script>
+</body>
+</html>
