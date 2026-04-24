@@ -1,2 +1,7 @@
+node_modules/
+server/node_modules/
+server/manthy.db
+.env
+.env.local
 .vercel
-.env*.local
+.DS_Store
