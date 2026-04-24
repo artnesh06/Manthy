@@ -4,7 +4,13 @@
   "description": "Manthy NFT Survival Game",
   "scripts": {
     "start": "node server/index.js",
-    "install-server": "cd server && npm install"
+    "postinstall": "cd server && npm install"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "sql.js": "^1.10.0",
+    "node-cron": "^3.0.3"
   },
   "engines": {
     "node": ">=18.0.0"
