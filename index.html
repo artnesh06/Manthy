@@ -187,8 +187,12 @@ nav{position:sticky;top:0;z-index:400;display:flex;align-items:stretch;justify-c
 .fb.active{color:var(--gb);background:rgba(118,255,3,.08);}
 /* ARENA CARDS — Cosmic Mad Scientists style */
 .agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;}
-.ncard{background:transparent;border:none;position:relative;transition:transform .15s;}
-.ncard:hover{transform:translateY(-3px);}
+.ncard{background:transparent;border:none;position:relative;transition:transform .25s ease,box-shadow .25s ease;cursor:pointer;}
+.ncard:hover{transform:translateY(-6px) scale(1.02);z-index:10;}
+.ncard:hover .ncard-img-wrap{border-color:var(--gb);box-shadow:0 8px 24px rgba(118,255,3,.15);}
+.ncard:hover .ncard-img-wrap img{transform:scale(1.05);transition:transform .3s ease;}
+.ncard.dn:hover .ncard-img-wrap{border-color:var(--danger);box-shadow:0 8px 24px rgba(255,23,68,.2);}
+.ncard.wn:hover .ncard-img-wrap{border-color:var(--amber);box-shadow:0 8px 24px rgba(255,179,0,.15);}
 .ncard-img-wrap{position:relative;width:100%;aspect-ratio:1;background:var(--bg3);border:2px solid var(--border2);overflow:hidden;margin-bottom:12px;}
 .ncard:hover .ncard-img-wrap{border-color:var(--gb);}
 .ncard.dn .ncard-img-wrap{border-color:rgba(255,23,68,.5);}
@@ -213,18 +217,55 @@ nav{position:sticky;top:0;z-index:400;display:flex;align-items:stretch;justify-c
 .catch-btn:hover{background:rgba(255,23,68,.2);}
 </style>
 <style>
-/* MUSEUM — Gallery style */
-.museum-banner{background:var(--bg2);border:1px solid rgba(255,23,68,.25);padding:1.5rem 2rem;margin-bottom:1.5rem;text-align:center;}
-.mgrid2{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;}
-.dcard{background:transparent;position:relative;text-align:center;}
-.dcard-frame{background:#0a0606;border:3px solid #1a1012;position:relative;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:56px;margin-bottom:0;box-shadow:0 8px 24px rgba(0,0,0,.6),inset 0 0 30px rgba(0,0,0,.4);}
-.dcard-frame::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,200,200,.04) 0%,transparent 40%,rgba(0,0,0,.3) 100%);pointer-events:none;z-index:1;}
-.dcard-frame .skull-ov{position:absolute;font-size:24px;opacity:.5;bottom:8px;right:8px;z-index:2;}
-.dcard-frame .exhibit-num{position:absolute;top:6px;left:8px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:rgba(255,100,100,.5);letter-spacing:1px;z-index:2;}
-.dcard-plaque{background:#110a0a;border:1px solid rgba(255,23,68,.15);border-top:none;padding:10px 12px;text-align:left;box-shadow:0 4px 12px rgba(0,0,0,.4);}
-.dcard-plaque-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#ef9a9a;letter-spacing:.5px;margin-bottom:3px;}
-.dcard-plaque-reason{font-size:11px;color:#ef5350;margin-bottom:2px;}
-.dcard-plaque-day{font-size:10px;color:rgba(255,255,255,.2);font-family:'Space Mono',monospace;}
+/* MUSEUM — Vintage Gallery style */
+.museum-banner{background:linear-gradient(180deg, rgba(26,18,8,.8) 0%, var(--bg2) 100%);border:1px solid rgba(107,76,30,.25);padding:1.5rem 2rem;margin-bottom:1.5rem;text-align:center;}
+.mgrid2{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;position:relative;}
+/* Tree/vine background behind museum grid */
+.mgrid2::before{content:'';position:absolute;inset:-20px;background:
+  radial-gradient(ellipse at 20% 80%, rgba(34,80,20,.12) 0%, transparent 50%),
+  radial-gradient(ellipse at 80% 20%, rgba(34,80,20,.08) 0%, transparent 50%),
+  radial-gradient(ellipse at 50% 50%, rgba(20,40,15,.06) 0%, transparent 60%);
+  pointer-events:none;z-index:0;}
+.dcard{background:transparent;position:relative;text-align:center;transition:transform .35s ease, box-shadow .35s ease;cursor:pointer;z-index:1;}
+.dcard:hover{transform:translateY(-8px) scale(1.04) rotate(-0.5deg);z-index:10;}
+.dcard:hover .dcard-frame{box-shadow:0 16px 40px rgba(0,0,0,.5),0 0 20px rgba(180,140,60,.2),inset 0 0 30px rgba(0,0,0,.3);}
+.dcard:hover .dcard-frame img{transform:scale(1.08);filter:sepia(0.1) brightness(1.1);}
+.dcard:hover .vine-deco{opacity:1;transform:scale(1.1);}
+/* Vintage wooden frame */
+.dcard-frame{
+  background:#1a1208;
+  border:6px solid #3d2b10;
+  border-image:linear-gradient(135deg, #6b4c1e 0%, #3d2b10 25%, #8b6914 50%, #3d2b10 75%, #6b4c1e 100%) 6;
+  position:relative;overflow:hidden;aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;font-size:56px;margin-bottom:0;
+  box-shadow:0 8px 24px rgba(0,0,0,.6),inset 0 0 20px rgba(0,0,0,.5),0 0 0 1px rgba(107,76,30,.3);
+  transition:box-shadow .35s ease;
+}
+.dcard-frame img{transition:transform .4s ease, filter .4s ease;filter:sepia(0.15) brightness(0.95);}
+/* Vintage overlay — aged paper texture */
+.dcard-frame::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(180deg, rgba(180,140,60,.06) 0%, transparent 30%, transparent 70%, rgba(0,0,0,.2) 100%);
+  pointer-events:none;z-index:1;}
+.dcard-frame::after{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 4px);
+  pointer-events:none;z-index:1;opacity:.5;}
+/* Vine/leaf decoration */
+.vine-deco{position:absolute;z-index:4;pointer-events:none;opacity:.6;transition:opacity .3s ease, transform .3s ease;font-size:14px;}
+.vine-tl{top:-4px;left:-4px;transform:rotate(-30deg);}
+.vine-br{bottom:-4px;right:-4px;transform:rotate(150deg);}
+.dcard-frame .exhibit-num{position:absolute;top:6px;left:8px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:rgba(180,140,60,.6);letter-spacing:1px;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+/* Plaque — brass style */
+.dcard-plaque{background:linear-gradient(180deg, #1a1208 0%, #110a04 100%);border:1px solid rgba(107,76,30,.3);border-top:2px solid rgba(107,76,30,.4);padding:10px 12px;text-align:left;box-shadow:0 4px 12px rgba(0,0,0,.4);}
+.dcard-plaque-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#c9a84c;letter-spacing:.5px;margin-bottom:3px;}
+.dcard-plaque-reason{font-size:11px;color:#a07840;margin-bottom:2px;}
+.dcard-plaque-earn{font-family:'Space Mono',monospace;font-size:10px;color:rgba(180,140,60,.5);margin-top:2px;}
+.dcard-plaque-day{font-size:10px;color:rgba(180,140,60,.3);font-family:'Space Mono',monospace;}
+/* Hanging wire effect */
+.dcard::before{content:'';position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:1px;height:12px;background:linear-gradient(180deg, transparent, rgba(180,140,60,.3));z-index:0;}
+.dcard::after{content:'';position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;border:1px solid rgba(180,140,60,.25);z-index:0;}
+/* Gentle swing animation on hover */
+@keyframes frameSwing{0%{transform:translateY(-8px) scale(1.04) rotate(-0.5deg);}50%{transform:translateY(-8px) scale(1.04) rotate(0.5deg);}100%{transform:translateY(-8px) scale(1.04) rotate(-0.5deg);}}
+.dcard:hover{animation:frameSwing 2s ease-in-out infinite;}
 @media(max-width:768px){.mgrid2{grid-template-columns:repeat(2,1fr);}
 .dcard-frame{font-size:40px;}}
 
@@ -474,7 +515,7 @@ nav{position:sticky;top:0;z-index:400;display:flex;align-items:stretch;justify-c
 
   /* Museum */
   .museum-banner{padding:1rem;}
-  .mgrid2{grid-template-columns:repeat(2,1fr);gap:12px;}
+  .mgrid2{grid-template-columns:repeat(2,1fr);gap:16px;}
   .dcard-frame{font-size:40px;}
 
   /* Ranks */
@@ -762,8 +803,8 @@ nav{position:sticky;top:0;z-index:400;display:flex;align-items:stretch;justify-c
 <!-- MUSEUM -->
 <div id="page-museum" class="page">
   <div class="museum-banner">
-    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--danger);margin-bottom:6px;letter-spacing:2px">🏛️ MUSEUM OF THE FALLEN</div>
-    <div style="font-family:'Space Mono',monospace;font-size:11px;color:rgba(239,154,154,.6);letter-spacing:1px">// They got weak. Now displayed forever as a warning. //</div>
+    <div style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--amber);margin-bottom:6px;letter-spacing:2px">🏛️ MUSEUM OF THE FALLEN</div>
+    <div style="font-family:'Space Mono',monospace;font-size:11px;color:rgba(200,160,60,.5);letter-spacing:1px">// They got weak. Now displayed forever as a warning. Still earning 20% //</div>
   </div>
   <div class="shdr"><div class="stitle" style="color:var(--danger)">PERMANENT COLLECTION</div><div class="scnt">37 exhibits</div></div>
   <div class="mgrid2" id="museum-grid"></div>
@@ -1108,11 +1149,19 @@ async function onConnected(addr){
 
   // Fetch user's NFTs from this collection
   toast('Loading your NFTs...');
-  const result = await fetchTokensByOwner(addr, 30, 0);
-  walletNFTs = (result.tokens || []).map((t, i) => ({
+  let userTokens = [];
+  let uOffset = 0;
+  while(true) {
+    const result = await fetchTokensByOwner(addr, 30, uOffset);
+    const batch = result.tokens || [];
+    userTokens = userTokens.concat(batch);
+    if (batch.length < 30 || userTokens.length >= (result.pageInfo?.total || 0)) break;
+    uOffset += batch.length;
+  }
+  walletNFTs = userTokens.map((t, i) => ({
     id: parseInt(t.tokenId) || (1000+i),
     tokenId: t.tokenId,
-    name: t.name || `Bear #${t.tokenId}`,
+    name: t.name || `Seals #${t.tokenId}`,
     imageUrl: t.imageUrl || '',
     traits: t.traits || []
   }));
@@ -1217,11 +1266,13 @@ function renderMuseum(){
       <div class="dcard-frame">
         <div class="exhibit-num">#${String(i+1).padStart(3,'0')}</div>
         ${nftImageHtml(n, 56)}
-        <div class="skull-ov">💀</div>
+        <div class="vine-deco vine-tl">🌿</div>
+        <div class="vine-deco vine-br">🍃</div>
       </div>
       <div class="dcard-plaque">
         <div class="dcard-plaque-name">${n.name} — "${n.nick}"</div>
         <div class="dcard-plaque-reason">${n.reason}</div>
+        <div class="dcard-plaque-earn">+16 $MTHY/day (−80%)</div>
         <div class="dcard-plaque-day">Fell: ${n.day}</div>
       </div>
     </div>`).join('');
