@@ -3,7 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MANTHY — Survive or Get Caught</title>
+<title>Manthy NFT Collection</title>
+<meta name="description" content="Feed your Manthy and fight to stay alive. The last 20 standing win exclusive 1/1 art and merch.">
+<meta name="keywords" content="MANTHY, NFT, survival game, stake NFT, crypto game, Web3 game, NFT arena, MTHY token">
+<meta name="author" content="MANTHY.WTF">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#080e08">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Manthy NFT Collection — The Ultimate On-Chain Survival Game">
+<meta property="og:description" content="200 Manthy. 20 survivors. Stake your NFT, feed it daily, and fight to stay alive. The last 20 standing win exclusive 1/1 art and merch.">
+<meta property="og:image" content="hero.png">
+<meta property="og:url" content="https://manthy.wtf">
+<meta property="og:site_name" content="MANTHY.WTF">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Manthy NFT Collection — The Ultimate On-Chain Survival Game">
+<meta name="twitter:description" content="200 Manthy. 20 survivors. Stake, feed, survive. The last 20 win 1/1 art + merch. Do you have what it takes?">
+<meta name="twitter:image" content="hero.png">
+
+<link rel="canonical" href="https://manthy.wtf">
 <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Inter:wght@400;600;700;900&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -26,17 +47,17 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 @keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 
 /* NAV */
-nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-content:space-between;padding:0;padding-left:2rem;height:56px;background:rgba(8,14,8,0.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border2);}
-.logo{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gb);letter-spacing:3px;cursor:pointer;display:flex;align-items:center;}
+nav{position:sticky;top:0;z-index:400;display:flex;align-items:stretch;justify-content:space-between;padding:0;padding-left:2rem;height:56px;background:rgba(8,14,8,0.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border2);}
+.logo{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gb);letter-spacing:3px;cursor:pointer;display:flex;align-items:center;}
 .logo span{color:var(--gn);}
 .nav-links{display:flex;gap:0;align-items:stretch;border-left:1px solid var(--border2);margin-left:auto;height:100%;}
-.nb{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:8px 16px;border-radius:0;font-family:'Space Mono',monospace;font-weight:400;font-size:13px;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;}
+.nb{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:8px 16px;border-radius:0;font-family:'Space Mono',monospace;font-weight:400;font-size:11px;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;}
 .nb:hover{color:var(--gb);background:rgba(118,255,3,.04);}
 .nb.active{color:var(--gb);background:rgba(118,255,3,.1);font-weight:700;}
 .bal-box{display:flex;align-items:center;gap:7px;background:rgba(118,255,3,0.06);border:none;border-right:1px solid var(--border2);border-radius:0;padding:5px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--gb);}
 .btn-pri{background:var(--gb);color:#080e08;border:none;padding:8px 18px;border-radius:0;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
 .btn-pri:hover{box-shadow:0 0 20px rgba(118,255,3,.3);transform:translateY(-1px);}
-.btn-sec{background:transparent;color:var(--gb);border:1px solid var(--gb);padding:8px 18px;border-radius:0;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
+.btn-sec{background:transparent;color:var(--gb);border:1px solid var(--gb);padding:8px 18px;border-radius:0;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
 .btn-sec:hover{background:rgba(118,255,3,.06);}
 .wc-btn{display:flex;align-items:center;gap:7px;background:rgba(118,255,3,0.06);border:none;border-right:1px solid var(--border2);border-radius:0;padding:5px 12px;cursor:pointer;transition:all .15s;}
 .wc-btn:hover{border-color:var(--danger);background:rgba(255,23,68,.06);}
@@ -46,7 +67,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .dc-popup-btn:hover{background:rgba(255,23,68,.25);}
 .wdot{width:6px;height:6px;border-radius:50%;background:var(--gb);animation:pdot 2s infinite;flex-shrink:0;}
 @keyframes pdot{0%,100%{box-shadow:0 0 0 0 rgba(118,255,3,.4);}50%{box-shadow:0 0 0 4px rgba(118,255,3,0);}}
-.waddr{font-family:'Space Mono',monospace;font-size:13px;color:var(--gb);}
+.waddr{font-family:'Space Mono',monospace;font-size:11px;color:var(--gb);}
 
 /* PAGES */
 .page{display:none;padding:2rem;padding-bottom:80px;position:relative;z-index:1;max-width:1200px;margin:0 auto;}
@@ -59,16 +80,16 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .overlay.show .wmodal{transform:translateY(0);}
 </style>
 <style>
-.wm-logo{font-family:'Inconsolata',monospace;font-size:18px;font-weight:700;color:var(--gb);margin-bottom:4px;letter-spacing:3px;}
-.wm-sub{font-family:'VT323',monospace;font-size:20px;color:var(--tm);margin-bottom:2rem;letter-spacing:1px;}
+.wm-logo{font-family:'Inconsolata',monospace;font-size:16px;font-weight:700;color:var(--gb);margin-bottom:4px;letter-spacing:3px;}
+.wm-sub{font-family:'VT323',monospace;font-size:18px;color:var(--tm);margin-bottom:2rem;letter-spacing:1px;}
 .wopts{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem;}
 .wopt{display:flex;align-items:center;gap:12px;background:rgba(118,255,3,.03);border:1px solid var(--border);border-radius:0;padding:12px 14px;cursor:pointer;transition:all .15s;text-align:left;width:100%;}
 .wopt:hover{border-color:var(--gb);background:rgba(118,255,3,.06);transform:translateX(3px);}
 .wopt-icon{width:36px;height:36px;border-radius:0;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:rgba(118,255,3,.06);border:1px solid var(--border);}
 .wopt-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px;letter-spacing:1px;}
-.wopt-desc{font-size:12px;color:var(--tm);}
+.wopt-desc{font-size:11px;color:var(--tm);}
 .wopt-arrow{margin-left:auto;color:var(--td);font-size:16px;font-family:'Space Mono',monospace;}
-.wdiscl{font-size:12px;color:var(--td);line-height:1.7;}
+.wdiscl{font-size:11px;color:var(--td);line-height:1.7;}
 .wdiscl a{color:var(--gn);}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--gb);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -129,22 +150,22 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 /* STATS */
 .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:1rem 0;background:var(--border);border:1px solid var(--border2);}
 .sc{background:var(--bg2);padding:1.5rem 1rem;text-align:center;}
-.sn{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--gb);display:block;margin-bottom:4px;}
-.sl{font-size:12px;color:var(--tm);text-transform:uppercase;letter-spacing:2px;font-family:'Space Mono',monospace;}
+.sn{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--gb);display:block;margin-bottom:4px;}
+.sl{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:2px;font-family:'Space Mono',monospace;}
 
 /* SECTION HDR */
 .shdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
-.stitle{font-family:'Inconsolata',monospace;font-size:16px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;}
-.scnt{font-family:'VT323',monospace;font-size:20px;color:var(--tm);}
+.stitle{font-family:'Inconsolata',monospace;font-size:14px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;}
+.scnt{font-family:'VT323',monospace;font-size:18px;color:var(--tm);}
 
 /* MECHANICS — 2x2 grid with number beside */
 .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-bottom:2rem;background:var(--border);border:1px solid var(--border2);}
 .mc{background:var(--bg2);padding:1.5rem;display:flex;gap:16px;align-items:flex-start;}
-.mc-num{font-family:'Space Mono',monospace;font-size:30px;font-weight:700;color:var(--gb);opacity:.4;flex-shrink:0;line-height:1;}
+.mc-num{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--gb);opacity:.4;flex-shrink:0;line-height:1;}
 .mc-body{flex:1;}
 .mi{font-size:24px;margin-bottom:8px;display:block;}
-.mn{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gb);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;}
-.md{font-size:14px;color:var(--tm);line-height:1.6;}
+.mn{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--gb);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;}
+.md{font-size:13px;color:var(--tm);line-height:1.6;}
 
 /* HP VISUAL */
 .hp-box{background:var(--bg2);border:1px solid var(--border2);padding:1.5rem;margin-bottom:2rem;}
@@ -160,7 +181,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 
 /* ARENA */
 .fbar{display:flex;gap:0;margin-bottom:1.5rem;border:1px solid var(--border2);width:fit-content;}
-.fb{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:7px 16px;font-size:13px;font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+.fb{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:7px 16px;font-size:12px;font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
 .fb:last-child{border-right:none;}
 .fb:hover{color:var(--gb);}
 .fb.active{color:var(--gb);background:rgba(118,255,3,.08);}
@@ -173,14 +194,15 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .ncard.dn .ncard-img-wrap{border-color:rgba(255,23,68,.5);}
 .ncard.wn .ncard-img-wrap{border-color:rgba(255,145,0,.4);}
 .ncard-img-wrap .nft-emoji{font-size:80px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+.ncard-img-wrap img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;}
 .ncard-tag{position:absolute;top:8px;left:8px;background:rgba(118,255,3,.15);border:1px solid rgba(118,255,3,.35);color:var(--gb);font-family:'Space Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;letter-spacing:1px;z-index:2;}
 .ncard-tag.tag-warn{background:rgba(255,179,0,.15);border-color:rgba(255,179,0,.4);color:var(--amber);}
 .ncard-tag.tag-danger{background:rgba(255,23,68,.2);border-color:rgba(255,23,68,.5);color:var(--danger);animation:pulse 1s infinite;}
 .ncard-hp-bar{position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(0,0,0,.5);}
 .ncard-hp-fill{height:100%;}
 .ncard-body{padding:0 2px;}
-.ncard-name{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;}
-.ncard-desc{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);line-height:1.5;margin-bottom:6px;}
+.ncard-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;}
+.ncard-desc{font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);line-height:1.5;margin-bottom:6px;}
 .ncard-owner{font-family:'Space Mono',monospace;font-size:11px;color:var(--td);margin-bottom:8px;}
 .ncard-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .ncard-hp-label{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1px;}
@@ -201,7 +223,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .dcard-frame .exhibit-num{position:absolute;top:6px;left:8px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:rgba(255,100,100,.5);letter-spacing:1px;z-index:2;}
 .dcard-plaque{background:#110a0a;border:1px solid rgba(255,23,68,.15);border-top:none;padding:10px 12px;text-align:left;box-shadow:0 4px 12px rgba(0,0,0,.4);}
 .dcard-plaque-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#ef9a9a;letter-spacing:.5px;margin-bottom:3px;}
-.dcard-plaque-reason{font-size:12px;color:#ef5350;margin-bottom:2px;}
+.dcard-plaque-reason{font-size:11px;color:#ef5350;margin-bottom:2px;}
 .dcard-plaque-day{font-size:10px;color:rgba(255,255,255,.2);font-family:'Space Mono',monospace;}
 @media(max-width:768px){.mgrid2{grid-template-columns:repeat(2,1fr);}
 .dcard-frame{font-size:40px;}}
@@ -209,10 +231,10 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 /* STAKE — Honor Roll grid style */
 .stake-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border2);margin-bottom:1.5rem;}
 .stake-stat{background:var(--bg2);padding:1.2rem 1rem;text-align:center;}
-.stake-stat-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gb);display:block;margin-bottom:3px;}
+.stake-stat-val{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--gb);display:block;margin-bottom:3px;}
 .stake-stat-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:2px;}
 .heatmap-wrap{background:var(--bg2);border:1px solid var(--border2);padding:1.2rem 1.5rem;margin-bottom:1.5rem;overflow-x:auto;}
-.heatmap-title{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.heatmap-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
 .heatmap-title b{color:var(--gb);}
 .heatmap-legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--td);}
 .heatmap-legend-box{width:10px;height:10px;}
@@ -228,7 +250,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .hm-3{background:rgba(118,255,3,.45);}
 .hm-4{background:var(--gb);}
 .honor-header{background:var(--bg2);border:1px solid var(--border2);padding:1rem 1.5rem;margin-bottom:0;display:flex;align-items:center;justify-content:space-between;}
-.honor-title{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--text);letter-spacing:2px;text-transform:uppercase;}
+.honor-title{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--text);letter-spacing:2px;text-transform:uppercase;}
 .honor-tabs{display:flex;gap:0;border:1px solid var(--border2);}
 .honor-tab{background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:6px 16px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;}
 .honor-tab:last-child{border-right:none;}
@@ -242,7 +264,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .honor-card-img{width:100%;aspect-ratio:1;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:56px;margin-bottom:8px;position:relative;overflow:hidden;}
 .honor-card-img .honor-rank{position:absolute;top:4px;left:4px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--gb);background:rgba(8,14,8,.8);padding:2px 5px;letter-spacing:1px;}
 .honor-card-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text);letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.honor-card-score{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-top:2px;}
+.honor-card-score{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;margin-top:2px;}
 .honor-card-hp{height:3px;background:rgba(255,255,255,.06);margin-top:6px;}
 .honor-card-hp-fill{height:100%;}
 .honor-card-stake-btn{display:block;width:100%;margin-top:8px;background:var(--gb);color:#080e08;border:none;padding:6px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;}
@@ -262,10 +284,10 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .nft-modal-overlay.show .nft-modal{transform:translateY(0);}
 .nft-modal-img{width:100%;height:100%;min-height:280px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:80px;border-right:1px solid var(--border2);}
 .nft-modal-body{padding:1.5rem;display:flex;flex-direction:column;justify-content:center;}
-.nft-modal-name{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--text);letter-spacing:1px;margin-bottom:2px;}
-.nft-modal-nick{font-family:'Space Mono',monospace;font-size:12px;color:var(--td);margin-bottom:12px;}
+.nft-modal-name{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--text);letter-spacing:1px;margin-bottom:2px;}
+.nft-modal-nick{font-family:'Space Mono',monospace;font-size:10px;color:var(--td);margin-bottom:12px;}
 .nft-modal-rows{margin-bottom:14px;}
-.nft-modal-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:12px;}
+.nft-modal-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:10px;}
 .nft-modal-row:last-child{border-bottom:none;}
 .nft-modal-row .label{color:var(--tm);}
 .nft-modal-row .val{color:var(--gb);font-weight:700;}
@@ -273,12 +295,12 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .nft-modal-hp-fill{height:100%;}
 .nft-modal-actions{display:flex;gap:8px;}
 .nft-modal-actions .btn-pri,.nft-modal-actions .btn-sec{flex:1;text-align:center;padding:10px;}
-.nft-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--tm);font-size:22px;cursor:pointer;font-family:'Space Mono',monospace;line-height:1;z-index:2;}
+.nft-modal-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--tm);font-size:20px;cursor:pointer;font-family:'Space Mono',monospace;line-height:1;z-index:2;}
 .nft-modal-close:hover{color:var(--gb);}
 @media(max-width:640px){.nft-modal{grid-template-columns:1fr;max-width:360px;}.nft-modal-img{min-height:200px;border-right:none;border-bottom:1px solid var(--border2);}}
-.mrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--tm);}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--tm);}
 .mrow:last-child{border-bottom:none;}
-.mval{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gb);}
+.mval{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--gb);}
 @media(max-width:768px){.stake-stats{grid-template-columns:repeat(3,1fr);}.honor-grid{grid-template-columns:repeat(3,1fr);}}
 
 /* RULES — Cosmic 2x2 grid style */
@@ -287,14 +309,14 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .rule-card{background:var(--bg2);padding:1.8rem;display:flex;gap:16px;align-items:flex-start;}
 .rule-icon{width:80px;height:80px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;}
 .rule-body{flex:1;}
-.rule-num{font-family:'Space Mono',monospace;font-size:30px;font-weight:700;color:var(--gb);opacity:.35;line-height:1;margin-bottom:6px;}
-.rule-title{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;}
-.rule-desc{font-size:14px;color:var(--tm);line-height:1.7;}
+.rule-num{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--gb);opacity:.35;line-height:1;margin-bottom:6px;}
+.rule-title{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;}
+.rule-desc{font-size:13px;color:var(--tm);line-height:1.7;}
 .rule-desc b{color:var(--text);}
 .rule-desc .red{color:var(--danger);}
 .rule-desc .amber{color:var(--amber);}
-.rule-note{background:var(--bg2);border:1px solid var(--border2);padding:14px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:14px;color:var(--tm);letter-spacing:.5px;}
-.rule-note-tag{background:rgba(255,23,68,.15);border:1px solid rgba(255,23,68,.4);color:var(--danger);font-family:'Space Mono',monospace;font-size:12px;font-weight:700;padding:3px 8px;letter-spacing:1px;flex-shrink:0;}
+.rule-note{background:var(--bg2);border:1px solid var(--border2);padding:14px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);letter-spacing:.5px;}
+.rule-note-tag{background:rgba(255,23,68,.15);border:1px solid rgba(255,23,68,.4);color:var(--danger);font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 8px;letter-spacing:1px;flex-shrink:0;}
 .rule-tag{display:inline-block;background:rgba(118,255,3,.06);border:1px solid var(--border2);color:var(--gb);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:3px 8px;border-radius:0;margin:4px 4px 0 0;letter-spacing:1px;}
 .prize-box{background:var(--bg2);border:1px solid rgba(255,179,0,.25);border-radius:0;padding:1.8rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;}
 .prize-left{text-align:left;}
@@ -310,8 +332,8 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .podium-item:nth-child(3) .p-emoji{animation-delay:1s;}
 .podium-item.p-1st .p-emoji{font-size:60px;}
 @keyframes podFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
-.p-name{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px;text-align:center;}
-.p-score{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gb);text-align:center;}
+.p-name{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text);letter-spacing:1px;text-align:center;}
+.p-score{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gb);text-align:center;}
 .p-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);text-align:center;}
 .p-bar{width:90px;background:var(--bg3);border:1px solid var(--border2);border-bottom:none;display:flex;align-items:flex-end;justify-content:center;padding-top:8px;position:relative;overflow:hidden;}
 .p-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(118,255,3,.06),transparent);pointer-events:none;}
@@ -326,7 +348,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 
 /* LB TABS */
 .lb-tabs{display:flex;gap:0;margin-bottom:1.5rem;border:1px solid var(--border2);max-width:500px;}
-.lb-tab{flex:1;background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:10px 16px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-align:center;text-transform:uppercase;}
+.lb-tab{flex:1;background:transparent;border:none;border-right:1px solid var(--border2);color:var(--tm);padding:10px 16px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:1px;text-align:center;text-transform:uppercase;}
 .lb-tab:last-child{border-right:none;}
 .lb-tab:hover{color:var(--gb);}
 .lb-tab.active{color:var(--gb);background:rgba(118,255,3,.08);}
@@ -337,12 +359,12 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .lbrow:last-child{border-bottom:none;}
 .lbrow:hover{background:rgba(118,255,3,.03);}
 .lbrow.lhdr{background:rgba(118,255,3,.06);font-size:11px;color:var(--td);text-transform:uppercase;letter-spacing:2px;font-family:'Space Mono',monospace;font-weight:700;padding:10px 16px;}
-.lbrank{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--tm);}
+.lbrank{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--tm);}
 .lbrank.top{color:var(--amber);}
 .lbemoji{font-size:28px;}
-.lbname{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px;}
+.lbname{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text);letter-spacing:1px;}
 .lb-hp-col{text-align:right;}
-.lb-hp-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
+.lb-hp-val{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;}
 .lb-hp-bar{height:4px;background:rgba(255,255,255,.06);margin-top:3px;}
 .lb-hp-fill{height:100%;transition:width .8s ease-out;}
 .lb-days-col{font-family:'Space Mono',monospace;font-size:13px;color:var(--tm);text-align:right;}
@@ -354,81 +376,101 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--gb);color:var(--gb);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:14px 20px;border-radius:0;z-index:999;transform:translateX(240px);opacity:0;transition:all .25s;max-width:260px;line-height:1.8;letter-spacing:.5px;}
 .toast.show{transform:translateX(0);opacity:1;}
 
+/* MOBILE BLOCKER — disabled for mobile version */
+.mobile-blocker{display:none !important;}
+
 /* FOOTER */
 .site-footer{background:var(--bg2);border-top:1px solid var(--border2);padding:2rem;margin-top:0;}
 .footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2rem;align-items:start;}
-.footer-brand .footer-logo{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gb);letter-spacing:3px;margin-bottom:8px;}
-.footer-brand .footer-desc{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);line-height:1.6;max-width:280px;}
-.footer-col-title{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.footer-brand .footer-logo{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gb);letter-spacing:3px;margin-bottom:8px;}
+.footer-brand .footer-desc{font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);line-height:1.6;max-width:280px;}
+.footer-col-title{font-family:'Space Mono',monospace;font-size:9px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
 .footer-links{list-style:none;display:flex;flex-direction:column;gap:6px;}
-.footer-links a{color:var(--tm);font-size:12px;text-decoration:none;transition:color .15s;font-family:'Space Mono',monospace;font-size:12px;}
+.footer-links a{color:var(--tm);font-size:10px;text-decoration:none;transition:color .15s;font-family:'Space Mono',monospace;font-size:10px;}
 .footer-links a:hover{color:var(--gb);}
 .footer-socials{display:flex;gap:10px;margin-top:10px;}
 .footer-social{width:32px;height:32px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--tm);transition:all .15s;cursor:pointer;}
 .footer-social:hover{border-color:var(--gb);color:var(--gb);background:rgba(118,255,3,.06);}
-.footer-bottom{max-width:1200px;margin:0 auto;padding-top:1.5rem;margin-top:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--td);letter-spacing:1px;}
+.footer-bottom{max-width:1200px;margin:0 auto;padding-top:1.5rem;margin-top:1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-family:'Space Mono',monospace;font-size:9px;color:var(--td);letter-spacing:1px;}
+
+/* ===== MOBILE HAMBURGER ===== */
+.hamburger{display:none;background:none;border:none;color:var(--gb);font-size:22px;cursor:pointer;padding:8px 12px;line-height:1;font-family:'Space Mono',monospace;z-index:400;}
+@media(max-width:768px){
+  .hamburger{display:flex;align-items:center;margin-left:auto;}
+  .nav-links{
+    position:fixed;top:50px;left:0;right:0;bottom:0;
+    background:rgba(8,14,8,0.98);backdrop-filter:blur(10px);
+    flex-direction:column;align-items:stretch;
+    border-left:none;margin-left:0;height:auto;
+    padding:0;z-index:350;
+    transform:translateX(100%);transition:transform .25s ease;
+    overflow-y:auto;
+    display:flex;
+  }
+  .nav-links.open{transform:translateX(0);}
+  .nb{border-right:none;border-bottom:1px solid var(--border2);padding:14px 20px;font-size:12px;text-align:left;}
+  .bal-box{border-right:none;border-bottom:1px solid var(--border2);padding:14px 20px;justify-content:flex-start;}
+  .wc-btn{border-right:none;border-bottom:1px solid var(--border2);padding:14px 20px;justify-content:flex-start;}
+  .btn-pri#conbtn{margin:12px 20px;text-align:center;display:block;padding:12px 20px;font-size:11px;}
+}
 
 /* ===== COMPREHENSIVE MOBILE ===== */
 @media(max-width:768px){
   /* Nav */
   nav{padding:0 .8rem;height:50px;flex-wrap:nowrap;}
   .logo{font-size:11px;letter-spacing:2px;}
-  .nav-links{gap:2px;}
-  .nb{padding:4px 8px;font-size:9px;letter-spacing:.5px;}
-  .bal-box{display:none;}
-  .btn-pri#conbtn{font-size:9px;padding:6px 10px;}
 
   /* Marquee */
   .marquee-bar{padding:3px 0;}
-  .marquee-track span{font-size:6px;padding:0 12px;}
+  .marquee-track span{font-size:7px;padding:0 12px;}
 
   /* Pages */
   .page{padding:1rem;padding-bottom:60px;}
 
   /* Home */
   .hero-section{min-height:auto;}
-  .hero{margin-top:-3rem;padding:0 1rem;}
-  .htitle{font-size:clamp(11px,3.8vw,22px);letter-spacing:1px;white-space:nowrap;}
+  .hero{margin-top:-1.5rem;padding:0 1rem;}
+  .htitle{font-size:clamp(14px,4.5vw,24px);letter-spacing:1px;white-space:normal;text-align:center;}
   .home-content{padding:1rem;}
-  .hsub{font-size:16px;letter-spacing:1px;}
-  .hbtns{gap:8px;}
-  .hbtns .btn-pri,.hbtns .btn-sec{font-size:9px;padding:8px 14px;}
+  .hsub{font-size:14px;letter-spacing:1px;}
+  .hbtns{gap:8px;flex-direction:column;align-items:center;}
+  .hbtns .btn-pri,.hbtns .btn-sec{font-size:10px;padding:10px 20px;width:100%;max-width:260px;text-align:center;}
   .stats-bar{grid-template-columns:repeat(2,1fr);margin:1rem 0;}
   .sc{padding:1rem .8rem;}
   .sn{font-size:18px;}
-  .hbtns{gap:8px;}
-  .hbtns .btn-pri,.hbtns .btn-sec{font-size:9px;padding:8px 14px;}
   .mgrid{grid-template-columns:1fr;gap:1px;}
   .mc{padding:1.2rem;}
   .mc-num{font-size:22px;}
   .hp-box{padding:1rem;}
+  .hp-row{flex-wrap:wrap;gap:8px;}
+  .hp-row>span:last-child{min-width:auto;text-align:left;width:100%;font-size:10px;}
 
   /* Stake */
   .stake-stats{grid-template-columns:repeat(3,1fr);}
   .stake-stat{padding:.8rem .6rem;}
   .stake-stat-val{font-size:14px;}
-  .stake-stat-label{font-size:11px;}
+  .stake-stat-label{font-size:9px;letter-spacing:1px;}
   .heatmap-wrap{padding:1rem;overflow-x:auto;}
   .heatmap{gap:2px;}
   .hm-cell{width:9px;height:9px;}
   .honor-header{flex-direction:column;align-items:flex-start;gap:10px;padding:1rem;}
-  .honor-header>div:last-child{flex-wrap:wrap;width:100%;}
+  .honor-header>div:last-child{flex-wrap:wrap;width:100%;gap:6px;}
   .honor-grid{grid-template-columns:repeat(3,1fr);}
   .honor-card{padding:6px;}
   .honor-card-img{font-size:40px;}
-  .honor-card-name{font-size:11px;}
+  .honor-card-name{font-size:10px;}
   .honor-card-score{font-size:9px;}
-  .honor-card-stake-btn{font-size:11px;padding:4px;}
+  .honor-card-stake-btn{font-size:10px;padding:5px;}
 
   /* Arena */
   .shdr{flex-direction:column;align-items:flex-start;gap:6px;}
   .fbar{flex-wrap:wrap;}
-  .fb{padding:5px 10px;font-size:10px;}
+  .fb{padding:6px 12px;font-size:10px;}
   .agrid{grid-template-columns:repeat(2,1fr);gap:12px;}
   .ncard-img-wrap .nft-emoji{font-size:60px;}
   .ncard-name{font-size:9px;}
   .ncard-desc{font-size:9px;}
-  .catch-btn{font-size:11px;padding:6px;}
+  .catch-btn{font-size:10px;padding:8px;}
 
   /* Museum */
   .museum-banner{padding:1rem;}
@@ -455,10 +497,11 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 
   /* Rules */
   .rules-grid{grid-template-columns:1fr;}
-  .rule-card{padding:1.2rem;}
-  .rule-icon{width:60px;height:60px;font-size:28px;}
+  .rule-card{padding:1.2rem;flex-direction:column;gap:10px;}
+  .rule-icon{width:50px;height:50px;font-size:24px;}
   .rule-num{font-size:22px;}
-  .prize-box{flex-direction:column;text-align:center;gap:1rem;}
+  .rule-note{flex-direction:column;align-items:flex-start;gap:8px;font-size:9px;}
+  .prize-box{flex-direction:column;text-align:center;gap:1rem;padding:1.2rem;}
   .prize-left{text-align:center;}
   .prize-right{text-align:center;}
 
@@ -466,13 +509,20 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
   .nft-modal{grid-template-columns:1fr;max-width:340px;}
   .nft-modal-img{min-height:180px;border-right:none;border-bottom:1px solid var(--border2);}
   .nft-modal-body{padding:1rem;}
+  .nft-modal-actions{flex-direction:column;}
 
   /* Footer */
-  .footer-inner{grid-template-columns:1fr;gap:1.5rem;}
+  .site-footer{padding:1.5rem 1rem;}
+  .site-footer>div{flex-direction:column !important;gap:1.5rem !important;}
+  .footer-links{grid-template-columns:1fr !important;gap:8px !important;}
   .footer-bottom{flex-direction:column;gap:8px;text-align:center;}
 
   /* Toast */
-  .toast{bottom:16px;right:12px;left:12px;max-width:none;font-size:11px;padding:10px 14px;}
+  .toast{bottom:16px;right:12px;left:12px;max-width:none;font-size:10px;padding:10px 14px;}
+
+  /* Wallet modal */
+  .wmodal{padding:1.5rem 1rem;max-width:calc(100vw - 2rem);}
+  .wopt{padding:10px 12px;}
 }
 
 @media(max-width:480px){
@@ -484,10 +534,20 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
   .podium-item .p-emoji{font-size:28px;}
   .podium-item.p-1st .p-emoji{font-size:36px;}
   .p-bar{width:56px;}
+  .htitle{font-size:clamp(13px,4vw,20px);}
+  .hsub{font-size:12px;letter-spacing:0.5px;}
+  .hero{margin-top:-1rem;}
 }
 </style>
 </head>
 <body>
+
+<!-- MOBILE BLOCKER -->
+<div class="mobile-blocker">
+  <div class="mobile-blocker-icon">🖥️</div>
+  <div class="mobile-blocker-title">DESKTOP ONLY</div>
+  <div class="mobile-blocker-desc">MANTHY.WTF is optimized for desktop. Please open this site on a computer for the full experience.</div>
+</div>
 
 <!-- BG BLOBS -->
 <div class="bg-blob bg-blob-1"></div>
@@ -500,19 +560,14 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
     <div class="wm-logo">MANTHY.WTF</div>
     <div class="wm-sub">// connect wallet to start playing //</div>
     <div class="wopts">
-      <button class="wopt" onclick="connectWallet('metamask','🦊','MetaMask')">
-        <div class="wopt-icon">🦊</div>
-        <div><div class="wopt-name">METAMASK</div><div class="wopt-desc">Browser extension wallet</div></div>
+      <button class="wopt" onclick="connectWallet('keplr','⚛️','Keplr')">
+        <div class="wopt-icon">⚛️</div>
+        <div><div class="wopt-name">KEPLR</div><div class="wopt-desc">Cosmos ecosystem wallet</div></div>
         <div class="wopt-arrow">→</div>
       </button>
-      <button class="wopt" onclick="connectWallet('wc','🔗','WalletConnect')">
-        <div class="wopt-icon">🔗</div>
-        <div><div class="wopt-name">WALLETCONNECT</div><div class="wopt-desc">Mobile and multi-wallet</div></div>
-        <div class="wopt-arrow">→</div>
-      </button>
-      <button class="wopt" onclick="connectWallet('cb','🔵','Coinbase Wallet')">
-        <div class="wopt-icon">🔵</div>
-        <div><div class="wopt-name">COINBASE WALLET</div><div class="wopt-desc">Self-custody wallet</div></div>
+      <button class="wopt" onclick="connectWallet('leap','🦘','Leap')">
+        <div class="wopt-icon">🦘</div>
+        <div><div class="wopt-name">LEAP</div><div class="wopt-desc">Multi-chain Cosmos wallet</div></div>
         <div class="wopt-arrow">→</div>
       </button>
     </div>
@@ -523,8 +578,8 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 <!-- CONNECTING OVERLAY -->
 <div class="overlay" id="coverlay">
   <div class="wmodal" style="padding:3rem 2rem">
-    <div style="font-size:48px;margin-bottom:1rem" id="cicon">🦊</div>
-    <div class="wm-logo" style="font-size:12px;margin-bottom:8px" id="cname">MetaMask</div>
+    <div style="font-size:48px;margin-bottom:1rem" id="cicon">⚛️</div>
+    <div class="wm-logo" style="font-size:12px;margin-bottom:8px" id="cname">Keplr</div>
     <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);margin-bottom:1.5rem;letter-spacing:1px">Waiting for confirmation...</div>
     <div style="font-size:12px;color:var(--td)"><span class="spinner"></span>Connecting...</div>
   </div>
@@ -534,7 +589,8 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 
 <nav>
   <div class="logo" onclick="showPage('home')"><img src="logo.png" alt="MANTHY.WTF" style="height:28px;width:auto;display:block;"></div>
-  <div class="nav-links">
+  <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
+  <div class="nav-links" id="nav-links">
     <button class="nb active" onclick="showPage('home')">Home</button>
     <button class="nb" onclick="gatedNav('stake')">Stake</button>
     <button class="nb" onclick="gatedNav('arena')">Arena</button>
@@ -820,7 +876,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
         <li><a href="#" onclick="gatedNav('museum')">Museum</a></li>
         <li><a href="#" onclick="gatedNav('ranks')">Ranks</a></li>
         <li><a href="#" onclick="showPage('rules')">Rules</a></li>
-        <li><a href="#">OpenSea</a></li>
+        <li><a href="https://stargaze.zone/m/cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a" target="_blank">Stargaze</a></li>
         <li><a href="#">Terms</a></li>
       </ul>
     </div>
@@ -831,34 +887,146 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:stretch;justify-c
 // ===== STATE =====
 let wallet = null, pendingPage = null;
 let mthyBal = 1240;
+const COLLECTION_ADDR = 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys';
+const STARGAZE_GQL = 'https://graphql.mainnet.stargaze-apis.com/graphql';
+const CHAIN_ID = 'stargaze-1';
 
-const EMOJIS = ['🦗','🦟','🐛','🦎','🐸','🐞','🦋','🐜'];
 const NICKS  = ['Deaf','Curly','Slimy','Loner','Flirty','Chubby','Grumpy','Frizzy','Stumpy','Snarky','Thrifty','Plain','Slowpoke','Handsome','Flashy','Corny','Lazy','Moody','Nosy','Smarty'];
-const OWNERS = ['0x1a3f...c4d2','0x9be2...f117','0x47da...3a80','0xc931...e552','0x8f2b...9a01','0x2e7c...1d43'];
+const OWNERS_SHORT = ['cosmo...vcuu','cosmo...cvlg','cosmo...ntge','cosmo...vhc2','cosmo...0a4a','cosmo...g04s'];
 
-const arenaData = Array.from({length:20},(_,i)=>{
-  const hps=[100,100,80,100,50,100,100,80,50,100,100,80,100,100,50,100,80,100,100,50];
-  return{id:i+1,name:`Manthy #${String(i+1).padStart(3,'0')}`,nick:NICKS[i%NICKS.length],emoji:EMOJIS[i%EMOJIS.length],hp:hps[i],owner:OWNERS[i%OWNERS.length],days:Math.floor(Math.random()*18)+2};
-});
+let arenaData = [];
+let museumData = [];
+let walletNFTs = [];
+let stakedNFTs = [];
+let selectedWallet = null;
+let allCollectionNFTs = [];
 
-const museumData = Array.from({length:14},(_,i)=>({
-  id:i+21,name:`Manthy #${String(i+21).padStart(3,'0')}`,nick:NICKS[(i+5)%NICKS.length],
-  emoji:EMOJIS[(i+3)%EMOJIS.length],
-  reason:['Forgot to feed 2 days','Caught by another holder','Ran out of $MTHY','Too lazy to feed','Caught at 3am raid'][i%5],
-  day:`Day ${Math.floor(Math.random()*12)+1}`
-}));
+// ===== STARGAZE GraphQL FETCH =====
+async function fetchCollectionTokens(limit=30, offset=0) {
+  const query = `{
+    tokens(collectionAddr:"${COLLECTION_ADDR}", limit:${limit}, offset:${offset}) {
+      tokens {
+        tokenId
+        name
+        imageUrl
+        owner { address }
+        traits { name value }
+      }
+      pageInfo { total offset limit }
+    }
+  }`;
+  try {
+    const res = await fetch(STARGAZE_GQL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({query})
+    });
+    const json = await res.json();
+    return json.data?.tokens || {tokens:[], pageInfo:{total:0}};
+  } catch(e) {
+    console.error('Stargaze fetch error:', e);
+    return {tokens:[], pageInfo:{total:0}};
+  }
+}
 
-const walletNFTs=[
-  {id:101,name:'Manthy #101',emoji:'🦗'},
-  {id:102,name:'Manthy #102',emoji:'🦟'},
-  {id:103,name:'Manthy #103',emoji:'🐸'},
-];
-const stakedNFTs=[
-  {id:5,name:'Manthy #005',emoji:'🦗',days:14,hp:100},
-  {id:12,name:'Manthy #012',emoji:'🦟',days:8,hp:80},
-  {id:33,name:'Manthy #033',emoji:'🐛',days:3,hp:50},
-];
-let selectedWallet=null;
+async function fetchTokensByOwner(ownerAddr, limit=30, offset=0) {
+  const query = `{
+    tokens(collectionAddr:"${COLLECTION_ADDR}", ownerAddrOrName:"${ownerAddr}", limit:${limit}, offset:${offset}) {
+      tokens {
+        tokenId
+        name
+        imageUrl
+        owner { address }
+        traits { name value }
+      }
+      pageInfo { total offset limit }
+    }
+  }`;
+  try {
+    const res = await fetch(STARGAZE_GQL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({query})
+    });
+    const json = await res.json();
+    return json.data?.tokens || {tokens:[], pageInfo:{total:0}};
+  } catch(e) {
+    console.error('Stargaze owner fetch error:', e);
+    return {tokens:[], pageInfo:{total:0}};
+  }
+}
+
+function nftImageHtml(nft, size) {
+  const url = nft.imageUrl || nft.image || '';
+  if (url) {
+    return `<img src="${url}" alt="${nft.name||''}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+  return `<span style="font-size:${size||60}px">🐻</span>`;
+}
+
+// Build arena/museum data from collection tokens
+function buildGameData(tokens) {
+  allCollectionNFTs = tokens;
+  arenaData = [];
+  museumData = [];
+  tokens.forEach((t, i) => {
+    const hps = [100,100,80,100,50,100,100,80,50,100,100,80,100,100,50,100,80,100,100,50];
+    const hp = hps[i % hps.length];
+    const ownerAddr = t.owner?.address || '';
+    const ownerShort = ownerAddr ? ownerAddr.slice(0,5)+'...'+ownerAddr.slice(-4) : OWNERS_SHORT[i%OWNERS_SHORT.length];
+    const nft = {
+      id: parseInt(t.tokenId) || (i+1),
+      tokenId: t.tokenId,
+      name: t.name || `Bear #${t.tokenId}`,
+      nick: NICKS[i % NICKS.length],
+      imageUrl: t.imageUrl || '',
+      hp: hp,
+      owner: ownerShort,
+      ownerFull: ownerAddr,
+      days: Math.floor(Math.random()*18)+2,
+      traits: t.traits || []
+    };
+    // Put some in museum for demo
+    if (i >= 60 && hp === 50) {
+      museumData.push({
+        ...nft,
+        reason: ['Forgot to feed 2 days','Caught by another holder','Ran out of $MTHY','Too lazy to feed','Caught at 3am raid'][i%5],
+        day: `Day ${Math.floor(Math.random()*12)+1}`
+      });
+    } else {
+      arenaData.push(nft);
+    }
+  });
+}
+
+// ===== LOAD COLLECTION ON PAGE LOAD =====
+async function loadCollection() {
+  toast('Loading NFTs from Stargaze...');
+  let allTokens = [];
+  let offset = 0;
+  const limit = 30;
+  // Fetch first batch
+  const first = await fetchCollectionTokens(limit, 0);
+  allTokens = first.tokens || [];
+  const total = first.pageInfo?.total || allTokens.length;
+  offset = allTokens.length;
+  // Fetch remaining
+  while (offset < total && offset < 200) {
+    const batch = await fetchCollectionTokens(limit, offset);
+    if (!batch.tokens || batch.tokens.length === 0) break;
+    allTokens = allTokens.concat(batch.tokens);
+    offset += batch.tokens.length;
+  }
+  buildGameData(allTokens);
+  renderArena();
+  renderMuseum();
+  renderLB();
+  // Update stats
+  document.getElementById('h-alive').innerText = arenaData.length;
+  document.getElementById('h-dead').innerText = museumData.length;
+  document.getElementById('h-danger').innerText = arenaData.filter(n=>n.hp<=80).length;
+  toast('Loaded ' + allTokens.length + ' NFTs from Seals ✅');
+}
 
 // ===== MARQUEE =====
 (function(){
@@ -869,44 +1037,90 @@ let selectedWallet=null;
   if(t2) t2.innerHTML=msg.repeat(8);
 })();
 
-// ===== WALLET =====
+// ===== WALLET (KEPLR / LEAP) =====
 function openWallet(){document.getElementById('woverlay').classList.add('show');}
 document.getElementById('woverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
 
-function connectWallet(type,icon,name){
+async function connectWallet(type, icon, name){
   document.getElementById('woverlay').classList.remove('show');
   document.getElementById('cicon').innerText=icon;
   document.getElementById('cname').innerText=name;
   document.getElementById('coverlay').classList.add('show');
-  setTimeout(async()=>{
-    try{
-      let addr;
-      if(type==='metamask'&&window.ethereum){
-        const acc=await window.ethereum.request({method:'eth_requestAccounts'});
-        addr=acc[0];
-      } else {
-        addr='0x'+[...Array(40)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');
-      }
-      onConnected(addr);
-    }catch(e){
-      document.getElementById('coverlay').classList.remove('show');
-      toast('Connection cancelled.');
+
+  try {
+    let provider;
+    if (type === 'keplr') {
+      if (!window.keplr) { throw new Error('Keplr not installed. Please install the Keplr browser extension.'); }
+      provider = window.keplr;
+    } else if (type === 'leap') {
+      if (!window.leap) { throw new Error('Leap not installed. Please install the Leap browser extension.'); }
+      provider = window.leap;
     }
-  },1800);
+
+    // Suggest Stargaze chain if not already added
+    try {
+      await provider.experimentalSuggestChain({
+        chainId: CHAIN_ID,
+        chainName: 'Stargaze',
+        rpc: 'https://rpc.stargaze-apis.com',
+        rest: 'https://rest.stargaze-apis.com',
+        bip44: { coinType: 118 },
+        bech32Config: {
+          bech32PrefixAccAddr: 'stars',
+          bech32PrefixAccPub: 'starspub',
+          bech32PrefixValAddr: 'starsvaloper',
+          bech32PrefixValPub: 'starsvaloperpub',
+          bech32PrefixConsAddr: 'starsvalcons',
+          bech32PrefixConsPub: 'starsvalconspub',
+        },
+        currencies: [{ coinDenom: 'STARS', coinMinimalDenom: 'ustars', coinDecimals: 6 }],
+        feeCurrencies: [{ coinDenom: 'STARS', coinMinimalDenom: 'ustars', coinDecimals: 6, gasPriceStep: { low: 1, average: 1.1, high: 1.2 } }],
+        stakeCurrency: { coinDenom: 'STARS', coinMinimalDenom: 'ustars', coinDecimals: 6 },
+      });
+    } catch(suggestErr) { /* chain may already exist, ignore */ }
+
+    await provider.enable(CHAIN_ID);
+    const offlineSigner = provider.getOfflineSigner(CHAIN_ID);
+    const accounts = await offlineSigner.getAccounts();
+    const addr = accounts[0].address;
+    onConnected(addr);
+  } catch(e) {
+    document.getElementById('coverlay').classList.remove('show');
+    toast(e.message || 'Connection failed.');
+  }
 }
-function onConnected(addr){
-  wallet=addr;
+
+async function onConnected(addr){
+  wallet = addr;
   document.getElementById('coverlay').classList.remove('show');
-  const s=addr.slice(0,6)+'...'+addr.slice(-4);
-  document.getElementById('waddr').innerText=s;
+  const s = addr.slice(0,8)+'...'+addr.slice(-4);
+  document.getElementById('waddr').innerText = s;
   document.getElementById('conbtn').style.display='none';
   document.getElementById('wcbtn').style.display='flex';
   document.getElementById('balbox').style.display='flex';
   toast('Wallet connected!\n'+s+' ✅');
+
+  // Fetch user's NFTs from this collection
+  toast('Loading your NFTs...');
+  const result = await fetchTokensByOwner(addr, 30, 0);
+  walletNFTs = (result.tokens || []).map((t, i) => ({
+    id: parseInt(t.tokenId) || (1000+i),
+    tokenId: t.tokenId,
+    name: t.name || `Bear #${t.tokenId}`,
+    imageUrl: t.imageUrl || '',
+    traits: t.traits || []
+  }));
+  stakedNFTs = [];
+  renderStake();
+  toast('Found ' + walletNFTs.length + ' NFTs in your wallet ✅');
+
   if(pendingPage){showPage(pendingPage);pendingPage=null;}
 }
+
 function disconnect(){
   wallet=null;
+  walletNFTs=[];
+  stakedNFTs=[];
   document.getElementById('conbtn').style.display='block';
   document.getElementById('wcbtn').style.display='none';
   document.getElementById('balbox').style.display='none';
@@ -924,8 +1138,23 @@ function gatedNav(p){
   showPage(p);
 }
 
+// ===== MOBILE MENU =====
+function toggleMobileMenu(){
+  const nav=document.getElementById('nav-links');
+  const btn=document.getElementById('hamburger');
+  nav.classList.toggle('open');
+  btn.innerText=nav.classList.contains('open')?'✕':'☰';
+}
+function closeMobileMenu(){
+  const nav=document.getElementById('nav-links');
+  const btn=document.getElementById('hamburger');
+  if(nav)nav.classList.remove('open');
+  if(btn)btn.innerText='☰';
+}
+
 // ===== NAV =====
 function showPage(p){
+  closeMobileMenu();
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('active'));
@@ -941,13 +1170,14 @@ function showPage(p){
 // ===== RENDER ARENA =====
 function renderArena(filter='all'){
   const grid=document.getElementById('arena-grid');
+  if(!grid) return;
   const data=arenaData.filter(n=>{
     if(filter==='safe')return n.hp===100;
     if(filter==='warn')return n.hp===80;
     if(filter==='danger')return n.hp===50;
     return true;
   });
-  document.getElementById('arena-cnt').innerText=data.length+' Manthy';
+  document.getElementById('arena-cnt').innerText=data.length+' Bears';
   grid.innerHTML=data.map(n=>{
     const cls=n.hp===50?'dn':n.hp===80?'wn':'';
     const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':'var(--danger)';
@@ -955,11 +1185,11 @@ function renderArena(filter='all'){
     const tagText=n.hp===100?'HP 100%':n.hp===80?'HP 80%':'WEAK!';
     const statusText=n.hp===100?'Full — safe':n.hp===80?'Hungry — skipped 1 day':'Weak — catchable!';
     let action='';
-    if(n.hp===50) action=`<button class="catch-btn" onclick="catchManthy(${n.id})">🪤 CATCH NOW</button>`;
+    if(n.hp===50) action=`<button class="catch-btn" onclick="event.stopPropagation();catchManthy(${n.id})">🪤 CATCH NOW</button>`;
     return `<div class="ncard ${cls}" onclick="openArenaModal(${n.id})" style="cursor:pointer">
       <div class="ncard-img-wrap">
         <div class="ncard-tag${tagCls}">${tagText}</div>
-        <div class="nft-emoji">${n.emoji}</div>
+        ${nftImageHtml(n, 80)}
         <div class="ncard-hp-bar"><div class="ncard-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>
       </div>
       <div class="ncard-body">
@@ -974,11 +1204,13 @@ function renderArena(filter='all'){
 
 // ===== RENDER MUSEUM =====
 function renderMuseum(){
-  document.getElementById('museum-grid').innerHTML=museumData.map((n,i)=>`
+  const grid=document.getElementById('museum-grid');
+  if(!grid) return;
+  grid.innerHTML=museumData.map((n,i)=>`
     <div class="dcard">
       <div class="dcard-frame">
         <div class="exhibit-num">#${String(i+1).padStart(3,'0')}</div>
-        ${n.emoji}
+        ${nftImageHtml(n, 56)}
         <div class="skull-ov">💀</div>
       </div>
       <div class="dcard-plaque">
@@ -1007,7 +1239,7 @@ function renderLB(sortBy){
     if(!n) return '';
     const score=currentSort==='days'?n.days+'d':currentSort==='score'?(n.hp*n.days).toLocaleString():n.hp+'%';
     return `<div class="podium-item ${podiumClasses[i]}">
-      <div class="p-emoji">${n.emoji}</div>
+      <div class="p-emoji" style="width:60px;height:60px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:2px solid var(--border2)">${nftImageHtml(n, 48)}</div>
       <div class="p-name">${n.name}</div>
       <div class="p-score">${score}</div>
       <div class="p-sub">${podiumLabels[i]} "${n.nick}"</div>
@@ -1028,7 +1260,7 @@ function renderLB(sortBy){
     }).join('');
     return `<div class="lbrow">
       <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
-      <div class="lbemoji">${n.emoji}</div>
+      <div class="lbemoji" style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3)">${nftImageHtml(n, 28)}</div>
       <div>
         <div class="lbname">${n.name}</div>
         <div style="font-size:10px;color:var(--td);margin-top:2px;font-family:'Space Mono',monospace">"${n.nick}"</div>
@@ -1101,7 +1333,7 @@ function renderStake(filter){
     return `<div class="honor-card ${n.type==='staked'?'is-staked':'is-wallet'}" onclick="openNftModal(${n.id},'${n.type}')">
       <div class="honor-card-img">
         ${n.type==='staked'?`<div class="honor-rank">${n.days}d</div>`:''}
-        ${n.emoji}
+        ${nftImageHtml(n, 56)}
       </div>
       <div class="honor-card-name">${n.name}</div>
       <div class="honor-card-score ${hpCls}">${scoreText}</div>
@@ -1188,7 +1420,7 @@ function openNftModal(id,type){
   const nft=type==='staked'?stakedNFTs.find(n=>n.id===id):walletNFTs.find(n=>n.id===id);
   if(!nft)return;
   const m=document.getElementById('nft-modal');
-  document.getElementById('nm-img').innerHTML=nft.emoji;
+  document.getElementById('nm-img').innerHTML=nftImageHtml(nft, 80);
   document.getElementById('nm-name').innerText=nft.name;
   const nick=NICKS[(nft.id-1)%NICKS.length]||'';
   document.getElementById('nm-nick').innerText=nick?'"'+nick+'"':'';
@@ -1243,7 +1475,7 @@ function openArenaModal(id){
   const nft=arenaData.find(n=>n.id===id);
   if(!nft)return;
   const m=document.getElementById('nft-modal');
-  document.getElementById('nm-img').innerHTML=nft.emoji;
+  document.getElementById('nm-img').innerHTML=nftImageHtml(nft, 80);
   document.getElementById('nm-name').innerText=nft.name;
   document.getElementById('nm-nick').innerText='"'+nft.nick+'"';
 
@@ -1327,9 +1559,8 @@ function toast(msg){
 }
 
 // ===== INIT =====
-renderArena();
-renderMuseum();
-renderLB();
+// Load collection from Stargaze on page load
+loadCollection();
 renderStake();
 
 // ===== ANIMATIONS =====
