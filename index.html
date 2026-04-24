@@ -39,7 +39,8 @@
   --danger:#ff1744;--warn:#ff9100;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
+.site-footer{margin-top:auto;}
 
 /* MARQUEE */
 .marquee-bar{background:rgba(118,255,3,0.08);overflow:hidden;white-space:nowrap;padding:3px 0;border-bottom:1px solid var(--border2);}
@@ -365,7 +366,7 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 .stake-stat-val{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:var(--gb);display:block;margin-bottom:6px;transition:transform .3s ease;}
 .stake-stat:hover .stake-stat-val{transform:scale(1.1);}
 .stake-stat-label{font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:3px;}
-.heatmap-wrap{background:var(--bg2);border:1px solid var(--border2);padding:1.2rem 1.5rem;margin-bottom:1.5rem;overflow-x:auto;}
+.heatmap-wrap{background:var(--bg2);border:1px solid var(--border2);padding:1.2rem 1.5rem;margin-bottom:1.5rem;overflow:visible;position:relative;}
 .heatmap-title{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
 .heatmap-title b{color:var(--gb);}
 .heatmap-legend{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--td);}
@@ -373,7 +374,7 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 .heatmap{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px;}
 .hm-cell{width:12px;height:12px;background:rgba(118,255,3,.04);border:1px solid rgba(118,255,3,.06);transition:all .15s;position:relative;cursor:pointer;}
 .hm-cell:hover{border-color:var(--gb);transform:scale(1.3);z-index:10;}
-.hm-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--gb);padding:6px 10px;white-space:nowrap;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);z-index:100;pointer-events:none;}
+.hm-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--gb);padding:6px 10px;white-space:nowrap;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);z-index:9999;pointer-events:none;}
 .hm-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--gb);}
 .hm-tip span{color:var(--gb);font-weight:700;}
 .hm-cell:hover .hm-tip{display:block;}
@@ -2167,7 +2168,7 @@ function toast(msg){
 }
 
 // ===== GAME TIMER =====
-const GAME_START = new Date('2026-04-24T00:00:00Z').getTime();
+const GAME_START = new Date('2026-04-25T00:00:00Z').getTime();
 function updateGameTimer(){
   const now = Date.now();
   const elapsed = now - GAME_START;
