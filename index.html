@@ -957,11 +957,17 @@ async function fetchTokensByOwner(ownerAddr, limit=30, offset=0) {
 }
 
 function nftImageHtml(nft, size) {
-  const url = nft.imageUrl || nft.image || '';
-  if (url) {
-    return `<img src="${url}" alt="${nft.name||''}" style="width:100%;height:100%;object-fit:cover;">`;
+  let url = nft.imageUrl || nft.image || '';
+  // Replace blocked Stargaze IPFS gateway with public gateway
+  if (url.includes('ipfs-gw.stargaze-apis.com/ipfs/')) {
+    url = url.replace('https://ipfs-gw.stargaze-apis.com/ipfs/', 'https://dweb.link/ipfs/');
+  } else if (url.startsWith('ipfs://')) {
+    url = url.replace('ipfs://', 'https://dweb.link/ipfs/');
   }
-  return `<span style="font-size:${size||60}px">🐻</span>`;
+  if (url) {
+    return `<img src="${url}" alt="${nft.name||''}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.onerror=null;this.src=this.src.replace('dweb.link','cloudflare-ipfs.com');">`;
+  }
+  return `<span style="font-size:${size||60}px">🦭</span>`;
 }
 
 // Build arena/museum data from collection tokens
