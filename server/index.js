@@ -8,7 +8,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'manthy-admin-2026';
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://manthy.fun', 'https://www.manthy.fun', 'https://manthy.vercel.app', 'http://localhost:3001', 'http://localhost:3000'],
+  credentials: true
+}));
 app.use(express.json());
 
 // === RATE LIMITING (simple in-memory) ===

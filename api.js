@@ -1,4 +1,5 @@
 // ===== MANTHY API CLIENT =====
+// Vercel rewrites /api/* to Railway backend. Works on both Vercel and Railway.
 const API_BASE = window.location.origin + '/api';
 
 const MantyAPI = {
