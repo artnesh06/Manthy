@@ -1283,8 +1283,9 @@ function updateHomeStats(stats) {
   if(mcEl) mcEl.innerText = (stats.dead||0) + ' Exhibits';
 }
 
-// Refresh stats from API every 30 seconds
+// Refresh stats from API every 30 seconds (only update numbers, don't re-render pages)
 setInterval(async () => {
+  if (isConnecting) return; // Don't refresh during wallet connect
   try {
     const stats = await MantyAPI.getStats();
     updateHomeStats(stats);
@@ -2221,14 +2222,15 @@ try{
 }catch(e){}
 
 // Auto-reconnect wallet
+let isConnecting = false;
 try{
   const savedWallet = localStorage.getItem('manthy_wallet');
   if(savedWallet){
-    // Silently reconnect — try Keplr first, then Leap
     (async function(){
       let provider = window.keplr || window.leap;
       if(provider){
         try{
+          isConnecting = true;
           await provider.enable(CHAIN_ID);
           const signer = provider.getOfflineSigner(CHAIN_ID);
           const accounts = await signer.getAccounts();
@@ -2236,7 +2238,9 @@ try{
           if(addr === savedWallet){
             await onConnected(addr);
           }
+          isConnecting = false;
         }catch(e){
+          isConnecting = false;
           localStorage.removeItem('manthy_wallet');
         }
       }

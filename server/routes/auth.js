@@ -49,9 +49,8 @@ router.get('/nfts', async (req, res) => {
         const data = await resp.json();
         const tokenIds = data?.data?.tokens || [];
         
-        // Fetch metadata from Stargaze GraphQL for each token
-        const nfts = [];
-        for (const tokenId of tokenIds) {
+        // Fetch metadata from Stargaze GraphQL in parallel (faster)
+        const nfts = await Promise.all(tokenIds.map(async (tokenId) => {
           try {
             const gql = await fetch('https://graphql.mainnet.stargaze-apis.com/graphql', {
               method: 'POST', headers: {'Content-Type':'application/json'},
@@ -59,11 +58,11 @@ router.get('/nfts', async (req, res) => {
             });
             const gqlData = await gql.json();
             const meta = gqlData?.data?.token;
-            nfts.push({ tokenId, name: meta?.name || `Seals #${tokenId}`, imageUrl: meta?.imageUrl || '' });
+            return { tokenId, name: meta?.name || `Seals #${tokenId}`, imageUrl: meta?.imageUrl || '' };
           } catch(e) {
-            nfts.push({ tokenId, name: `Seals #${tokenId}`, imageUrl: '' });
+            return { tokenId, name: `Seals #${tokenId}`, imageUrl: '' };
           }
-        }
+        }));
         return res.json({ nfts, total: nfts.length });
       }
     } catch(e) {
