@@ -54,7 +54,11 @@ router.post('/reset', (req, res) => {
   run('DELETE FROM museum');
   run('DELETE FROM feed_history');
   run('DELETE FROM users');
-  res.json({ success: true, message: 'Game reset' });
+  run('DELETE FROM winners');
+  run('DELETE FROM catch_log');
+  run('DELETE FROM wallet_nft_cache');
+  run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('game_ended', '0')");
+  res.json({ success: true, message: 'Game reset — all data cleared' });
 });
 
 // Save game config

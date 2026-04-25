@@ -127,6 +127,12 @@ const MantyAPI = {
     return r.json();
   },
 
+  // Catch stats per day (for garden chart)
+  async getCatchStats() {
+    const r = await fetchWithTimeout(API_BASE + '/leaderboard/catch-stats');
+    return r.json();
+  },
+
   // Winners
   async getWinners() {
     const r = await fetchWithTimeout(API_BASE + '/leaderboard/winners');

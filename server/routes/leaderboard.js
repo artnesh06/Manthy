@@ -37,6 +37,12 @@ router.get('/catches', (req, res) => {
   res.json({ catches });
 });
 
+// Catch stats per day — for garden chart
+router.get('/catch-stats', (req, res) => {
+  const days = all("SELECT DATE(caught_at) as day, COUNT(*) as count FROM catch_log GROUP BY DATE(caught_at) ORDER BY day DESC LIMIT 14");
+  res.json({ days });
+});
+
 // Winners — public endpoint
 router.get('/winners', (req, res) => {
   const winners = all('SELECT * FROM winners ORDER BY hp DESC, days_survived DESC');

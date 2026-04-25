@@ -774,6 +774,32 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 .pf-mini-name{font-family:'Space Mono',monospace;font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .pf-mini-score{font-family:'Space Mono',monospace;font-size:12px;color:var(--gb);font-weight:700;}
 
+/* GARDEN INSIGHTS PANEL — desktop only */
+.garden-layout{display:grid;grid-template-columns:1fr 320px;gap:2rem;align-items:start;}
+.garden-main{min-width:0;}
+.garden-insights{position:sticky;top:72px;}
+.garden-insights-title{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.catch-chart{background:var(--bg2);border:1px solid var(--border2);padding:16px;margin-bottom:16px;}
+.catch-chart-bars{display:flex;align-items:flex-end;gap:3px;height:80px;padding-top:8px;}
+.catch-chart-bar{flex:1;background:var(--danger);min-width:4px;border-radius:2px 2px 0 0;transition:height .3s;position:relative;cursor:pointer;}
+.catch-chart-bar:hover{opacity:.8;}
+.catch-chart-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);padding:4px 8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text);white-space:nowrap;z-index:10;}
+.catch-chart-labels{display:flex;justify-content:space-between;margin-top:6px;font-family:'Space Mono',monospace;font-size:9px;color:var(--td);}
+.catch-activity{background:var(--bg2);border:1px solid var(--border2);max-height:400px;overflow-y:auto;}
+.catch-activity-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:11px;}
+.catch-activity-row:last-child{border-bottom:none;}
+.catch-activity-row:hover{background:rgba(255,23,68,.03);}
+.catch-activity-pfp{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;}
+.catch-activity-pfp img{width:100%;height:100%;object-fit:cover;}
+.catch-activity-info{flex:1;min-width:0;}
+.catch-activity-name{color:var(--danger);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.catch-activity-by{color:var(--td);font-size:10px;}
+.catch-activity-time{color:var(--td);font-size:10px;flex-shrink:0;}
+@media(max-width:768px){
+  .garden-layout{grid-template-columns:1fr !important;}
+  .garden-insights{display:none !important;}
+}
+
 /* CATCH TICKER NOTIFICATION */
 .catch-ticker{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(255,23,68,.12);border-bottom:1px solid rgba(255,23,68,.4);padding:8px 16px;display:none;align-items:center;justify-content:center;gap:12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--danger);animation:tickerSlide .3s ease-out;}
 .catch-ticker.show{display:flex;}
@@ -1013,7 +1039,6 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 <!-- NFT Detail Modal (global) -->
 <div class="nft-modal-overlay" id="nft-modal">
   <div class="nft-modal" style="position:relative">
-    <button class="nft-modal-close" onclick="closeNftModal()">×</button>
     <div class="nft-modal-img" id="nm-img"></div>
     <div class="nft-modal-body">
       <div class="nft-modal-name" id="nm-name"></div>
@@ -1027,17 +1052,30 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 
 <!-- ARENA -->
 <div id="page-arena" class="page">
-  <div class="shdr" style="margin-top:0;">
-    <div class="scnt" id="arena-cnt"><span class="live-dot"></span> 180 Manthys In Garden</div>
+  <div class="garden-layout">
+    <div class="garden-main">
+      <div class="shdr" style="margin-top:0;">
+        <div class="scnt" id="arena-cnt"><span class="live-dot"></span> 180 Manthys In Garden</div>
+      </div>
+      <div class="fbar">
+        <button class="fb active" onclick="filterArena('all',this)">All</button>
+        <button class="fb" onclick="filterArena('safe',this)">🌿 Full</button>
+        <button class="fb" onclick="filterArena('warn',this)">😮‍💨 Hungry</button>
+        <button class="fb" onclick="filterArena('danger',this)">😵 Weak</button>
+      </div>
+      <div class="agrid" id="arena-grid"></div>
+      <div class="pagination" id="arena-pagination"></div>
+    </div>
+    <div class="garden-insights">
+      <div class="garden-insights-title">CATCHES PER DAY</div>
+      <div class="catch-chart">
+        <div class="catch-chart-bars" id="catch-chart-bars"></div>
+        <div class="catch-chart-labels" id="catch-chart-labels"></div>
+      </div>
+      <div class="garden-insights-title">RECENT ACTIVITY</div>
+      <div class="catch-activity" id="catch-activity"></div>
+    </div>
   </div>
-  <div class="fbar">
-    <button class="fb active" onclick="filterArena('all',this)">All</button>
-    <button class="fb" onclick="filterArena('safe',this)">🌿 Full</button>
-    <button class="fb" onclick="filterArena('warn',this)">😮‍💨 Hungry</button>
-    <button class="fb" onclick="filterArena('danger',this)">😵 Weak</button>
-  </div>
-  <div class="agrid" id="arena-grid"></div>
-  <div class="pagination" id="arena-pagination"></div>
 </div>
 
 <!-- MUSEUM -->
@@ -1771,12 +1809,77 @@ function showPage(p){
 </script>
 
 <script>
+// ===== GARDEN INSIGHTS =====
+async function loadGardenInsights() {
+  try {
+    // Chart: catches per day
+    const statsData = await MantyAPI.getCatchStats();
+    const days = (statsData.days || []).reverse(); // oldest first
+    const chartBars = document.getElementById('catch-chart-bars');
+    const chartLabels = document.getElementById('catch-chart-labels');
+    if (chartBars) {
+      if (days.length === 0) {
+        chartBars.innerHTML = '<div style="width:100%;text-align:center;color:var(--td);font-size:11px;padding:20px 0;">No catches yet</div>';
+        if (chartLabels) chartLabels.innerHTML = '';
+      } else {
+        const maxCount = Math.max(...days.map(d => d.count), 1);
+        chartBars.innerHTML = days.map(d => {
+          const h = Math.max(4, Math.round((d.count / maxCount) * 70));
+          const label = d.day ? d.day.slice(5) : '';
+          return `<div class="catch-chart-bar" style="height:${h}px;" data-tip="${label}: ${d.count} caught"></div>`;
+        }).join('');
+        if (chartLabels && days.length > 1) {
+          chartLabels.innerHTML = `<span>${days[0].day ? days[0].day.slice(5) : ''}</span><span>${days[days.length-1].day ? days[days.length-1].day.slice(5) : ''}</span>`;
+        }
+      }
+    }
+
+    // Activity: recent catches
+    const catchData = await MantyAPI.getRecentCatches(15);
+    const catches = catchData.catches || [];
+    const actEl = document.getElementById('catch-activity');
+    if (actEl) {
+      if (catches.length === 0) {
+        actEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--td);font-size:11px;">No catches yet. Garden is safe... for now.</div>';
+      } else {
+        actEl.innerHTML = catches.map(c => {
+          const catcher = (c.caught_by || '').slice(0, 8) + '...';
+          const ago = timeAgo(c.caught_at);
+          return `<div class="catch-activity-row">
+            <div class="catch-activity-pfp"><img src="default-pfp.png" alt=""></div>
+            <div class="catch-activity-info">
+              <div class="catch-activity-name">${c.name || '#' + c.token_id}</div>
+              <div class="catch-activity-by">by ${catcher}</div>
+            </div>
+            <div class="catch-activity-time">${ago}</div>
+          </div>`;
+        }).join('');
+      }
+    }
+  } catch(e) {}
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const now = Date.now();
+  const then = new Date(dateStr + 'Z').getTime();
+  const diff = now - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
 // ===== RENDER ARENA =====
-const ARENA_PER_PAGE = 20; // 4 cols × 5 rows
+const ARENA_PER_PAGE = 20;
 let arenaPage = 1;
 let arenaFilteredData = [];
 
 function renderArena(filter='all', page=1){
+  loadGardenInsights(); // refresh insights panel
   const grid=document.getElementById('arena-grid');
   if(!grid) return;
   arenaFilteredData=arenaData.filter(n=>{
@@ -2399,7 +2502,7 @@ function openNftModal(id,type){
   const hpWrap=document.getElementById('nm-hp-wrap');
   const hpFill=document.getElementById('nm-hp-fill');
   if(type==='staked'){
-    const hcol=nft.hp===100?'var(--gb)':nft.hp===80?'var(--amber)':'var(--danger)';
+    const hcol=hpColor(nft.hp);
     hpWrap.style.display='block';
     hpFill.style.width=nft.hp+'%';
     hpFill.style.background=hcol;
@@ -2410,26 +2513,26 @@ function openNftModal(id,type){
   let rows='';
   rows+=`<div class="nft-modal-row"><span class="label">Type</span><span class="val">${type==='staked'?'Staked':'In Wallet'}</span></div>`;
   if(type==='staked'){
-    const hcol=nft.hp===100?'var(--gb)':nft.hp===80?'var(--amber)':'var(--danger)';
-    const status=nft.hp===100?'Fed ✓':nft.hp===80?'Hungry':'Weak!';
+    const hcol=hpColor(nft.hp);
+    const status=nft.hp>=80?'Fed':nft.hp>=50?'Hungry':'Weak!';
     rows+=`<div class="nft-modal-row"><span class="label">HP</span><span class="val" style="color:${hcol}">${nft.hp}%</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val" style="color:${hcol}">${status}</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Days Staked</span><span class="val">${nft.days}d</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Earn Rate</span><span class="val">80 $MTHY/day</span></div>`;
-    rows+=`<div class="nft-modal-row"><span class="label">Total Earned</span><span class="val">${(nft.days*80).toLocaleString()} $MTHY</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Feed Cost</span><span class="val">100 $MTHY</span></div>`;
   } else {
     rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val">Not staked</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Potential</span><span class="val">80 $MTHY/day</span></div>`;
   }
+  rows+=`<div class="nft-modal-row"><span class="label">Stargaze</span><span class="val"><a href="https://stargaze.zone/m/cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a/${nft.tokenId}" target="_blank" style="color:var(--gn);text-decoration:none;">View on Stargaze ↗</a></span></div>`;
   document.getElementById('nm-rows').innerHTML=rows;
 
   let actions='';
   if(type==='staked'){
-    if(nft.hp<100) actions+=`<button class="btn-pri" onclick="feedOne(${nft.id})">🌿 FEED (100 $MTHY)</button>`;
-    else actions+=`<button class="btn-sec" style="border-color:var(--gb);color:var(--gb);cursor:default;flex:1;text-align:center;padding:10px">✓ ALREADY FED</button>`;
+    if(nft.hp<100) actions+=`<button class="btn-pri" onclick="feedOne(${nft.id})">FEED (100 $MTHY)</button>`;
+    else actions+=`<button class="btn-sec" style="border-color:var(--gb);color:var(--gb);cursor:default;flex:1;text-align:center;padding:10px">ALREADY FED</button>`;
   } else {
-    actions+=`<button class="btn-pri" onclick="stakeById(${nft.id})">⚡ STAKE NOW</button>`;
+    actions+=`<button class="btn-pri" onclick="stakeById(${nft.id})">STAKE NOW</button>`;
   }
   actions+=`<button class="btn-sec" onclick="closeNftModal()">CLOSE</button>`;
   document.getElementById('nm-actions').innerHTML=actions;
@@ -2450,24 +2553,25 @@ function openArenaModal(id){
   document.getElementById('nm-name').innerText=nft.name;
   document.getElementById('nm-nick').innerText='"'+nft.nick+'"';
 
-  const hcol=nft.hp===100?'var(--gb)':nft.hp===80?'var(--amber)':'var(--danger)';
+  const hcol=hpColor(nft.hp);
   const hpWrap=document.getElementById('nm-hp-wrap');
   const hpFill=document.getElementById('nm-hp-fill');
   hpWrap.style.display='block';
   hpFill.style.width=nft.hp+'%';
   hpFill.style.background=hcol;
 
-  const status=nft.hp===100?'Full — safe':nft.hp===80?'Hungry — skipped 1 day':'Weak — catchable!';
+  const status=nft.hp>=80?'Full — safe':nft.hp>=50?'Hungry — feed soon':'Weak — catchable!';
   let rows='';
   rows+=`<div class="nft-modal-row"><span class="label">Owner</span><span class="val">${nft.owner}</span></div>`;
   rows+=`<div class="nft-modal-row"><span class="label">HP</span><span class="val" style="color:${hcol}">${nft.hp}%</span></div>`;
   rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val" style="color:${hcol}">${status}</span></div>`;
   rows+=`<div class="nft-modal-row"><span class="label">Days Survived</span><span class="val">${nft.days}d</span></div>`;
+  rows+=`<div class="nft-modal-row"><span class="label">Stargaze</span><span class="val"><a href="https://stargaze.zone/m/cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a/${nft.tokenId}" target="_blank" style="color:var(--gn);text-decoration:none;">View on Stargaze ↗</a></span></div>`;
   document.getElementById('nm-rows').innerHTML=rows;
 
   let actions='';
-  if(nft.hp===50) actions+=`<button class="btn-pri" style="background:var(--danger);color:#fff" onclick="catchManthy(${nft.id});closeNftModal()">🪤 CATCH NOW</button>`;
-  else actions+=`<button class="btn-sec" style="border-color:${hcol};color:${hcol};cursor:default;flex:1;text-align:center;padding:10px">${nft.hp===100?'🌿 SAFE':'😮‍💨 HUNGRY'}</button>`;
+  if(nft.hp<=50 && nft.ownerFull !== wallet) actions+=`<button class="btn-pri" style="background:var(--danger);color:#fff" onclick="catchManthy(${nft.id});closeNftModal()">CATCH NOW</button>`;
+  else actions+=`<button class="btn-sec" style="border-color:${hcol};color:${hcol};cursor:default;flex:1;text-align:center;padding:10px">${nft.hp>=80?'SAFE':nft.hp>=50?'HUNGRY':'WEAK'}</button>`;
   actions+=`<button class="btn-sec" onclick="closeNftModal()">CLOSE</button>`;
   document.getElementById('nm-actions').innerHTML=actions;
 

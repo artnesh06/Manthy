@@ -6,8 +6,12 @@ function checkAutoEndGame() {
   if (getConfig('game_ended', 0) === 1) return;
   const maxSurvivors = getConfig('max_survivors', 20);
   const alive = get('SELECT COUNT(*) as count FROM staked_nfts')?.count || 0;
-  if (alive > 0 && alive <= maxSurvivors) {
-    console.log(`[CRON] Auto end-game triggered! ${alive} NFTs remaining (≤${maxSurvivors})`);
+  const dead = get('SELECT COUNT(*) as count FROM museum')?.count || 0;
+  const totalPlayed = alive + dead;
+  // Only auto-end if: enough NFTs have played (at least max_survivors + 1 total)
+  // AND alive count dropped to max_survivors or below
+  if (alive > 0 && alive <= maxSurvivors && totalPlayed > maxSurvivors) {
+    console.log(`[CRON] Auto end-game triggered! ${alive} alive, ${dead} dead (total ${totalPlayed})`);
     const survivors = all('SELECT * FROM staked_nfts ORDER BY hp DESC, staked_at ASC');
     const now = new Date();
     for (const nft of survivors) {
