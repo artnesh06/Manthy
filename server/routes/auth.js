@@ -12,10 +12,15 @@ const COSMOS_LCD_ENDPOINTS = [
 function getCachedWalletNFTs(wallet) {
   const row = get("SELECT nfts, cached_at FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
   if (!row) return null;
-  // Cache valid for 10 minutes
   const age = Date.now() - new Date(row.cached_at + 'Z').getTime();
-  if (age > 600000) return null;
-  try { return JSON.parse(row.nfts); } catch(e) { return null; }
+  try {
+    const nfts = JSON.parse(row.nfts);
+    // Empty results cache only 1 minute (user might have just received NFTs)
+    // Non-empty results cache 10 minutes
+    const maxAge = (nfts.length === 0) ? 60000 : 600000;
+    if (age > maxAge) return null;
+    return nfts;
+  } catch(e) { return null; }
 }
 
 function setCachedWalletNFTs(wallet, nfts) {

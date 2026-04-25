@@ -2010,27 +2010,29 @@ function animatePodium(){
 // ===== RENDER STAKE =====
 let stakeFilter='all';
 
-// Generate heatmap — today at top-left, future dates flow right
+// Generate heatmap — 1 year, today in the middle (row 4), wraps around
 (function(){
   const hm=document.getElementById('heatmap');
   if(!hm)return;
-  let h='';
   const today=new Date();
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const totalDays=364;
+  const totalDays=364; // 52 weeks
+  // We want today at row 4 (index 3) in the middle column
+  // Grid is column-flow: cell c → row = c%7, col = floor(c/7)
+  // Middle column = col 26 (of 52). Cell at col26,row3 = 26*7+3 = 185
+  // So today should be cell 185. halfDays = 185.
+  const halfDays=185;
+  
+  let h='';
   let cellIdx=0;
-  // Generate cells: today at top-left, then future dates going right
-  // But also include past 30 days for heatmap data from API
-  const pastDays = 180; // 6 months back
-  const futureDays = totalDays - pastDays;
-  for(let i=-pastDays;i<futureDays;i++){
+  for(let c=0;c<totalDays;c++){
+    const offset = ((c - halfDays) % totalDays + totalDays) % totalDays;
     const d=new Date(today);
-    d.setDate(d.getDate()+i);
+    d.setDate(d.getDate()+offset);
     const dateStr=months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
-    const delay=(cellIdx*0.003).toFixed(3);
-    const isToday=i===0?' hm-today':'';
-    const isPast=i<0?' hm-past':'';
-    h+=`<div class="hm-cell${isToday}${isPast}" data-date="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}" data-day="${i}" style="animation-delay:${delay}s"><div class="hm-tip">${dateStr}<br>No activity</div></div>`;
+    const delay=(cellIdx*0.002).toFixed(3);
+    const isToday=offset===0?' hm-today':'';
+    h+=`<div class="hm-cell${isToday}" data-date="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}" data-day="${offset}" style="animation-delay:${delay}s"><div class="hm-tip">${dateStr}<br>No activity</div></div>`;
     cellIdx++;
   }
   hm.innerHTML=h;
