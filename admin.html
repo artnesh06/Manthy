@@ -84,6 +84,20 @@ button.danger:hover{background:#ff5252;}
   </div>
 </div>
 
+<div class="grid">
+  <div class="card"><h3>SUMMARY</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+      <div><div class="stat" id="sm-users" style="font-size:22px;">0</div><div class="stat-label">USERS</div></div>
+      <div><div class="stat" id="sm-feeds" style="font-size:22px;">0</div><div class="stat-label">TOTAL FEEDS</div></div>
+      <div><div class="stat" id="sm-mthy" style="font-size:22px;">0</div><div class="stat-label">$MTHY IN CIRCULATION</div></div>
+    </div>
+    <div style="margin-top:10px;text-align:center;font-size:11px;color:#4caf50;">AVG HP: <span id="sm-avghp" style="color:#76ff03;">0</span>%</div>
+  </div>
+  <div class="card"><h3>RECENT FEEDS</h3>
+    <div id="feed-history" style="max-height:150px;overflow-y:auto;font-size:11px;color:#81c784;"></div>
+  </div>
+</div>
+
 <h2>USERS</h2>
 <table><thead><tr><th>Wallet</th><th>$MTHY</th><th>Joined</th><th>Last Seen</th></tr></thead>
 <tbody id="users-body"></tbody></table>
@@ -271,8 +285,24 @@ async function resetGame(){
   }catch(e){toast('Error: '+e.message);}
 }
 
-function loadAll(){loadHealth();loadStats();loadUsers();loadStaked();loadMuseum();loadConfig();}
+function loadAll(){loadHealth();loadStats();loadUsers();loadStaked();loadMuseum();loadConfig();loadSummary();loadFeedHistory();}
 setInterval(()=>{if(ADMIN_KEY)loadAll();},30000);
+
+async function loadSummary(){
+  try{const r=await fetch(API+'/admin/summary',{headers:{'X-Admin-Key':ADMIN_KEY}});const d=await r.json();
+    document.getElementById('sm-users').innerText=d.totalUsers||0;
+    document.getElementById('sm-feeds').innerText=d.totalFeeds||0;
+    document.getElementById('sm-mthy').innerText=(d.totalMthy||0).toLocaleString();
+    document.getElementById('sm-avghp').innerText=d.avgHp||0;
+  }catch(e){log('Summary: '+e.message);}
+}
+async function loadFeedHistory(){
+  try{const r=await fetch(API+'/admin/feed-history?limit=20',{headers:{'X-Admin-Key':ADMIN_KEY}});const d=await r.json();
+    document.getElementById('feed-history').innerHTML=(d.history||[]).map(h=>
+      `<div style="padding:3px 0;border-bottom:1px solid #111a11;">${(h.wallet||'').slice(0,8)}... fed #${h.token_id} — ${h.fed_at||''}</div>`
+    ).join('')||'<div style="color:#4caf50;">No feeds yet</div>';
+  }catch(e){log('Feed history: '+e.message);}
+}
 </script>
 </body>
 </html>

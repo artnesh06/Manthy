@@ -57,4 +57,22 @@ router.get('/config', (req, res) => {
   res.json({ config });
 });
 
+// Feed history
+router.get('/feed-history', (req, res) => {
+  const { limit = 50 } = req.query;
+  const history = all('SELECT * FROM feed_history ORDER BY fed_at DESC LIMIT ?', [Number(limit)]);
+  res.json({ history });
+});
+
+// Game summary
+router.get('/summary', (req, res) => {
+  const totalUsers = get('SELECT COUNT(*) as count FROM users')?.count || 0;
+  const totalStaked = get('SELECT COUNT(*) as count FROM staked_nfts')?.count || 0;
+  const totalMuseum = get('SELECT COUNT(*) as count FROM museum')?.count || 0;
+  const totalFeeds = get('SELECT COUNT(*) as count FROM feed_history')?.count || 0;
+  const totalMthy = get('SELECT SUM(mthy_balance) as total FROM users')?.total || 0;
+  const avgHp = get('SELECT AVG(hp) as avg FROM staked_nfts')?.avg || 0;
+  res.json({ totalUsers, totalStaked, totalMuseum, totalFeeds, totalMthy: Math.floor(totalMthy), avgHp: Math.round(avgHp) });
+});
+
 module.exports = router;
