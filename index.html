@@ -1155,37 +1155,28 @@ async function fetchTokensByOwnerDirect(ownerAddr, limit=30, offset=0) {
   }
 }
 
-// Fetch wallet NFTs from Cosmos Hub REST API (accurate post-migration)
+// Fetch wallet NFTs — use backend proxy (Cosmos Hub) first, fallback to direct Stargaze
 async function fetchWalletNFTs(addr) {
-  let userTokens = [];
-  
-  // Method 1: Cosmos Hub REST API (most accurate)
-  try {
-    const query = btoa(JSON.stringify({tokens:{owner:addr,limit:30}}));
-    const resp = await fetch(`${COSMOS_REST}/cosmwasm/wasm/v1/contract/${COLLECTION_ADDR_COSMOS}/smart/${query}`);
-    if (resp.ok) {
-      const data = await resp.json();
-      const tokenIds = data?.data?.tokens || [];
-      if (tokenIds.length > 0) {
-        // Fetch metadata for each token from Stargaze GraphQL (has images/names)
-        for (const tokenId of tokenIds) {
-          const meta = await fetchTokenMeta(tokenId);
-          userTokens.push({
-            id: parseInt(tokenId) || 0,
-            tokenId: tokenId,
-            name: meta?.name || `Seals #${tokenId}`,
-            imageUrl: meta?.imageUrl || '',
-            traits: meta?.traits || []
-          });
-        }
-        return userTokens;
+  // Method 1: Backend proxy (most accurate, no CORS issues)
+  if (USE_API) {
+    try {
+      const data = await MantyAPI.getWalletNFTs(addr);
+      if (data.nfts && data.nfts.length > 0) {
+        return data.nfts.map((t, i) => ({
+          id: parseInt(t.tokenId) || (1000+i),
+          tokenId: t.tokenId,
+          name: t.name || `Seals #${t.tokenId}`,
+          imageUrl: t.imageUrl || '',
+          traits: []
+        }));
       }
+    } catch(e) {
+      console.log('Backend NFT fetch failed, trying direct:', e.message);
     }
-  } catch(e) {
-    console.log('Cosmos Hub REST failed, trying Stargaze GraphQL:', e.message);
   }
-  
-  // Method 2: Fallback to Stargaze GraphQL (may be outdated)
+
+  // Method 2: Direct Stargaze GraphQL fallback
+  let userTokens = [];
   const addrsToTry = [addr];
   if(addr.startsWith('cosmos1')){
     try{

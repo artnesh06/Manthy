@@ -93,5 +93,11 @@ const MantyAPI = {
   async getMuseum(limit = 20, offset = 0) {
     const r = await fetch(API_BASE + `/museum?limit=${limit}&offset=${offset}`);
     return r.json();
+  },
+
+  // Wallet NFTs (proxied through backend to avoid CORS)
+  async getWalletNFTs(wallet) {
+    const r = await fetch(API_BASE + '/auth/nfts?wallet=' + encodeURIComponent(wallet));
+    return r.json();
   }
 };
