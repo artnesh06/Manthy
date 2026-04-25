@@ -21,8 +21,8 @@ function checkAutoEndGame() {
 }
 
 function startCronJobs() {
-  // HP Decay — every hour, gradual decay
-  cron.schedule('0 * * * *', () => {
+  // HP Decay — every 30 minutes, -1% per 30 min
+  cron.schedule('0,30 * * * *', () => {
     if (getConfig('game_ended', 0) === 1) return;
     console.log('[CRON] HP decay...');
     const staked = all('SELECT * FROM staked_nfts');
@@ -30,11 +30,9 @@ function startCronJobs() {
     let decayed = 0;
     for (const nft of staked) {
       const lastFed = new Date(nft.last_fed + 'Z');
-      const hours = (now - lastFed) / (1000 * 60 * 60);
-      // Step decay: 0-24h = 100%, 24-48h = 80%, 48h+ = 50% (catchable)
-      let newHp = 100;
-      if (hours >= 48) newHp = 50;
-      else if (hours >= 24) newHp = 80;
+      const minutes = (now - lastFed) / (1000 * 60);
+      // Decay: -1% per 30 minutes → 0% in 50 hours
+      let newHp = Math.max(0, Math.round(100 - (minutes / 30)));
       if (newHp !== nft.hp) {
         run('UPDATE staked_nfts SET hp = ? WHERE id = ?', [newHp, nft.id]);
         decayed++;
@@ -62,26 +60,21 @@ function startCronJobs() {
     if (earned > 0) console.log(`[CRON] ${earned} museum NFTs earned for owners`);
   });
 
-  // Auto-catch — every 6 hours, catch NFTs with HP ≤ 28% that have been weak for 24h+
+  // Auto-catch — every 6 hours, catch NFTs with HP = 0%
   cron.schedule('0 */6 * * *', () => {
     if (getConfig('game_ended', 0) === 1) return;
     console.log('[CRON] Auto-catch check...');
-    const weak = all('SELECT * FROM staked_nfts WHERE hp <= 50');
+    const dead = all('SELECT * FROM staked_nfts WHERE hp <= 0');
     let caught = 0;
-    for (const nft of weak) {
-      const lastFed = new Date(nft.last_fed + 'Z');
-      const hours = (Date.now() - lastFed.getTime()) / (1000 * 60 * 60);
-      // Auto-catch if unfed for 72+ hours
-      if (hours >= 72) {
-        run('INSERT INTO museum (token_id, collection_addr, name, image_url, original_owner, caught_by, reason) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [nft.token_id, nft.collection_addr, nft.name, nft.image_url, nft.wallet, 'SYSTEM', 'Auto-caught: abandoned (72h unfed)']);
-        run('INSERT INTO catch_log (token_id, name, caught_by, original_owner) VALUES (?, ?, ?, ?)',
-          [nft.token_id, nft.name, 'SYSTEM', nft.wallet]);
-        run('DELETE FROM staked_nfts WHERE id = ?', [nft.id]);
-        caught++;
-      }
+    for (const nft of dead) {
+      run('INSERT INTO museum (token_id, collection_addr, name, image_url, original_owner, caught_by, reason) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [nft.token_id, nft.collection_addr, nft.name, nft.image_url, nft.wallet, 'SYSTEM', 'Auto-caught: HP reached 0%']);
+      run('INSERT INTO catch_log (token_id, name, caught_by, original_owner) VALUES (?, ?, ?, ?)',
+        [nft.token_id, nft.name, 'SYSTEM', nft.wallet]);
+      run('DELETE FROM staked_nfts WHERE id = ?', [nft.id]);
+      caught++;
     }
-    if (caught > 0) console.log(`[CRON] Auto-caught ${caught} abandoned NFTs`);
+    if (caught > 0) console.log(`[CRON] Auto-caught ${caught} dead NFTs`);
 
     // Auto-detect game end: if ≤ max_survivors NFTs remain, declare winners
     checkAutoEndGame();

@@ -1243,6 +1243,23 @@ function generateRandomName(){
 let arenaData = [];
 let museumData = [];
 let walletNFTs = [];
+
+// HP color helper — gradual from green to amber to red
+function hpColor(hp) {
+  if (hp >= 80) return 'var(--gb)';
+  if (hp >= 50) return 'var(--amber)';
+  return 'var(--danger)';
+}
+function hpClass(hp) {
+  if (hp >= 80) return '';
+  if (hp >= 50) return 'wn';
+  return 'dn';
+}
+function hpTag(hp) {
+  if (hp >= 80) return { cls: '', text: 'HP ' + hp + '%' };
+  if (hp >= 50) return { cls: ' tag-warn', text: 'HP ' + hp + '%' };
+  return { cls: ' tag-danger', text: 'WEAK ' + hp + '%' };
+}
 let stakedNFTs = [];
 let allCollectionNFTs = [];
 
@@ -1782,16 +1799,15 @@ function renderArena(filter='all', page=1){
   }
   
   grid.innerHTML=pageData.map(n=>{
-    const cls=n.hp===50?'dn':n.hp===80?'wn':'';
-    const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':'var(--danger)';
-    const tagCls=n.hp===100?'':n.hp===80?' tag-warn':' tag-danger';
-    const tagText=n.hp===100?'HP 100%':n.hp===80?'HP 80%':'WEAK!';
-    const statusText=n.hp===100?'Full — safe':n.hp===80?'Hungry — skipped 1 day':'Weak — catchable!';
+    const cls=hpClass(n.hp);
+    const hcol=hpColor(n.hp);
+    const tag=hpTag(n.hp);
+    const statusText=n.hp>=80?'Full — safe':n.hp>=50?'Hungry — feed soon':'Weak — catchable!';
     let action='';
-    if(n.hp===50 && n.ownerFull !== wallet) action=`<button class="catch-btn" onclick="event.stopPropagation();catchManthy(${n.id})">🪤 CATCH NOW</button>`;
+    if(n.hp<=50 && n.ownerFull !== wallet) action=`<button class="catch-btn" onclick="event.stopPropagation();catchManthy(${n.id})">🪤 CATCH NOW</button>`;
     return `<div class="ncard ${cls}" onclick="openArenaModal(${n.id})" style="cursor:pointer">
       <div class="ncard-img-wrap">
-        <div class="ncard-tag${tagCls}">${tagText}</div>
+        <div class="ncard-tag${tag.cls}">${tag.text}</div>
         ${nftImageHtml(n, 80)}
         <div class="ncard-hp-bar"><div class="ncard-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>
       </div>
@@ -1927,16 +1943,17 @@ async function renderLB(sortBy){
       }).join('');
       animatePodium();
       // Table
-      document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Player</div><div>$MTHY</div><div>Catches</div></div>`+
+      document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr" style="grid-template-columns:50px 44px 1fr 80px 60px 72px;"><div>#</div><div></div><div>Player</div><div style="text-align:right">$MTHY</div><div style="text-align:right">Hold</div><div style="text-align:right">Catches</div></div>`+
         users.map((u,i)=>{
           const medals=['🥇','🥈','🥉'];
           const isMe = wallet && u.wallet === wallet;
-          return `<div class="lbrow" ${isMe?'style="background:rgba(118,255,3,.06);border-left:3px solid var(--gb);"':''}>
+          return `<div class="lbrow" style="grid-template-columns:50px 44px 1fr 80px 60px 72px;${isMe?'background:rgba(118,255,3,.06);border-left:3px solid var(--gb);':''}">
             <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
             <div class="lbemoji" style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3)">${userPfp(u)}</div>
-            <div><div class="lbname">${userName(u)}${isMe?' <span style="font-size:9px;color:var(--gb);background:rgba(118,255,3,.15);padding:2px 6px;letter-spacing:1px;margin-left:4px">YOU</span>':''}</div><div style="font-size:11px;color:var(--td);margin-top:2px">${u.nft_count} NFTs staked</div></div>
-            <div class="lb-hp-col"><div class="lb-hp-val" style="color:var(--gb)">${Math.floor(u.mthy_balance).toLocaleString()}</div></div>
-            <div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:13px;font-weight:700;text-align:right">🪤 ${u.catches||0}</div>
+            <div><div class="lbname">${userName(u)}${isMe?' <span style="font-size:9px;color:var(--gb);background:rgba(118,255,3,.15);padding:2px 6px;letter-spacing:1px;margin-left:4px">YOU</span>':''}</div></div>
+            <div style="text-align:right;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--gb)">${Math.floor(u.mthy_balance).toLocaleString()}</div>
+            <div style="text-align:right;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--tm)">${u.nft_count}</div>
+            <div style="text-align:right;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--amber)">${u.catches||0}</div>
           </div>`;
         }).join('');
     } catch(e) {}
@@ -1975,12 +1992,32 @@ async function renderLB(sortBy){
   const LB_LIMIT = 20;
   const medals=['🥇','🥈','🥉'];
   function renderLBRow(n, i) {
-    const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':'var(--danger)';
+    const hcol=hpColor(n.hp);
     const isOwn = wallet && n.ownerFull === wallet;
+    // Chart: show HP per day since staked (max 7 days)
+    // Only show bars for days the NFT has been in the game
+    const daysAlive = Math.min(7, Math.max(1, (n.days || 0) + 1)); // +1 for today
+    const dayLabels=['6d ago','5d ago','4d ago','3d ago','2d ago','Yesterday','Today'];
     const bars=Array.from({length:7},(_,j)=>{
-      const h=Math.max(4,Math.min(22,n.hp*(0.3+Math.random()*0.7)/100*22));
-      const delay=j*0.08+i*0.03;
-      return `<div class="lb-chart-bar" style="height:${h}px;background:${hcol};animation-delay:${delay.toFixed(2)}s"></div>`;
+      const dayIdx = 6 - j; // 0=today, 6=6 days ago
+      // Only show bar if NFT was alive on that day
+      if (dayIdx >= daysAlive) {
+        return `<div class="lb-chart-bar" style="height:0px;background:transparent;min-height:0;"></div>`;
+      }
+      // Today (j=6) = current HP. Previous days = estimate based on decay rate
+      // HP decays ~48% per day (1% per 30min). Going back, assume fed once per day.
+      let dayHp;
+      if (dayIdx === 0) {
+        dayHp = n.hp; // today = current HP
+      } else {
+        // Older days: we don't have exact data, show 100% (assume they fed)
+        // Only today shows real HP
+        dayHp = 100;
+      }
+      const h = Math.max(2, Math.round(dayHp / 100 * 22));
+      const barCol = hpColor(dayHp);
+      const delay = j * 0.08 + i * 0.03;
+      return `<div class="lb-chart-bar" style="height:${h}px;background:${barCol};animation-delay:${delay.toFixed(2)}s;cursor:pointer;" title="${dayLabels[j]}: ${dayHp}% HP"></div>`;
     }).join('');
     return `<div class="lbrow" ${isOwn?'style="background:rgba(118,255,3,.06);border-left:3px solid var(--gb);"':''}>
       <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
@@ -2001,27 +2038,38 @@ async function renderLB(sortBy){
   let seeMoreBtn = '';
   if(sorted.length > LB_LIMIT){
     seeMoreBtn = `<div style="text-align:center;padding:1rem 0;">
-      <button class="btn-sec" onclick="expandLeaderboard()" id="lb-see-more" style="font-size:11px;padding:10px 24px;">SEE MORE (${sorted.length - LB_LIMIT} remaining)</button>
+      <button class="btn-sec" onclick="expandLeaderboard()" id="lb-see-more" style="font-size:11px;padding:10px 24px;">SEE MORE (${sorted.length - lbShown} remaining)</button>
+    </div>`;
+  }
+  document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Manthy</div><div>HP</div><div>Chart</div></div>`+rows+seeMoreBtn;
+  lbShown = LB_LIMIT;
+}
+
+let lbShown = 20;
+function expandLeaderboard(){
+  let sorted;
+  if(currentSort==='days') sorted=[...arenaData].sort((a,b)=>b.days-a.days);
+  else if(currentSort==='score') sorted=[...arenaData].sort((a,b)=>(b.hp*b.days)-(a.hp*a.days));
+  else sorted=[...arenaData].sort((a,b)=>b.hp!==a.hp?b.hp-a.hp:b.days-a.days);
+  
+  const nextBatch = 20;
+  const newLimit = lbShown + nextBatch;
+  const rows=sorted.slice(0, newLimit).map((n,i)=>renderLBRow(n,i)).join('');
+  lbShown = newLimit;
+  
+  let seeMoreBtn = '';
+  if(sorted.length > lbShown){
+    seeMoreBtn = `<div style="text-align:center;padding:1rem 0;">
+      <button class="btn-sec" onclick="expandLeaderboard()" id="lb-see-more" style="font-size:11px;padding:10px 24px;">SEE MORE (${sorted.length - lbShown} remaining)</button>
     </div>`;
   }
   document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Manthy</div><div>HP</div><div>Chart</div></div>`+rows+seeMoreBtn;
 }
 
-let lbExpanded = false;
-function expandLeaderboard(){
-  lbExpanded = true;
-  let sorted;
-  if(currentSort==='days') sorted=[...arenaData].sort((a,b)=>b.days-a.days);
-  else if(currentSort==='score') sorted=[...arenaData].sort((a,b)=>(b.hp*b.days)-(a.hp*a.days));
-  else sorted=[...arenaData].sort((a,b)=>b.hp!==a.hp?b.hp-a.hp:b.days-a.days);
-  const rows=sorted.map((n,i)=>renderLBRow(n,i)).join('');
-  document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Manthy</div><div>HP</div><div>Chart</div></div>`+rows;
-}
-
 function switchLBTab(btn,sort){
   document.querySelectorAll('.lb-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  lbExpanded = false;
+  lbShown = 20;
   renderLB(sort);
 }
 
@@ -2197,8 +2245,8 @@ function renderStake(filter){
 
   const grid=document.getElementById('honor-grid');
   grid.innerHTML=allCards.map(n=>{
-    const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':n.hp===50?'var(--danger)':'var(--tm)';
-    const hpCls=n.hp===100?'hp-green':n.hp===80?'hp-amber':n.hp===50?'hp-red':'hp-green';
+    const hcol=hpColor(n.hp||0);
+    const hpCls=n.hp>=80?'hp-green':n.hp>=50?'hp-amber':'hp-red';
     const scoreText=n.type==='staked'?`${n.hp}%`:'NEW';
     const statusLabel=n.type==='staked'?(n.hp===100?'Fed':n.hp===80?'Hungry':'Weak!'):'In wallet';
     return `<div class="honor-card ${n.type==='staked'?'is-staked':'is-wallet'}" onclick="openNftModal(${n.id},'${n.type}')">
@@ -2675,7 +2723,7 @@ async function loadProfilePage() {
       }
       function miniName(u) { return u.display_name || u.wallet.slice(0,6)+'...'+u.wallet.slice(-4); }
       
-      document.getElementById('pf-mini-leaderboard').innerHTML = users.slice(0, 5).map((u, i) => {
+      const miniRows = users.slice(0, 5).map((u, i) => {
         const medals = ['🥇','🥈','🥉'];
         const isMe = u.wallet === wallet;
         return `<div class="pf-mini-row ${isMe ? 'is-me' : ''}">
@@ -2685,6 +2733,8 @@ async function loadProfilePage() {
           <div class="pf-mini-score">${Math.floor(u.mthy_balance).toLocaleString()}</div>
         </div>`;
       }).join('');
+      const seeAll = users.length > 5 ? `<div style="text-align:center;padding:10px 0;"><button class="btn-sec" onclick="showPage('ranks');switchLBTab(document.querySelector('.lb-tab:last-child'),'score')" style="font-size:10px;padding:6px 16px;width:100%;">SEE ALL RANKINGS →</button></div>` : '';
+      document.getElementById('pf-mini-leaderboard').innerHTML = miniRows + seeAll;
     } catch(e) {}
   } catch(e) { console.log('Profile load error:', e); }
 }
