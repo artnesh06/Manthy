@@ -1471,6 +1471,7 @@ async function onConnected(addr){
 
   renderStake();
   updateBalUI();
+  loadHeatmapFromAPI(); // Load real heatmap data for this wallet
   toast('Found ' + walletNFTs.length + ' unstaked + ' + stakedNFTs.length + ' staked ✅');
 
   if(pendingPage){showPage(pendingPage);pendingPage=null;}
@@ -1485,6 +1486,9 @@ function disconnect(){
   document.getElementById('wcbtn').style.display='none';
   document.getElementById('balbox').style.display='none';
   document.getElementById('dcpopup').classList.remove('show');
+  // Reset heatmap
+  document.querySelectorAll('.hm-cell').forEach(c=>{c.style.background='';c.style.borderColor='';c.dataset.count='0';});
+  const cntEl=document.getElementById('hm-count');if(cntEl)cntEl.innerText='0';
   showPage('home');
   toast('Wallet disconnected.');
 }
@@ -1909,6 +1913,37 @@ function updateHeatmap(action) {
   if (cntEl) cntEl.innerText = parseInt(cntEl.innerText || '0') + 1;
 }
 
+// Load heatmap from API (per wallet, real data from database)
+async function loadHeatmapFromAPI() {
+  if (!USE_API || !wallet) return;
+  try {
+    const data = await MantyAPI.getHeatmap(wallet);
+    if (!data.days) return;
+    // Reset all cells
+    document.querySelectorAll('.hm-cell').forEach(c => {
+      c.style.background = '';
+      c.style.borderColor = '';
+      c.dataset.count = '0';
+      const tip = c.querySelector('.hm-tip');
+      if (tip) { const parts = tip.innerHTML.split('<br>'); tip.innerHTML = parts[0] + '<br>No activity'; }
+    });
+    // Light up cells with real data
+    for (const [day, count] of Object.entries(data.days)) {
+      const cell = document.querySelector(`.hm-cell[data-date="${day}"]`);
+      if (cell) {
+        cell.dataset.count = count;
+        const intensity = Math.min(count * 0.15, 1);
+        cell.style.background = `rgba(118,255,3,${Math.max(0.12, intensity)})`;
+        cell.style.borderColor = `rgba(118,255,3,${Math.max(0.2, intensity)})`;
+        const tip = cell.querySelector('.hm-tip');
+        if (tip) { const parts = tip.innerHTML.split('<br>'); tip.innerHTML = parts[0] + `<br>${count} action(s)`; }
+      }
+    }
+    const cntEl = document.getElementById('hm-count');
+    if (cntEl) cntEl.innerText = data.total || 0;
+  } catch(e) {}
+}
+
 function renderStake(filter){
   const allCards=[];
   walletNFTs.forEach(n=>allCards.push({...n,type:'wallet',hp:null,days:null}));
@@ -2049,6 +2084,9 @@ async function stakeAll(){
   }
   walletNFTs=[];
   renderStake();
+  // Reset button
+  const btnAfter=document.getElementById('btn-stake-all');
+  if(btnAfter){btnAfter.disabled=false;btnAfter.innerHTML='STAKE ALL (<span id="stake-all-count">0</span>)';}
   for(let i=0;i<count;i++) updateHeatmap('stake');
   toast(count+' NFTs staked!\n+80 $MTHY/day each ✅');
   refreshGlobalData();

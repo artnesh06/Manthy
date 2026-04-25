@@ -100,5 +100,11 @@ const MantyAPI = {
   async getWalletNFTs(wallet) {
     const r = await fetch(API_BASE + '/auth/nfts?wallet=' + encodeURIComponent(wallet));
     return r.json();
+  },
+
+  // Heatmap data
+  async getHeatmap(wallet) {
+    const r = await fetch(API_BASE + '/auth/heatmap?wallet=' + encodeURIComponent(wallet));
+    return r.json();
   }
 };

@@ -101,4 +101,19 @@ router.get('/nfts', async (req, res) => {
   res.json({ nfts: [], total: 0, error: 'Could not fetch from Cosmos Hub' });
 });
 
+// Heatmap: get feed/stake activity per day for a wallet
+router.get('/heatmap', (req, res) => {
+  const { wallet } = req.query;
+  if (!wallet) return res.json({ days: {} });
+  // Count feeds per day
+  const feeds = all("SELECT DATE(fed_at) as day, COUNT(*) as count FROM feed_history WHERE wallet = ? GROUP BY DATE(fed_at)", [wallet]);
+  // Count stakes per day
+  const stakes = all("SELECT DATE(staked_at) as day, COUNT(*) as count FROM staked_nfts WHERE wallet = ? GROUP BY DATE(staked_at)", [wallet]);
+  const days = {};
+  for (const f of feeds) { days[f.day] = (days[f.day] || 0) + f.count; }
+  for (const s of stakes) { days[s.day] = (days[s.day] || 0) + s.count; }
+  const total = Object.values(days).reduce((a, b) => a + b, 0);
+  res.json({ days, total });
+});
+
 module.exports = router;
