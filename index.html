@@ -2033,8 +2033,6 @@ let stakeFilter='all';
     h+=`<div class="hm-cell${isToday}${isPast}" data-date="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}" data-day="${i}" style="animation-delay:${delay}s"><div class="hm-tip">${dateStr}<br>No activity</div></div>`;
     cellIdx++;
   }
-    cellIdx++;
-  }
   hm.innerHTML=h;
   const cntEl=document.getElementById('hm-count');
   if(cntEl) cntEl.innerText='0';
