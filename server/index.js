@@ -68,6 +68,7 @@ app.use('/api/claim', writeLimit, require('./routes/claim'));
 app.use('/api/leaderboard', readLimit, require('./routes/leaderboard'));
 app.use('/api/museum', readLimit, require('./routes/museum'));
 app.use('/api/admin', adminAuth, require('./routes/admin'));
+app.use('/api/winners', readLimit, require('./routes/winners'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -6,6 +6,7 @@ router.post('/', (req, res) => {
   const FEED_COST = getConfig('feed_cost', 100);
   const { wallet, tokenId } = req.body;
   if (!wallet || !tokenId) return res.status(400).json({ error: 'wallet and tokenId required' });
+  if (getConfig('game_ended', 0) === 1) return res.status(400).json({ error: 'Game has ended' });
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   const nft = get('SELECT * FROM staked_nfts WHERE wallet = ? AND token_id = ?', [wallet, tokenId]);
@@ -18,13 +19,14 @@ router.post('/', (req, res) => {
   run('INSERT INTO feed_history (wallet, token_id, cost) VALUES (?, ?, ?)', [wallet, tokenId, FEED_COST]);
 
   const updated = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
-  res.json({ success: true, balance: updated.mthy_balance });
+  res.json({ success: true, balance: Math.round((updated.mthy_balance || 0) * 100) / 100 });
 });
 
 router.post('/all', (req, res) => {
   const FEED_COST = getConfig('feed_cost', 100);
   const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
+  if (getConfig('game_ended', 0) === 1) return res.status(400).json({ error: 'Game has ended' });
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   const hungry = all('SELECT * FROM staked_nfts WHERE wallet = ? AND hp < 100', [wallet]);
@@ -38,7 +40,7 @@ router.post('/all', (req, res) => {
     run('INSERT INTO feed_history (wallet, token_id, cost) VALUES (?, ?, ?)', [wallet, nft.token_id, FEED_COST]);
   }
   const updated = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
-  res.json({ success: true, fed: hungry.length, balance: updated.mthy_balance });
+  res.json({ success: true, fed: hungry.length, balance: Math.round((updated.mthy_balance || 0) * 100) / 100 });
 });
 
 module.exports = router;

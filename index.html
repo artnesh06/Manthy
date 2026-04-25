@@ -721,10 +721,49 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
   .hero{margin-top:-1rem;}
 }
 </style>
+<style>
+/* CATCH TICKER NOTIFICATION */
+.catch-ticker{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(255,23,68,.12);border-bottom:1px solid rgba(255,23,68,.4);padding:8px 16px;display:none;align-items:center;justify-content:center;gap:12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--danger);animation:tickerSlide .3s ease-out;}
+.catch-ticker.show{display:flex;}
+.catch-ticker-text{letter-spacing:.5px;}
+.catch-ticker-text b{color:#ff5252;}
+.catch-ticker-close{background:none;border:1px solid rgba(255,23,68,.4);color:var(--danger);font-family:'Space Mono',monospace;font-size:11px;padding:3px 10px;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.catch-ticker-close:hover{background:rgba(255,23,68,.15);}
+@keyframes tickerSlide{from{transform:translateY(-100%);}to{transform:translateY(0);}}
+
+/* SURVIVOR BADGE */
+.survivor-badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(255,179,0,.15),rgba(255,179,0,.05));border:2px solid rgba(255,179,0,.5);padding:8px 16px;font-family:'Space Mono',monospace;font-size:12px;color:var(--amber);letter-spacing:1px;animation:badgeGlow 2s ease-in-out infinite;margin:4px;}
+.survivor-badge-icon{font-size:18px;}
+@keyframes badgeGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,179,0,0);}50%{box-shadow:0 0 16px rgba(255,179,0,.2);}}
+
+/* WINNER SECTION in stake page */
+.winner-section{background:linear-gradient(135deg,rgba(26,18,8,.9),var(--bg2));border:2px solid rgba(255,179,0,.3);padding:2rem;margin-bottom:1.5rem;text-align:center;}
+.winner-section h3{font-family:'Inconsolata',monospace;font-size:22px;color:var(--amber);letter-spacing:3px;margin-bottom:8px;}
+.winner-section p{font-family:'Space Mono',monospace;font-size:13px;color:var(--tm);margin-bottom:1rem;}
+.winner-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:1.5rem;}
+.winner-card{background:var(--bg2);border:2px solid rgba(255,179,0,.3);padding:12px;text-align:center;position:relative;}
+.winner-card-img{width:100%;aspect-ratio:1;background:var(--bg3);overflow:hidden;margin-bottom:8px;display:flex;align-items:center;justify-content:center;}
+.winner-card-name{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--amber);letter-spacing:1px;margin-bottom:4px;}
+.winner-card-info{font-family:'Space Mono',monospace;font-size:11px;color:var(--tm);}
+.winner-card-claimed{position:absolute;top:8px;right:8px;background:rgba(118,255,3,.15);border:1px solid rgba(118,255,3,.3);color:var(--gb);font-family:'Space Mono',monospace;font-size:10px;padding:3px 8px;letter-spacing:1px;}
+.claim-form{background:var(--bg2);border:1px solid rgba(255,179,0,.2);padding:1.5rem;margin-top:8px;text-align:left;}
+.claim-form label{display:block;font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:1px;margin-bottom:4px;margin-top:10px;}
+.claim-form input,.claim-form textarea{background:var(--bg3);border:1px solid rgba(255,179,0,.3);color:var(--text);padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;width:100%;}
+.claim-form input:focus,.claim-form textarea:focus{outline:none;border-color:var(--amber);}
+.claim-form textarea{resize:vertical;min-height:60px;}
+.claim-form button{background:var(--amber);color:#080e08;border:none;padding:10px 20px;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;margin-top:12px;width:100%;}
+.claim-form button:hover{background:#ffd54f;}
+.claim-form .note{font-size:11px;color:var(--tm);margin-top:8px;line-height:1.6;}
+</style>
 </head>
 <body>
 
-<!-- MOBILE BLOCKER -->
+<!-- CATCH TICKER NOTIFICATION -->
+<div class="catch-ticker" id="catch-ticker">
+  <span>🪤</span>
+  <span class="catch-ticker-text" id="catch-ticker-text"></span>
+  <button class="catch-ticker-close" onclick="closeCatchTicker()">✕</button>
+</div>
 <div class="mobile-blocker">
   <div class="mobile-blocker-icon">🖥️</div>
   <div class="mobile-blocker-title">DESKTOP ONLY</div>
@@ -879,6 +918,14 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
     <div class="stake-stat"><span class="stake-stat-val" id="ss-balance">0</span><span class="stake-stat-label">$MTHY Balance</span></div>
     <div class="stake-stat"><span class="stake-stat-val" id="ss-pending" style="color:var(--gn)">+0</span><span class="stake-stat-label">Pending</span></div>
     <div class="stake-stat"><span class="stake-stat-val" id="ss-earnrate">0</span><span class="stake-stat-label">$MTHY / Day</span></div>
+  </div>
+
+  <!-- Winner section (hidden until game ends) -->
+  <div class="winner-section" id="winner-section" style="display:none;">
+    <h3>🏆 YOU SURVIVED!</h3>
+    <p>Your Manthy made it to the final 20. Claim your prizes below.</p>
+    <div id="winner-badges" style="margin-bottom:1rem;"></div>
+    <div class="winner-cards" id="winner-cards"></div>
   </div>
 
   <!-- Heatmap -->
@@ -1298,6 +1345,21 @@ function updateHomeStats(stats) {
   if(rsEl) rsEl.innerHTML = '<span class="live-dot"></span> ' + (stats.alive||0) + ' Manthys';
   const mcEl = document.getElementById('museum-count');
   if(mcEl) mcEl.innerText = (stats.dead||0) + ' Exhibits';
+  // Handle game ended state
+  if (stats.gameEnded === 1) {
+    window._gameEnded = true;
+    const stakeBtn = document.getElementById('btn-stake-all');
+    if(stakeBtn){stakeBtn.disabled=true;stakeBtn.style.opacity='.4';stakeBtn.title='Game has ended';}
+    const feedBtn = document.getElementById('btn-feed-all');
+    if(feedBtn){feedBtn.disabled=true;feedBtn.style.opacity='.4';feedBtn.title='Game has ended';}
+    // Show game ended banner on home
+    const hsub = document.querySelector('.hsub');
+    if(hsub && !hsub.dataset.ended){
+      hsub.dataset.ended='1';
+      hsub.innerHTML='// 🏆 GAME OVER — SURVIVORS DECLARED //';
+      hsub.style.color='var(--amber)';
+    }
+  }
 }
 
 // Refresh global data every 30 seconds
@@ -1308,6 +1370,34 @@ setInterval(async () => {
     updateHomeStats(stats);
   } catch(e) {}
 }, 30000);
+
+// Refresh wallet NFTs + staked every 2 minutes (detect new/sold NFTs)
+setInterval(async () => {
+  if (!wallet || !USE_API) return;
+  try {
+    // Refresh staked from server (catches auto-unstaked NFTs)
+    const stakedData = await MantyAPI.getMyStaked(wallet);
+    const newStaked = (stakedData.staked||[]).map(n => ({
+      id: n.id, tokenId: n.token_id,
+      name: n.name || 'Seals #'+n.token_id,
+      imageUrl: n.image_url || '',
+      hp: n.hp,
+      days: Math.floor((Date.now()-new Date(n.staked_at+'Z').getTime())/86400000),
+      lastEarned: n.last_earned
+    }));
+    // Refresh wallet NFTs (detect new purchases/transfers)
+    const freshNFTs = await fetchWalletNFTs(wallet);
+    const stakedIds = new Set(newStaked.map(n=>n.tokenId));
+    const newWallet = freshNFTs.filter(n => !stakedIds.has(n.tokenId));
+    // Only update UI if something changed
+    if (newStaked.length !== stakedNFTs.length || newWallet.length !== walletNFTs.length) {
+      stakedNFTs = newStaked;
+      walletNFTs = newWallet;
+      renderStake();
+      updateBalUI();
+    }
+  } catch(e) {}
+}, 120000);
 
 async function loadGardenFromAPI(page=1) {
   const limit = 20;
@@ -1425,7 +1515,7 @@ async function onConnected(addr){
     // Register/login on backend
     try {
       const loginData = await MantyAPI.login(addr);
-      mthyBal = Math.floor(loginData.user?.mthy_balance || 0);
+      mthyBal = Math.round((loginData.user?.mthy_balance || 0) * 100) / 100;
       
       // Get staked NFTs from backend
       const stakedData = await MantyAPI.getMyStaked(addr);
@@ -1475,6 +1565,9 @@ async function onConnected(addr){
   toast('Found ' + walletNFTs.length + ' unstaked + ' + stakedNFTs.length + ' staked ✅');
 
   if(pendingPage){showPage(pendingPage);pendingPage=null;}
+  // Check for catches and winners
+  checkCatchTicker();
+  loadWinnerSection();
 }
 
 function disconnect(){
@@ -1926,13 +2019,20 @@ let stakeFilter='all';
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const totalDays=364;
   let cellIdx=0;
-  for(let i=0;i<totalDays;i++){
+  // Generate cells: today at top-left, then future dates going right
+  // But also include past 30 days for heatmap data from API
+  const pastDays = 180; // 6 months back
+  const futureDays = totalDays - pastDays;
+  for(let i=-pastDays;i<futureDays;i++){
     const d=new Date(today);
     d.setDate(d.getDate()+i);
     const dateStr=months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
     const delay=(cellIdx*0.003).toFixed(3);
     const isToday=i===0?' hm-today':'';
-    h+=`<div class="hm-cell${isToday}" data-date="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}" data-day="${i}" style="animation-delay:${delay}s"><div class="hm-tip">${dateStr}<br>No feedings</div></div>`;
+    const isPast=i<0?' hm-past':'';
+    h+=`<div class="hm-cell${isToday}${isPast}" data-date="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}" data-day="${i}" style="animation-delay:${delay}s"><div class="hm-tip">${dateStr}<br>No activity</div></div>`;
+    cellIdx++;
+  }
     cellIdx++;
   }
   hm.innerHTML=h;
@@ -2071,7 +2171,7 @@ async function feedOne(id){
     try{
       const r=await MantyAPI.feed(wallet, nft.tokenId);
       if(r.error){toast(r.error);closeNftModal();return;}
-      mthyBal=Math.floor(r.balance||mthyBal-100);
+      mthyBal=Math.round((r.balance||mthyBal-100)*100)/100;
     }catch(e){toast('Feed failed');closeNftModal();return;}
   } else {
     if(mthyBal<100){toast('Not enough $MTHY!');return;}
@@ -2237,7 +2337,7 @@ async function claimReward(){
     try{
       const r=await MantyAPI.claim(wallet);
       if(r.error){toast(r.error);if(claimBtn){claimBtn.disabled=false;}updateBalUI();return;}
-      mthyBal=Math.floor(r.balance||0);
+      mthyBal=Math.round((r.balance||0)*100)/100;
       claimAccumulator=0;
       updateBalUI();
       updateHeatmap('claim');
@@ -2262,7 +2362,7 @@ async function feedAllStaked(){
     try{
       const r=await MantyAPI.feedAll(wallet);
       if(r.error){toast(r.error);return;}
-      mthyBal=Math.floor(r.balance||0);
+      mthyBal=Math.round((r.balance||0)*100)/100;
       hungry.forEach(n=>{n.hp=100;});
       renderStake();
       updateBalUI();
@@ -2354,6 +2454,8 @@ setInterval(function(){
     claimAccumulator += perSecond;
     const caEl = document.getElementById('claim-amount');
     if(caEl) caEl.innerText = claimAccumulator.toFixed(2);
+    const pendEl = document.getElementById('ss-pending');
+    if(pendEl) pendEl.innerText = '+' + claimAccumulator.toFixed(2);
   }
 }, 1000);
 
@@ -2424,6 +2526,109 @@ try{
 // Load collection from Stargaze on page load
 loadCollection();
 renderStake();
+
+// ===== CATCH TICKER =====
+let lastCatchCheck = null;
+let tickerDismissed = false;
+let tickerDismissedIds = new Set();
+
+function closeCatchTicker() {
+  document.getElementById('catch-ticker').classList.remove('show');
+  document.querySelector('nav').style.top = '0';
+  // Don't permanently dismiss — just mark current catches as seen
+  tickerDismissed = false;
+}
+
+async function checkCatchTicker() {
+  if (!wallet) return;
+  try {
+    const data = await MantyAPI.getRecentCatches(10);
+    const catches = data.catches || [];
+    // Find catches that affect the current user's NFTs and haven't been seen
+    const myCatches = catches.filter(c => c.original_owner === wallet && !tickerDismissedIds.has(c.id));
+    if (myCatches.length > 0) {
+      myCatches.forEach(c => tickerDismissedIds.add(c.id));
+      const ticker = document.getElementById('catch-ticker');
+      const text = document.getElementById('catch-ticker-text');
+      if (myCatches.length === 1) {
+        text.innerHTML = `Your <b>${myCatches[0].name || '#' + myCatches[0].token_id}</b> was caught! It's now in the Museum.`;
+      } else {
+        const names = myCatches.slice(0, 3).map(c => c.name || '#' + c.token_id).join(', ');
+        const extra = myCatches.length > 3 ? ` and ${myCatches.length - 3} more` : '';
+        text.innerHTML = `<b>${myCatches.length}</b> of your NFTs were caught: <b>${names}</b>${extra}. Check the Museum.`;
+      }
+      ticker.classList.add('show');
+      document.querySelector('nav').style.top = '37px';
+    }
+  } catch(e) {}
+}
+
+// Check for catches every 30 seconds
+setInterval(checkCatchTicker, 30000);
+
+// ===== WINNER SECTION =====
+async function loadWinnerSection() {
+  if (!wallet) return;
+  try {
+    const data = await MantyAPI.getMyWinners(wallet);
+    const winners = data.winners || [];
+    if (winners.length === 0) {
+      document.getElementById('winner-section').style.display = 'none';
+      return;
+    }
+    document.getElementById('winner-section').style.display = 'block';
+
+    // Render badges
+    const badgesHtml = winners.map(w =>
+      `<span class="survivor-badge"><span class="survivor-badge-icon">🏅</span> ${w.name} — SURVIVOR</span>`
+    ).join('');
+    document.getElementById('winner-badges').innerHTML = badgesHtml;
+
+    // Render winner cards with claim forms
+    const cardsHtml = winners.map(w => {
+      const claimed = !!w.claimed_at;
+      const imgHtml = nftImageHtml({imageUrl: w.image_url, name: w.name}, 60);
+      return `<div class="winner-card">
+        ${claimed ? '<div class="winner-card-claimed">✓ CLAIMED</div>' : ''}
+        <div class="winner-card-img">${imgHtml}</div>
+        <div class="winner-card-name">${w.name}</div>
+        <div class="winner-card-info">HP ${w.hp}% · ${w.days_survived}d survived</div>
+        ${claimed
+          ? `<div style="margin-top:8px;font-size:11px;color:var(--gb);font-family:'Space Mono',monospace;">Prize claimed ✓</div>`
+          : `<div class="claim-form" id="claim-form-${w.token_id}">
+              <label>WALLET ADDRESS (for 1/1 art)</label>
+              <input type="text" id="claim-wallet-${w.token_id}" placeholder="cosmos1... or stars1...">
+              <label>SHIPPING ADDRESS (for merchandise)</label>
+              <textarea id="claim-addr-${w.token_id}" placeholder="Full name, street, city, country, zip"></textarea>
+              <label>DISCORD USERNAME</label>
+              <input type="text" id="claim-discord-${w.token_id}" placeholder="username#1234 or username">
+              <label>TWITTER / X</label>
+              <input type="text" id="claim-twitter-${w.token_id}" placeholder="@username">
+              <div class="note">⚠️ Shipping cost is covered by the winner. At least one contact (Discord or Twitter) is required so we can reach you.</div>
+              <button onclick="submitClaim('${w.token_id}')">CLAIM PRIZE</button>
+            </div>`
+        }
+      </div>`;
+    }).join('');
+    document.getElementById('winner-cards').innerHTML = cardsHtml;
+  } catch(e) { console.log('Winner check error:', e); }
+}
+
+async function submitClaim(tokenId) {
+  const claimWallet = document.getElementById('claim-wallet-' + tokenId)?.value?.trim();
+  const claimAddress = document.getElementById('claim-addr-' + tokenId)?.value?.trim();
+  const discord = document.getElementById('claim-discord-' + tokenId)?.value?.trim();
+  const twitter = document.getElementById('claim-twitter-' + tokenId)?.value?.trim();
+  if (!claimWallet) { toast('Wallet address is required!'); return; }
+  if (!claimAddress) { toast('Shipping address is required!'); return; }
+  if (!discord && !twitter) { toast('Provide at least Discord or Twitter!'); return; }
+  try {
+    const r = await MantyAPI.claimPrize(wallet, tokenId, claimWallet, claimAddress, discord, twitter);
+    if (r.error) { toast(r.error); return; }
+    toast(r.message || 'Prize claimed! 🏆');
+    loadWinnerSection();
+  } catch(e) { toast('Claim failed'); }
+}
 
 // ===== ANIMATIONS =====
 

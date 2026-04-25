@@ -23,7 +23,9 @@ router.post('/', (req, res) => {
   run('UPDATE users SET mthy_balance = mthy_balance + ? WHERE wallet = ?', [totalEarned, wallet]);
 
   const updated = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
-  res.json({ success: true, earned: Math.floor(totalEarned), balance: Math.floor(updated.mthy_balance), message: `Claimed ${Math.floor(totalEarned)} $MTHY` });
+  const earned = Math.round(totalEarned * 100) / 100;
+  const balance = Math.round((updated.mthy_balance || 0) * 100) / 100;
+  res.json({ success: true, earned, balance, message: `Claimed ${earned} $MTHY` });
 });
 
 module.exports = router;

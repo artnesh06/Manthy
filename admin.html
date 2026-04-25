@@ -138,6 +138,15 @@ button.danger:hover{background:#ff5252;}
   <button onclick="saveConfig()">SAVE CONFIG</button>
 </div>
 
+<div class="card" style="margin-top:1rem;border-color:rgba(255,179,0,.4);">
+  <h3 style="color:#ffb300;">🏆 END GAME</h3>
+  <p style="font-size:11px;color:#81c784;margin-bottom:8px;">Declare the top 20 surviving NFTs as winners. This freezes the game.</p>
+  <div id="endgame-status" style="font-size:11px;color:#4caf50;margin-bottom:8px;"></div>
+  <button id="btn-endgame" style="background:#ffb300;color:#080e08;" onclick="endGame()">END GAME & DECLARE WINNERS</button>
+  <button id="btn-undo-endgame" style="background:#f44336;color:#fff;display:none;margin-left:8px;" onclick="undoEndGame()">UNDO END GAME</button>
+  <div id="winners-list" style="margin-top:12px;"></div>
+</div>
+
 <div class="card danger" style="margin-top:1rem;border-color:#f44336;">
   <h3 style="color:#f44336;">⚠️ DANGER ZONE</h3>
   <p style="font-size:11px;color:#81c784;margin-bottom:8px;">Reset all game data. This cannot be undone.</p>
@@ -153,17 +162,39 @@ const API = window.location.origin + '/api';
 let ADMIN_KEY = '';
 
 // === LOGIN ===
-function doLogin(){
+async function doLogin(){
   const id = document.getElementById('login-id').value.trim();
   const pw = document.getElementById('login-pw').value;
-  if(id === 'admin' && pw === 'Manthy)(*'){
-    ADMIN_KEY = 'manthy-admin-2026';
-    try{sessionStorage.setItem('manthy_admin','1');}catch(e){}
+  // Validate against server using admin key
+  const testKey = btoa(id + ':' + pw).replace(/=/g,'');
+  ADMIN_KEY = testKey;
+  try {
+    const r = await fetch(API+'/admin/config',{headers:{'X-Admin-Key':testKey}});
+    if(r.status === 401){
+      // Try legacy key
+      ADMIN_KEY = 'manthy-admin-2026';
+      const r2 = await fetch(API+'/admin/config',{headers:{'X-Admin-Key':ADMIN_KEY}});
+      if(r2.status === 401 && !(id === 'admin' && pw === 'Manthy)(*')){
+        document.getElementById('login-error').style.display='block';
+        ADMIN_KEY = '';
+        return;
+      }
+    }
+    try{sessionStorage.setItem('manthy_admin','1');sessionStorage.setItem('manthy_admin_key',ADMIN_KEY);}catch(e){}
     document.getElementById('login-screen').style.display='none';
     document.getElementById('admin-panel').style.display='block';
     loadAll();
-  } else {
-    document.getElementById('login-error').style.display='block';
+  } catch(e) {
+    // Fallback for offline: use hardcoded check
+    if(id === 'admin' && pw === 'Manthy)(*'){
+      ADMIN_KEY = 'manthy-admin-2026';
+      try{sessionStorage.setItem('manthy_admin','1');sessionStorage.setItem('manthy_admin_key',ADMIN_KEY);}catch(e2){}
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('admin-panel').style.display='block';
+      loadAll();
+    } else {
+      document.getElementById('login-error').style.display='block';
+    }
   }
 }
 function doLogout(){
@@ -175,7 +206,7 @@ function doLogout(){
 }
 // Auto-login if session exists
 if(sessionStorage.getItem('manthy_admin')==='1'){
-  ADMIN_KEY='manthy-admin-2026';
+  ADMIN_KEY=sessionStorage.getItem('manthy_admin_key')||'manthy-admin-2026';
   document.getElementById('login-screen').style.display='none';
   document.getElementById('admin-panel').style.display='block';
   setTimeout(()=>loadAll(),100);
@@ -285,7 +316,7 @@ async function resetGame(){
   }catch(e){toast('Error: '+e.message);}
 }
 
-function loadAll(){loadHealth();loadStats();loadUsers();loadStaked();loadMuseum();loadConfig();loadSummary();loadFeedHistory();}
+function loadAll(){loadHealth();loadStats();loadUsers();loadStaked();loadMuseum();loadConfig();loadSummary();loadFeedHistory();loadWinners();}
 setInterval(()=>{if(ADMIN_KEY)loadAll();},30000);
 
 async function loadSummary(){
@@ -302,6 +333,64 @@ async function loadFeedHistory(){
       `<div style="padding:3px 0;border-bottom:1px solid #111a11;">${(h.wallet||'').slice(0,8)}... fed #${h.token_id} — ${h.fed_at||''}</div>`
     ).join('')||'<div style="color:#4caf50;">No feeds yet</div>';
   }catch(e){log('Feed history: '+e.message);}
+}
+
+async function endGame(){
+  if(!confirm('Are you sure? This will declare the top 20 NFTs as WINNERS and freeze the game.')) return;
+  if(!confirm('REALLY? This cannot be undone easily.')) return;
+  try{
+    const r=await fetch(API+'/admin/end-game',{method:'POST',headers:adminH(),body:JSON.stringify({confirm:'END_GAME'})});
+    const d=await r.json();
+    if(d.error){toast(d.error);return;}
+    toast(d.message||'Game ended!');
+    log('GAME ENDED — '+d.winners+' winners declared');
+    loadWinners();
+  }catch(e){toast('Error: '+e.message);}
+}
+
+async function loadWinners(){
+  try{
+    const r=await fetch(API+'/admin/winners',{headers:{'X-Admin-Key':ADMIN_KEY}});
+    const d=await r.json();
+    const winners=d.winners||[];
+    const statusEl=document.getElementById('endgame-status');
+    const listEl=document.getElementById('winners-list');
+    const btn=document.getElementById('btn-endgame');
+    const undoBtn=document.getElementById('btn-undo-endgame');
+    if(winners.length===0){
+      statusEl.innerHTML='Game is still running.';
+      listEl.innerHTML='';
+      if(btn){btn.disabled=false;btn.style.opacity='1';}
+      if(undoBtn)undoBtn.style.display='none';
+      return;
+    }
+    statusEl.innerHTML='<span class="badge badge-amber">GAME ENDED</span> '+winners.length+' winners declared';
+    if(btn){btn.disabled=true;btn.style.opacity='.4';btn.innerText='GAME ALREADY ENDED';}
+    if(undoBtn)undoBtn.style.display='inline-block';
+    listEl.innerHTML='<table><thead><tr><th>Token</th><th>Name</th><th>Owner</th><th>HP</th><th>Days</th><th>Claimed</th><th>Wallet</th><th>Discord</th><th>Twitter</th></tr></thead><tbody>'+
+      winners.map(w=>`<tr>
+        <td>#${w.token_id}</td><td>${w.name}</td>
+        <td style="font-size:10px">${(w.wallet||'').slice(0,8)}...</td>
+        <td>${w.hp}%</td><td>${w.days_survived}d</td>
+        <td>${w.claimed_at?'<span class="badge badge-green">YES</span>':'<span class="badge badge-red">NO</span>'}</td>
+        <td style="font-size:10px">${w.claim_wallet?(w.claim_wallet.slice(0,12)+'...'):'—'}</td>
+        <td style="font-size:10px">${w.claim_discord||'—'}</td>
+        <td style="font-size:10px">${w.claim_twitter||'—'}</td>
+      </tr>`).join('')+'</tbody></table>';
+  }catch(e){log('Winners: '+e.message);}
+}
+
+async function undoEndGame(){
+  if(!confirm('Are you sure? This will DELETE all winners and resume the game.')) return;
+  if(!confirm('REALLY undo? Winners will be cleared.')) return;
+  try{
+    const r=await fetch(API+'/admin/undo-end-game',{method:'POST',headers:adminH(),body:JSON.stringify({confirm:'UNDO_END_GAME'})});
+    const d=await r.json();
+    if(d.error){toast(d.error);return;}
+    toast(d.message||'Game resumed!');
+    log('GAME UN-ENDED — winners cleared');
+    loadAll();
+  }catch(e){toast('Error: '+e.message);}
 }
 </script>
 </body>

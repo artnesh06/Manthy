@@ -6,7 +6,6 @@ router.get('/', (req, res) => {
   const { sort = 'hp', limit = 20, offset = 0 } = req.query;
   let orderBy = 'hp DESC, staked_at ASC';
   if (sort === 'score') {
-    // Score = HP + days_staked (longer survival = higher score)
     orderBy = "(hp + CAST((julianday('now') - julianday(staked_at)) AS INTEGER)) DESC, staked_at ASC";
   }
   const nfts = all(`SELECT *, CAST((julianday('now') - julianday(staked_at)) AS INTEGER) as days_alive FROM staked_nfts ORDER BY ${orderBy} LIMIT ? OFFSET ?`, [Number(limit), Number(offset)]);
@@ -22,7 +21,27 @@ router.get('/stats', (req, res) => {
   const survivors = getConfig('max_survivors', 20);
   const totalUsers = get('SELECT COUNT(*) as count FROM users')?.count || 0;
   const config = get("SELECT value FROM game_config WHERE key = 'game_start'");
-  res.json({ alive, weak, dead, survivors, totalUsers, gameStart: config?.value });
+  const gameEnded = getConfig('game_ended', 0);
+  res.json({ alive, weak, dead, survivors, totalUsers, gameStart: config?.value, gameEnded });
+});
+
+// Recent catches — for ticker notification
+router.get('/catches', (req, res) => {
+  const { limit = 10, since } = req.query;
+  let catches;
+  if (since) {
+    catches = all("SELECT * FROM catch_log WHERE caught_at > ? ORDER BY caught_at DESC LIMIT ?", [since, Number(limit)]);
+  } else {
+    catches = all('SELECT * FROM catch_log ORDER BY caught_at DESC LIMIT ?', [Number(limit)]);
+  }
+  res.json({ catches });
+});
+
+// Winners — public endpoint
+router.get('/winners', (req, res) => {
+  const winners = all('SELECT * FROM winners ORDER BY hp DESC, days_survived DESC');
+  const gameEnded = getConfig('game_ended', 0);
+  res.json({ winners, gameEnded });
 });
 
 // User leaderboard — sorted by $MTHY balance

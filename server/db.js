@@ -83,11 +83,45 @@ async function initDB() {
     )
   `);
 
+  // Winners table — stores the final 20 surviving NFTs
+  db.run(`
+    CREATE TABLE IF NOT EXISTS winners (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token_id TEXT NOT NULL,
+      collection_addr TEXT NOT NULL,
+      wallet TEXT NOT NULL,
+      name TEXT,
+      image_url TEXT,
+      hp INTEGER,
+      days_survived INTEGER,
+      claim_wallet TEXT,
+      claim_address TEXT,
+      claim_discord TEXT,
+      claim_twitter TEXT,
+      claimed_at TEXT,
+      won_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(token_id, collection_addr)
+    )
+  `);
+
+  // Catch log — recent catches for ticker notification
+  db.run(`
+    CREATE TABLE IF NOT EXISTS catch_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token_id TEXT NOT NULL,
+      name TEXT,
+      caught_by TEXT,
+      original_owner TEXT,
+      caught_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
   // Default config
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('earn_rate_per_day', '80')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('feed_cost', '100')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_start', '" + new Date().toISOString() + "')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('max_survivors', '20')");
+  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_ended', '0')");
 
   saveDB();
   console.log('[DB] Database initialized');
