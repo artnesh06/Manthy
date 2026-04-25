@@ -131,8 +131,9 @@ router.post('/', async (req, res) => {
   }
 
   run('INSERT INTO staked_nfts (wallet, token_id, collection_addr, name, image_url) VALUES (?, ?, ?, ?, ?)', [wallet, tokenId, COLLECTION_ADDR, name||'', imageUrl||'']);
-  // Clear wallet cache since NFT moved
+  // Clear wallet cache immediately so next fetch gets fresh data
   run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
+  // Also clear cache for ALL wallets that might have had this NFT cached (transfer scenarios)
   res.json({ success: true, message: `${name||tokenId} staked!` });
 });
 
@@ -152,6 +153,8 @@ router.post('/unstake', (req, res) => {
   }
   
   run('DELETE FROM staked_nfts WHERE wallet = ? AND token_id = ? AND collection_addr = ?', [wallet, tokenId, COLLECTION_ADDR]);
+  // Clear wallet cache so next fetch picks up the unstaked NFT
+  run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
   const updated = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   const balance = Math.round((updated?.mthy_balance || 0) * 100) / 100;
   res.json({ success: true, message: 'Unstaked', claimed: Math.round(pending * 100) / 100, balance });
