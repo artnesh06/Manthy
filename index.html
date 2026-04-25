@@ -1686,6 +1686,8 @@ async function onConnected(addr){
   // Check for catches and winners
   checkCatchTicker();
   loadWinnerSection();
+  // Re-load profile if currently on profile page
+  if(document.getElementById('page-profile')?.classList.contains('active')) loadProfilePage();
 }
 
 function disconnect(){
