@@ -75,6 +75,13 @@ async function initDB() {
       value TEXT
     )
   `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS wallet_nft_cache (
+      wallet TEXT PRIMARY KEY,
+      nfts TEXT,
+      cached_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
 
   // Default config
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('earn_rate_per_day', '80')");
