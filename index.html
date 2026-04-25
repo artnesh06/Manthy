@@ -1251,11 +1251,9 @@ function buildGameData(tokens) {
 async function loadCollection() {
   toast('Loading data...');
   
-  // Always try API first
   try {
     const healthCheck = await fetch(window.location.origin + '/api/health');
     if (healthCheck.ok) {
-      // API is online — load everything from backend
       const stats = await MantyAPI.getStats();
       updateHomeStats(stats);
       await loadGardenFromAPI();
@@ -1265,11 +1263,17 @@ async function loadCollection() {
       return;
     }
   } catch(e) {
-    console.log('API offline, falling back to Stargaze');
+    console.log('API offline');
   }
   
-  // Fallback: load from Stargaze (demo mode)
-  await loadCollectionFromStargaze();
+  // No fallback — show empty state
+  arenaData = [];
+  museumData = [];
+  updateHomeStats({ alive: 0, weak: 0, dead: 0, survivors: 20 });
+  renderArena();
+  renderMuseum();
+  renderLB();
+  toast('⚠️ Server offline — connect via Railway URL');
 }
 
 function updateHomeStats(stats) {
