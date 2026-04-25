@@ -1249,28 +1249,45 @@ async function loadCollection() {
   toast('Loading data...');
   
   try {
-    const healthCheck = await fetch(window.location.origin + '/api/health');
-    if (healthCheck.ok) {
-      const stats = await MantyAPI.getStats();
-      updateHomeStats(stats);
-      await loadGardenFromAPI();
-      await loadMuseumFromAPI();
-      renderLB();
-      toast('Data loaded ✅');
-      return;
-    }
+    const stats = await MantyAPI.getStats();
+    updateHomeStats(stats);
+    await loadGardenFromAPI();
+    await loadMuseumFromAPI();
+    renderLB();
+    toast('Data loaded ✅');
   } catch(e) {
-    console.log('API offline');
+    console.log('API error:', e.message);
+    // Retry once after 2 seconds
+    setTimeout(async () => {
+      try {
+        const stats = await MantyAPI.getStats();
+        updateHomeStats(stats);
+        await loadGardenFromAPI();
+        await loadMuseumFromAPI();
+        renderLB();
+        toast('Data loaded ✅');
+      } catch(e2) {
+        arenaData = [];
+        museumData = [];
+        updateHomeStats({ alive: 0, weak: 0, dead: 0, survivors: 20 });
+        renderArena();
+        renderMuseum();
+        renderLB();
+        toast('⚠️ Server offline');
+      }
+    }, 2000);
   }
-  
-  // No fallback — show empty state
-  arenaData = [];
-  museumData = [];
-  updateHomeStats({ alive: 0, weak: 0, dead: 0, survivors: 20 });
-  renderArena();
-  renderMuseum();
-  renderLB();
-  toast('⚠️ Server offline — connect via Railway URL');
+}
+
+// Refresh global data (Garden, Museum, Ranks) — call after stake/catch/feed
+async function refreshGlobalData() {
+  try {
+    const stats = await MantyAPI.getStats();
+    updateHomeStats(stats);
+    await loadGardenFromAPI();
+    await loadMuseumFromAPI();
+    renderLB();
+  } catch(e) {}
 }
 
 function updateHomeStats(stats) {
@@ -1283,9 +1300,9 @@ function updateHomeStats(stats) {
   if(mcEl) mcEl.innerText = (stats.dead||0) + ' Exhibits';
 }
 
-// Refresh stats from API every 30 seconds (only update numbers, don't re-render pages)
+// Refresh global data every 30 seconds
 setInterval(async () => {
-  if (isConnecting) return; // Don't refresh during wallet connect
+  if (isConnecting) return;
   try {
     const stats = await MantyAPI.getStats();
     updateHomeStats(stats);
@@ -1997,6 +2014,7 @@ async function stakeById(id){
   closeNftModal();
   updateHeatmap('stake');
   toast(nft.name+' staked!\n+80 $MTHY/day ✅');
+  refreshGlobalData(); // Update Garden + Ranks for all users
 }
 
 async function stakeAll(){
@@ -2020,6 +2038,7 @@ async function stakeAll(){
   renderStake();
   for(let i=0;i<count;i++) updateHeatmap('stake');
   toast(count+' NFTs staked!\n+80 $MTHY/day each ✅');
+  refreshGlobalData();
 }
 
 // ===== NFT MODAL =====
@@ -2185,6 +2204,7 @@ async function catchManthy(id){
   const mcEl2=document.getElementById('museum-count');
   if(mcEl2) mcEl2.innerText=museumData.length+' Exhibits';
   toast(caught.name+' caught!\nSent to Museum.');
+  refreshGlobalData();
 }
 
 function filterArena(type,btn){
