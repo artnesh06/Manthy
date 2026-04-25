@@ -152,4 +152,10 @@ function all(sql, params = []) {
   return rows;
 }
 
-module.exports = { initDB, run, get, all, saveDB, getDB: () => db };
+// Helper: get config value with fallback
+function getConfig(key, fallback) {
+  const row = get("SELECT value FROM game_config WHERE key = ?", [key]);
+  return row ? Number(row.value) || fallback : fallback;
+}
+
+module.exports = { initDB, run, get, all, saveDB, getDB: () => db, getConfig };

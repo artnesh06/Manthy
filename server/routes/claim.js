@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all } = require('../db');
-const EARN_PER_DAY = 80;
+const { run, get, all, getConfig } = require('../db');
 
 router.post('/', (req, res) => {
   const { wallet } = req.body;
@@ -11,6 +10,7 @@ router.post('/', (req, res) => {
   const staked = all('SELECT * FROM staked_nfts WHERE wallet = ?', [wallet]);
   if (staked.length === 0) return res.status(400).json({ error: 'No staked NFTs' });
 
+  const EARN_PER_DAY = getConfig('earn_rate_per_day', 80);
   const now = new Date();
   let totalEarned = 0;
   for (const nft of staked) {

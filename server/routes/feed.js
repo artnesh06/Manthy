@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all } = require('../db');
-const FEED_COST = 100;
+const { run, get, all, getConfig } = require('../db');
 
 router.post('/', (req, res) => {
+  const FEED_COST = getConfig('feed_cost', 100);
   const { wallet, tokenId } = req.body;
   if (!wallet || !tokenId) return res.status(400).json({ error: 'wallet and tokenId required' });
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
@@ -22,6 +22,7 @@ router.post('/', (req, res) => {
 });
 
 router.post('/all', (req, res) => {
+  const FEED_COST = getConfig('feed_cost', 100);
   const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
