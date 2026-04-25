@@ -112,15 +112,27 @@ router.post('/', async (req, res) => {
   if (get('SELECT * FROM staked_nfts WHERE token_id = ? AND collection_addr = ?', [tokenId, COLLECTION_ADDR])) return res.status(400).json({ error: 'Already staked' });
   if (get('SELECT * FROM museum WHERE token_id = ? AND collection_addr = ?', [tokenId, COLLECTION_ADDR])) return res.status(400).json({ error: 'In museum' });
 
-  // Verify NFT ownership on-chain
-  const ownership = await verifyOwnership(wallet, tokenId);
-  if (!ownership.verified) {
-    return res.status(403).json({ error: ownership.reason || 'Not your NFT' });
+  // Fast path: check DB cache first (user already fetched NFTs via /nfts endpoint)
+  const cached = get("SELECT nfts FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
+  let skipVerify = false;
+  if (cached) {
+    try {
+      const nfts = JSON.parse(cached.nfts);
+      if (nfts.some(n => n.tokenId === tokenId)) skipVerify = true;
+    } catch(e) {}
+  }
+
+  if (!skipVerify) {
+    const ownership = await verifyOwnership(wallet, tokenId);
+    if (!ownership.verified) {
+      return res.status(403).json({ error: ownership.reason || 'Not your NFT' });
+    }
   }
 
   run('INSERT INTO staked_nfts (wallet, token_id, collection_addr, name, image_url) VALUES (?, ?, ?, ?, ?)', [wallet, tokenId, COLLECTION_ADDR, name||'', imageUrl||'']);
-  const msg = ownership.warning ? `${name||tokenId} staked! (${ownership.warning})` : `${name||tokenId} staked!`;
-  res.json({ success: true, message: msg });
+  // Clear wallet cache since NFT moved
+  run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
+  res.json({ success: true, message: `${name||tokenId} staked!` });
 });
 
 router.post('/unstake', (req, res) => {

@@ -1850,13 +1850,33 @@ let stakeFilter='all';
     const dateStr=months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
     const delay=(cellIdx*0.003).toFixed(3);
     const isToday=i===0?' hm-today':'';
-    h+=`<div class="hm-cell${isToday}" data-date="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}" style="animation-delay:${delay}s"><div class="hm-tip">${dateStr}<br>No feedings</div></div>`;
+    h+=`<div class="hm-cell${isToday}" data-date="${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}" data-day="${i}" style="animation-delay:${delay}s"><div class="hm-tip">${dateStr}<br>No feedings</div></div>`;
     cellIdx++;
   }
   hm.innerHTML=h;
   const cntEl=document.getElementById('hm-count');
   if(cntEl) cntEl.innerText='0';
 })();
+
+// Update heatmap: light up today's cell green when user stakes/feeds
+function updateHeatmap(action) {
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const cell = document.querySelector(`.hm-cell[data-date="${dateStr}"]`);
+  if (cell) {
+    // Increase intensity
+    let count = parseInt(cell.dataset.count || '0') + 1;
+    cell.dataset.count = count;
+    const intensity = Math.min(count * 0.15, 1);
+    cell.style.background = `rgba(118,255,3,${Math.max(0.12, intensity)})`;
+    cell.style.borderColor = `rgba(118,255,3,${Math.max(0.2, intensity)})`;
+    const tip = cell.querySelector('.hm-tip');
+    if (tip) tip.innerHTML = tip.innerHTML.split('<br>')[0] + `<br>${count} ${action}(s)`;
+  }
+  // Update total count
+  const cntEl = document.getElementById('hm-count');
+  if (cntEl) cntEl.innerText = parseInt(cntEl.innerText || '0') + 1;
+}
 
 function renderStake(filter){
   const allCards=[];
@@ -1951,6 +1971,7 @@ async function feedOne(id){
   renderStake();
   updateBalUI();
   closeNftModal();
+  updateHeatmap('feed');
   toast(nft.name+' fed!\nHP 100% ✅');
 }
 
@@ -1974,6 +1995,7 @@ async function stakeById(id){
   stakedNFTs.push({id:nft.id,tokenId:nft.tokenId,name:nft.name,imageUrl:nft.imageUrl,days:0,hp:100});
   renderStake();
   closeNftModal();
+  updateHeatmap('stake');
   toast(nft.name+' staked!\n+80 $MTHY/day ✅');
 }
 
@@ -1996,6 +2018,7 @@ async function stakeAll(){
   }
   walletNFTs=[];
   renderStake();
+  for(let i=0;i<count;i++) updateHeatmap('stake');
   toast(count+' NFTs staked!\n+80 $MTHY/day each ✅');
 }
 
@@ -2090,21 +2113,27 @@ function openArenaModal(id){
 async function claimReward(){
   if(stakedNFTs.length<=0){toast('No staked NFTs earning!');return;}
   
+  // Loading state
+  const claimBtn=document.querySelector('[onclick="claimReward()"]');
+  const origText=claimBtn?claimBtn.innerText:'';
+  if(claimBtn){claimBtn.disabled=true;claimBtn.innerText='CLAIMING...';}
+  
   if(USE_API && wallet){
     try{
       const r=await MantyAPI.claim(wallet);
-      if(r.error){toast(r.error);return;}
+      if(r.error){toast(r.error);if(claimBtn){claimBtn.disabled=false;claimBtn.innerText=origText;}return;}
       mthyBal=Math.floor(r.balance||0);
       claimAccumulator=0;
       updateBalUI();
       toast(r.message||'Claimed!');
-    }catch(e){toast('Claim failed');return;}
+    }catch(e){toast('Claim failed');if(claimBtn){claimBtn.disabled=false;claimBtn.innerText=origText;}return;}
   } else {
     const reward=stakedNFTs.length*80;
     mthyBal+=reward;
     updateBalUI();
     toast(reward+' $MTHY claimed!');
   }
+  if(claimBtn){claimBtn.disabled=false;claimBtn.innerText=origText;}
 }
 
 async function feedAllStaked(){
