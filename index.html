@@ -1435,8 +1435,22 @@ async function onConnected(addr){
         name: n.name || 'Seals #'+n.token_id,
         imageUrl: n.image_url || '',
         hp: n.hp,
-        days: Math.floor((Date.now()-new Date(n.staked_at+'Z').getTime())/86400000)
+        days: Math.floor((Date.now()-new Date(n.staked_at+'Z').getTime())/86400000),
+        lastEarned: n.last_earned
       }));
+      
+      // Calculate initial pending from last_earned
+      const now = Date.now();
+      const EARN_PER_DAY = 80;
+      let initialPending = 0;
+      for(const nft of stakedNFTs){
+        if(nft.lastEarned){
+          const lastE = new Date(nft.lastEarned+'Z').getTime();
+          const diffDays = (now - lastE) / 86400000;
+          initialPending += diffDays * EARN_PER_DAY;
+        }
+      }
+      claimAccumulator = initialPending;
     } catch(e) { console.error('API login error:', e); }
   }
 
@@ -1937,7 +1951,6 @@ function formatBalK(n){
 
 function updateBalUI(){
   const earnRate=stakedNFTs.length*80;
-  const pending=earnRate;
   const mbalEl=document.getElementById('mbal');
   if(mbalEl){
     mbalEl.innerText=mthyBal.toLocaleString();
@@ -1945,7 +1958,7 @@ function updateBalUI(){
   const ttEl=document.getElementById('bal-tooltip');
   if(ttEl) ttEl.innerText=mthyBal.toLocaleString()+' $MTHY';
   document.getElementById('ss-balance').innerText=mthyBal.toLocaleString();
-  document.getElementById('ss-pending').innerText='+'+pending;
+  document.getElementById('ss-pending').innerText='+'+claimAccumulator.toFixed(2);
   document.getElementById('ss-staked').innerText=stakedNFTs.length;
   document.getElementById('ss-unstaked').innerText=walletNFTs.length;
   const erEl=document.getElementById('ss-earnrate');
@@ -1956,7 +1969,7 @@ function updateBalUI(){
   const facEl=document.getElementById('feed-all-count');
   if(facEl) facEl.innerText=stakedNFTs.filter(n=>n.hp<100).length;
   const caEl=document.getElementById('claim-amount');
-  if(caEl) caEl.innerText=pending;
+  if(caEl) caEl.innerText=claimAccumulator.toFixed(2);
 }
 
 function switchHonorTab(btn,filter){
