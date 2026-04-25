@@ -9,6 +9,9 @@ const COSMOS_LCD_ENDPOINTS = [
   'https://rest.cosmos.directory/cosmoshub'
 ];
 
+// In-memory cache for NFT metadata (survives across requests, cleared on restart)
+const nftMetaCache = new Map(); // tokenId -> { name, imageUrl, cachedAt }
+
 router.post('/login', (req, res) => {
   const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'Wallet address required' });
@@ -49,8 +52,13 @@ router.get('/nfts', async (req, res) => {
         const data = await resp.json();
         const tokenIds = data?.data?.tokens || [];
         
-        // Fetch metadata from Stargaze GraphQL in parallel (faster)
+        // Fetch metadata — use cache first, then Stargaze GraphQL
         const nfts = await Promise.all(tokenIds.map(async (tokenId) => {
+          // Check cache (valid for 1 hour)
+          const cached = nftMetaCache.get(tokenId);
+          if (cached && (Date.now() - cached.cachedAt) < 3600000) {
+            return { tokenId, name: cached.name, imageUrl: cached.imageUrl };
+          }
           try {
             const gql = await fetch('https://graphql.mainnet.stargaze-apis.com/graphql', {
               method: 'POST', headers: {'Content-Type':'application/json'},
@@ -58,7 +66,10 @@ router.get('/nfts', async (req, res) => {
             });
             const gqlData = await gql.json();
             const meta = gqlData?.data?.token;
-            return { tokenId, name: meta?.name || `Seals #${tokenId}`, imageUrl: meta?.imageUrl || '' };
+            const result = { tokenId, name: meta?.name || `Seals #${tokenId}`, imageUrl: meta?.imageUrl || '' };
+            // Cache it
+            nftMetaCache.set(tokenId, { name: result.name, imageUrl: result.imageUrl, cachedAt: Date.now() });
+            return result;
           } catch(e) {
             return { tokenId, name: `Seals #${tokenId}`, imageUrl: '' };
           }

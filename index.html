@@ -1423,8 +1423,15 @@ async function onConnected(addr){
     } catch(e) { console.error('API login error:', e); }
   }
 
-  // Fetch wallet NFTs from Stargaze (to show unstaked ones)
+  // Show staked NFTs immediately while wallet NFTs load
+  renderStake();
+  updateBalUI();
+
+  // Fetch wallet NFTs (show loading in grid)
   toast('Loading your NFTs...');
+  const grid = document.getElementById('honor-grid');
+  if(grid && stakedNFTs.length === 0) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--td);font-size:13px;">Loading NFTs...</div>';
+  
   walletNFTs = await fetchWalletNFTs(addr);
   
   // Remove already-staked from wallet list
@@ -1925,12 +1932,15 @@ async function feedOne(id){
   const nft=stakedNFTs.find(n=>n.id===id);
   if(!nft||nft.hp>=100)return;
   
+  const modalBtns=document.getElementById('nm-actions');
+  if(modalBtns) modalBtns.innerHTML='<button class="btn-pri" disabled style="opacity:.6">FEEDING...</button>';
+  
   if(USE_API && wallet){
     try{
       const r=await MantyAPI.feed(wallet, nft.tokenId);
-      if(r.error){toast(r.error);return;}
+      if(r.error){toast(r.error);closeNftModal();return;}
       mthyBal=Math.floor(r.balance||mthyBal-100);
-    }catch(e){toast('Feed failed');return;}
+    }catch(e){toast('Feed failed');closeNftModal();return;}
   } else {
     if(mthyBal<100){toast('Not enough $MTHY!');return;}
     mthyBal-=100;
@@ -1949,11 +1959,15 @@ async function stakeById(id){
   if(idx<0)return;
   const nft=walletNFTs[idx];
   
+  // Show loading on modal button
+  const modalBtns=document.getElementById('nm-actions');
+  if(modalBtns) modalBtns.innerHTML='<button class="btn-pri" disabled style="opacity:.6">STAKING...</button>';
+  
   if(USE_API && wallet){
     try{
       const r=await MantyAPI.stake(wallet, nft.tokenId, nft.name, nft.imageUrl);
-      if(r.error){toast(r.error);return;}
-    }catch(e){toast('Stake failed');return;}
+      if(r.error){toast(r.error);closeNftModal();return;}
+    }catch(e){toast('Stake failed');closeNftModal();return;}
   }
   
   walletNFTs.splice(idx,1);
@@ -1965,12 +1979,20 @@ async function stakeById(id){
 
 async function stakeAll(){
   if(walletNFTs.length===0){toast('No NFTs to stake!');return;}
+  const btn=document.querySelector('[onclick="stakeAll()"]');
+  if(btn){btn.disabled=true;btn.innerText='STAKING...';}
   const count=walletNFTs.length;
-  for(const nft of [...walletNFTs]){
-    if(USE_API && wallet){
+  
+  if(USE_API && wallet){
+    // Stake all in parallel
+    await Promise.all([...walletNFTs].map(async nft=>{
       try{await MantyAPI.stake(wallet, nft.tokenId, nft.name, nft.imageUrl);}catch(e){}
+      stakedNFTs.push({id:nft.id,tokenId:nft.tokenId,name:nft.name,imageUrl:nft.imageUrl,days:0,hp:100});
+    }));
+  } else {
+    for(const nft of [...walletNFTs]){
+      stakedNFTs.push({id:nft.id,tokenId:nft.tokenId,name:nft.name,imageUrl:nft.imageUrl,days:0,hp:100});
     }
-    stakedNFTs.push({id:nft.id,tokenId:nft.tokenId,name:nft.name,imageUrl:nft.imageUrl,days:0,hp:100});
   }
   walletNFTs=[];
   renderStake();
