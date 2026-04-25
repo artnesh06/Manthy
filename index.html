@@ -774,18 +774,18 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 .pf-mini-name{font-family:'Space Mono',monospace;font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .pf-mini-score{font-family:'Space Mono',monospace;font-size:12px;color:var(--gb);font-weight:700;}
 
-/* GARDEN INSIGHTS PANEL — desktop only */
-.garden-layout{display:grid;grid-template-columns:1fr 320px;gap:2rem;align-items:start;}
-.garden-main{min-width:0;}
-.garden-insights{position:sticky;top:72px;}
+/* GARDEN INSIGHTS PANEL — inline toggle, desktop only */
+.garden-insights-inline{display:none;background:var(--bg2);border:1px solid var(--border2);padding:16px;overflow:hidden;grid-column:span 1;}
+.garden-insights-inline.show{display:block;animation:insightBounce .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes insightBounce{0%{opacity:0;transform:translateX(-40px) scale(.9);}40%{opacity:1;transform:translateX(8px) scale(1.02);}70%{transform:translateX(-3px) scale(1);}100%{transform:translateX(0) scale(1);}}
 .garden-insights-title{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
-.catch-chart{background:var(--bg2);border:1px solid var(--border2);padding:16px;margin-bottom:16px;}
+.catch-chart{background:var(--bg3);border:1px solid var(--border);padding:12px;margin-bottom:16px;}
 .catch-chart-bars{display:flex;align-items:flex-end;gap:3px;height:80px;padding-top:8px;}
 .catch-chart-bar{flex:1;background:var(--danger);min-width:4px;border-radius:2px 2px 0 0;transition:height .3s;position:relative;cursor:pointer;}
 .catch-chart-bar:hover{opacity:.8;}
 .catch-chart-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);padding:4px 8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text);white-space:nowrap;z-index:10;}
 .catch-chart-labels{display:flex;justify-content:space-between;margin-top:6px;font-family:'Space Mono',monospace;font-size:9px;color:var(--td);}
-.catch-activity{background:var(--bg2);border:1px solid var(--border2);max-height:400px;overflow-y:auto;}
+.catch-activity{background:var(--bg3);border:1px solid var(--border);max-height:260px;overflow-y:auto;}
 .catch-activity-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:11px;}
 .catch-activity-row:last-child{border-bottom:none;}
 .catch-activity-row:hover{background:rgba(255,23,68,.03);}
@@ -795,9 +795,12 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 .catch-activity-name{color:var(--danger);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .catch-activity-by{color:var(--td);font-size:10px;}
 .catch-activity-time{color:var(--td);font-size:10px;flex-shrink:0;}
+.activity-toggle{background:rgba(118,255,3,0.06);border:1px solid var(--border2);color:var(--tm);padding:6px 14px;font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;letter-spacing:1px;text-transform:uppercase;margin-left:auto;}
+.activity-toggle:hover{color:var(--gb);border-color:var(--gb);background:rgba(118,255,3,.1);}
+.activity-toggle.active{color:var(--gb);border-color:var(--gb);background:rgba(118,255,3,.12);}
 @media(max-width:768px){
-  .garden-layout{grid-template-columns:1fr !important;}
-  .garden-insights{display:none !important;}
+  .activity-toggle{display:none !important;}
+  .garden-insights-inline{display:none !important;}
 }
 
 /* CATCH TICKER NOTIFICATION */
@@ -1052,30 +1055,18 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 
 <!-- ARENA -->
 <div id="page-arena" class="page">
-  <div class="garden-layout">
-    <div class="garden-main">
       <div class="shdr" style="margin-top:0;">
         <div class="scnt" id="arena-cnt"><span class="live-dot"></span> 180 Manthys In Garden</div>
       </div>
-      <div class="fbar">
+      <div class="fbar" style="display:flex;align-items:center;">
         <button class="fb active" onclick="filterArena('all',this)">All</button>
         <button class="fb" onclick="filterArena('safe',this)">🌿 Full</button>
         <button class="fb" onclick="filterArena('warn',this)">😮‍💨 Hungry</button>
         <button class="fb" onclick="filterArena('danger',this)">😵 Weak</button>
+        <button class="activity-toggle" id="activity-toggle-btn" onclick="toggleGardenActivity()">Activity</button>
       </div>
       <div class="agrid" id="arena-grid"></div>
       <div class="pagination" id="arena-pagination"></div>
-    </div>
-    <div class="garden-insights">
-      <div class="garden-insights-title">CATCHES PER DAY</div>
-      <div class="catch-chart">
-        <div class="catch-chart-bars" id="catch-chart-bars"></div>
-        <div class="catch-chart-labels" id="catch-chart-labels"></div>
-      </div>
-      <div class="garden-insights-title">RECENT ACTIVITY</div>
-      <div class="catch-activity" id="catch-activity"></div>
-    </div>
-  </div>
 </div>
 
 <!-- MUSEUM -->
@@ -1810,11 +1801,24 @@ function showPage(p){
 
 <script>
 // ===== GARDEN INSIGHTS =====
+let gardenActivityOpen = false;
+
+function toggleGardenActivity() {
+  gardenActivityOpen = !gardenActivityOpen;
+  const btn = document.getElementById('activity-toggle-btn');
+  if (btn) btn.classList.toggle('active', gardenActivityOpen);
+  renderArena(arenaFilteredData._filter || 'all', arenaPage);
+  if (gardenActivityOpen) loadGardenInsights();
+}
+
 async function loadGardenInsights() {
   try {
+    const panel = document.getElementById('garden-insights-inline');
+    if (!panel) return;
+
     // Chart: catches per day
     const statsData = await MantyAPI.getCatchStats();
-    const days = (statsData.days || []).reverse(); // oldest first
+    const days = (statsData.days || []).reverse();
     const chartBars = document.getElementById('catch-chart-bars');
     const chartLabels = document.getElementById('catch-chart-labels');
     if (chartBars) {
@@ -1835,7 +1839,7 @@ async function loadGardenInsights() {
     }
 
     // Activity: recent catches
-    const catchData = await MantyAPI.getRecentCatches(15);
+    const catchData = await MantyAPI.getRecentCatches(10);
     const catches = catchData.catches || [];
     const actEl = document.getElementById('catch-activity');
     if (actEl) {
@@ -1879,15 +1883,15 @@ let arenaPage = 1;
 let arenaFilteredData = [];
 
 function renderArena(filter='all', page=1){
-  loadGardenInsights(); // refresh insights panel
   const grid=document.getElementById('arena-grid');
   if(!grid) return;
   arenaFilteredData=arenaData.filter(n=>{
-    if(filter==='safe')return n.hp===100;
-    if(filter==='warn')return n.hp===80;
-    if(filter==='danger')return n.hp===50;
+    if(filter==='safe')return n.hp>=80;
+    if(filter==='warn')return n.hp>=50 && n.hp<80;
+    if(filter==='danger')return n.hp<50;
     return true;
   });
+  arenaFilteredData._filter = filter;
   arenaPage = page;
   const totalPages = Math.ceil(arenaFilteredData.length / ARENA_PER_PAGE);
   const start = (page-1) * ARENA_PER_PAGE;
@@ -1901,7 +1905,7 @@ function renderArena(filter='all', page=1){
     return;
   }
   
-  grid.innerHTML=pageData.map(n=>{
+  const cards=pageData.map(n=>{
     const cls=hpClass(n.hp);
     const hcol=hpColor(n.hp);
     const tag=hpTag(n.hp);
@@ -1921,7 +1925,26 @@ function renderArena(filter='all', page=1){
         ${action}
       </div>
     </div>`;
-  }).join('');
+  });
+
+  // Inject activity panel inline after 3rd card when toggled (desktop only)
+  if(gardenActivityOpen && window.innerWidth > 768){
+    const insertAt = Math.min(3, cards.length);
+    cards.splice(insertAt, 0, `<div class="garden-insights-inline show" id="garden-insights-inline">
+      <div class="garden-insights-title">CATCHES PER DAY</div>
+      <div class="catch-chart">
+        <div class="catch-chart-bars" id="catch-chart-bars"></div>
+        <div class="catch-chart-labels" id="catch-chart-labels"></div>
+      </div>
+      <div class="garden-insights-title" style="margin-top:8px;">RECENT ACTIVITY</div>
+      <div class="catch-activity" id="catch-activity"></div>
+    </div>`);
+  }
+
+  grid.innerHTML=cards.join('');
+
+  // Load insights data after DOM is injected
+  if(gardenActivityOpen && window.innerWidth > 768) loadGardenInsights();
 
   renderPagination('arena-pagination', page, totalPages, function(p){ renderArena(filter, p); });
 }
