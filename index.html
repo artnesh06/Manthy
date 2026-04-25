@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Manthy NFT Collection</title>
+<link rel="icon" type="image/png" href="ico.png">
 <meta name="description" content="Feed your Manthy and fight to stay alive. The last 20 standing win exclusive 1/1 art and merch.">
 <meta name="keywords" content="MANTHY, NFT, survival game, stake NFT, crypto game, Web3 game, NFT garden, MTHY token">
 <meta name="author" content="MANTHY.WTF">
@@ -722,6 +723,57 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 }
 </style>
 <style>
+/* PROFILE PAGE */
+.nav-pfp{display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;transition:all .15s;border-left:1px solid var(--border2);}
+.nav-pfp:hover{background:rgba(118,255,3,.06);}
+.nav-pfp-img{width:32px;height:32px;border-radius:50%;border:2px solid var(--gb);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg3);flex-shrink:0;}
+.nav-pfp-img img{width:100%;height:100%;object-fit:cover;}
+.nav-pfp-name{font-family:'Space Mono',monospace;font-size:11px;color:var(--gb);letter-spacing:1px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.profile-header{display:flex;align-items:center;gap:24px;margin-bottom:2rem;padding:2rem;background:var(--bg2);border:1px solid var(--border2);}
+.profile-avatar-wrap{position:relative;width:96px;height:96px;flex-shrink:0;cursor:pointer;}
+.profile-avatar{width:96px;height:96px;border-radius:50%;border:3px solid var(--gb);object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:40px;overflow:hidden;}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;}
+.profile-avatar-edit{position:absolute;bottom:0;right:0;width:28px;height:28px;background:var(--gb);color:#080e08;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;border:2px solid var(--bg2);transition:transform .2s;}
+.profile-avatar-edit:hover{transform:scale(1.15);}
+.profile-info{flex:1;}
+.profile-name{font-family:'Inconsolata',monospace;font-size:22px;font-weight:700;color:var(--text);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.profile-name-edit{background:none;border:none;color:var(--td);font-size:14px;cursor:pointer;padding:2px 6px;transition:color .2s;}
+.profile-name-edit:hover{color:var(--gb);}
+.profile-wallet{font-family:'Space Mono',monospace;font-size:12px;color:var(--td);letter-spacing:1px;margin-bottom:8px;}
+.profile-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.profile-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(118,255,3,.06);border:1px solid var(--border2);padding:4px 10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--gb);letter-spacing:1px;}
+.profile-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:2rem;}
+.profile-stat{background:var(--bg2);border:1px solid var(--border2);padding:1.5rem 1rem;text-align:center;}
+.profile-stat-val{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--gb);display:block;margin-bottom:4px;}
+.profile-stat-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:2px;}
+.profile-section-title{font-family:'Inconsolata',monospace;font-size:14px;font-weight:700;color:var(--gb);letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;}
+@media(max-width:768px){
+  .profile-header{flex-direction:column;text-align:center;gap:16px;padding:1.5rem;}
+  .profile-stats-grid{grid-template-columns:repeat(2,1fr);}
+  .profile-name{justify-content:center;}
+  .profile-badges{justify-content:center;}
+  .profile-right{display:none !important;}
+  .profile-layout{grid-template-columns:1fr !important;}
+}
+
+/* Profile 2-column layout */
+.profile-layout{display:grid;grid-template-columns:1fr 320px;gap:2rem;align-items:start;}
+.profile-left{min-width:0;}
+.profile-right{position:sticky;top:72px;}
+.profile-rank-card{background:var(--bg2);border:1px solid var(--border2);padding:1.5rem;text-align:center;margin-bottom:0;}
+.profile-rank-pos{font-family:'Inconsolata',monospace;font-size:48px;font-weight:900;color:var(--gb);letter-spacing:2px;}
+.profile-rank-label{font-family:'Space Mono',monospace;font-size:12px;color:var(--tm);letter-spacing:1px;margin-top:4px;}
+.pf-mini-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);transition:background .15s;}
+.pf-mini-row:last-child{border-bottom:none;}
+.pf-mini-row:hover{background:rgba(118,255,3,.03);}
+.pf-mini-row.is-me{background:rgba(118,255,3,.06);border:1px solid var(--border2);}
+.pf-mini-rank{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--tm);min-width:28px;}
+.pf-mini-rank.top{color:var(--amber);}
+.pf-mini-pfp{width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;}
+.pf-mini-pfp img{width:100%;height:100%;object-fit:cover;}
+.pf-mini-name{font-family:'Space Mono',monospace;font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pf-mini-score{font-family:'Space Mono',monospace;font-size:12px;color:var(--gb);font-weight:700;}
+
 /* CATCH TICKER NOTIFICATION */
 .catch-ticker{position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(255,23,68,.12);border-bottom:1px solid rgba(255,23,68,.4);padding:8px 16px;display:none;align-items:center;justify-content:center;gap:12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--danger);animation:tickerSlide .3s ease-out;}
 .catch-ticker.show{display:flex;}
@@ -817,15 +869,12 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
     <button class="nb" onclick="gatedNav('museum')">Museum</button>
     <button class="nb" onclick="gatedNav('ranks')">Ranks</button>
     <button class="nb" onclick="showPage('rules')">Rules</button>
-    <div class="wallet-combined" id="wcbtn" style="display:none;position:relative;" onclick="toggleDcPopup(event)">
-      <span class="waddr" id="waddr"></span>
-      <span class="wallet-bal"><span id="mbal">0</span> $MTHY<span class="bal-tooltip" id="bal-tooltip">0 $MTHY</span></span>
-      <div class="dc-popup" id="dcpopup">
-        <button class="dc-popup-btn" onclick="disconnect();event.stopPropagation();">DISCONNECT WALLET</button>
-      </div>
+    <div class="nav-pfp" id="nav-pfp" style="display:none;" onclick="gatedNav('profile')">
+      <div class="nav-pfp-img" id="nav-pfp-img"><img src="default-pfp.png" alt=""></div>
+      <span class="nav-pfp-name" id="nav-pfp-name">Anon</span>
     </div>
     <div id="balbox" style="display:none"></div>
-    <button class="btn-pri" id="conbtn" onclick="openWallet()" style="border:none;">CONNECT WALLET</button>
+    <button class="btn-pri" id="conbtn" onclick="openWallet()" style="border:none;">SIGN UP</button>
   </div>
 </nav>
 <div class="nav-mobile" id="nav-links-mobile">
@@ -834,7 +883,8 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
   <button class="nb" onclick="gatedNav('museum');closeMobileMenu()">Museum</button>
   <button class="nb" onclick="gatedNav('ranks');closeMobileMenu()">Ranks</button>
   <button class="nb" onclick="showPage('rules')">Rules</button>
-  <button class="btn-pri" id="conbtn-mobile" onclick="openWallet()" style="border:none;">CONNECT WALLET</button>
+  <button class="nb" onclick="gatedNav('profile');closeMobileMenu()">Profile</button>
+  <button class="btn-pri" id="conbtn-mobile" onclick="openWallet()" style="border:none;">SIGN UP</button>
 </div>
 
 <!-- HOME -->
@@ -1100,6 +1150,51 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
   </div>
 </div>
 
+<!-- PROFILE -->
+<div id="page-profile" class="page">
+  <div class="profile-layout">
+    <div class="profile-left">
+      <div class="profile-header">
+        <div class="profile-avatar-wrap" onclick="triggerAvatarUpload()">
+          <div class="profile-avatar" id="profile-avatar"><img src="default-pfp.png" alt="avatar"></div>
+          <div class="profile-avatar-edit">✎</div>
+        </div>
+        <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+        <div class="profile-info">
+          <div class="profile-name">
+            <span id="profile-display-name">Anonymous</span>
+            <button class="profile-name-edit" onclick="editDisplayName()" title="Edit name">✎</button>
+          </div>
+          <div class="profile-wallet" id="profile-wallet">Not connected</div>
+          <div class="profile-badges" id="profile-badges"></div>
+        </div>
+      </div>
+
+      <div class="profile-stats-grid">
+        <div class="profile-stat"><span class="profile-stat-val" id="pf-staked">0</span><span class="profile-stat-label">Staked</span></div>
+        <div class="profile-stat"><span class="profile-stat-val" id="pf-balance">0</span><span class="profile-stat-label">$MTHY</span></div>
+        <div class="profile-stat"><span class="profile-stat-val" id="pf-feeds">0</span><span class="profile-stat-label">Feeds</span></div>
+        <div class="profile-stat"><span class="profile-stat-val" id="pf-caught">0</span><span class="profile-stat-label">Caught</span></div>
+      </div>
+
+      <div class="profile-section-title">JOINED</div>
+      <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--tm);margin-bottom:2rem;" id="pf-joined">—</div>
+
+      <button class="btn-sec" onclick="disconnect()" style="border-color:var(--danger);color:var(--danger);">DISCONNECT WALLET</button>
+    </div>
+
+    <div class="profile-right" id="profile-leaderboard">
+      <div class="profile-section-title">YOUR RANKING</div>
+      <div class="profile-rank-card" id="pf-rank-card">
+        <div class="profile-rank-pos" id="pf-rank-pos">#—</div>
+        <div class="profile-rank-label">of <span id="pf-rank-total">0</span> players</div>
+      </div>
+      <div class="profile-section-title" style="margin-top:1.5rem;">TOP PLAYERS</div>
+      <div id="pf-mini-leaderboard"></div>
+    </div>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="site-footer">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:3rem;flex-wrap:wrap;">
@@ -1134,6 +1229,16 @@ const CHAIN_ID = 'cosmoshub-4';
 const USE_API = (typeof MantyAPI !== 'undefined'); // true when server is running
 
 const NICKS  = ['Deaf','Curly','Slimy','Loner','Flirty','Chubby','Grumpy','Frizzy','Stumpy','Snarky','Thrifty','Plain','Slowpoke','Handsome','Flashy','Corny','Lazy','Moody','Nosy','Smarty'];
+
+// Random anonymous name generator — insect predator animals
+const NAME_ADJ = ['Hungry','Swift','Silent','Sneaky','Toxic','Sticky','Jumpy','Slimy','Spiny','Crawly','Snappy','Greedy','Lurking','Prowling','Cunning','Fierce','Deadly','Savage','Wicked','Feral'];
+const NAME_NOUN = ['Frog','Gecko','Chameleon','Toad','Mantis','Spider','Bat','Lizard','Newt','Shrew','Sparrow','Swallow','Dragonfly','Anole','Skink','Iguana','Salamander','Hedgehog','Mole','Starling'];
+function generateRandomName(){
+  const adj = NAME_ADJ[Math.floor(Math.random()*NAME_ADJ.length)];
+  const noun = NAME_NOUN[Math.floor(Math.random()*NAME_NOUN.length)];
+  const num = Math.floor(Math.random()*99)+1;
+  return adj+noun+num;
+}
 
 let arenaData = [];
 let museumData = [];
@@ -1504,18 +1609,31 @@ async function onConnected(addr){
   wallet = addr;
   try{localStorage.setItem('manthy_wallet',addr);}catch(e){}
   document.getElementById('coverlay').classList.remove('show');
-  const s = addr.slice(0,8)+'...'+addr.slice(-4);
-  document.getElementById('waddr').innerText = s;
+  // Show nav PFP, hide sign up button
   document.getElementById('conbtn').style.display='none';
-  document.getElementById('wcbtn').style.display='flex';
-  document.getElementById('balbox').style.display='flex';
-  toast('Wallet connected!\n'+s+' ✅');
+  document.getElementById('nav-pfp').style.display='flex';
+  toast('Wallet connected! ✅');
 
   if (USE_API) {
     // Register/login on backend
     try {
       const loginData = await MantyAPI.login(addr);
       mthyBal = Math.round((loginData.user?.mthy_balance || 0) * 100) / 100;
+      
+      // Set nav PFP + name
+      const user = loginData.user || {};
+      let displayName = user.display_name;
+      if (!displayName) {
+        displayName = generateRandomName();
+        // Save random name to server
+        MantyAPI.updateName(addr, displayName).catch(()=>{});
+      }
+      document.getElementById('nav-pfp-name').innerText = displayName;
+      if (user.avatar && user.avatar.startsWith('data:image/')) {
+        document.getElementById('nav-pfp-img').innerHTML = `<img src="${user.avatar}" alt="">`;
+      } else {
+        document.getElementById('nav-pfp-img').innerHTML = '<img src="default-pfp.png" alt="">';
+      }
       
       // Get staked NFTs from backend
       const stakedData = await MantyAPI.getMyStaked(addr);
@@ -1576,20 +1694,16 @@ function disconnect(){
   stakedNFTs=[];
   try{localStorage.removeItem('manthy_wallet');}catch(e){}
   document.getElementById('conbtn').style.display='block';
-  document.getElementById('wcbtn').style.display='none';
+  document.getElementById('nav-pfp').style.display='none';
+  document.getElementById('nav-pfp-img').innerHTML='<img src="default-pfp.png" alt="">';
+  document.getElementById('nav-pfp-name').innerText='Anon';
   document.getElementById('balbox').style.display='none';
-  document.getElementById('dcpopup').classList.remove('show');
   // Reset heatmap
   document.querySelectorAll('.hm-cell').forEach(c=>{c.style.background='';c.style.borderColor='';c.dataset.count='0';});
   const cntEl=document.getElementById('hm-count');if(cntEl)cntEl.innerText='0';
   showPage('home');
   toast('Wallet disconnected.');
 }
-function toggleDcPopup(e){
-  e.stopPropagation();
-  document.getElementById('dcpopup').classList.toggle('show');
-}
-document.addEventListener('click',function(){document.getElementById('dcpopup')?.classList.remove('show');});
 function gatedNav(p){
   if(!wallet){pendingPage=p;openWallet();return;}
   showPage(p);
@@ -1621,7 +1735,7 @@ function showPage(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   document.querySelectorAll('.nb').forEach(x=>x.classList.remove('active'));
-  const map={stake:0,arena:1,museum:2,ranks:3,rules:4};
+  const map={stake:0,arena:1,museum:2,ranks:3,rules:4,profile:5};
   document.querySelectorAll('.nb')[map[p]]?.classList.add('active');
   closeNftModal();
   // Show ticker only on home page
@@ -1631,6 +1745,7 @@ function showPage(p){
   if(p==='arena') renderArena('all', arenaPage);
   if(p==='museum') renderMuseum(museumPage);
   if(p==='ranks') renderLB();
+  if(p==='profile') loadProfilePage();
   // Persist current page
   try{localStorage.setItem('manthy_page',p);}catch(e){}
 }
@@ -1789,33 +1904,37 @@ async function renderLB(sortBy){
         document.getElementById('lb-table').innerHTML='';
         return;
       }
+      function userPfp(u, size) {
+        if (u.avatar && u.avatar.startsWith('data:image/')) return `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+        return `<img src="default-pfp.png" style="width:100%;height:100%;object-fit:cover;">`;
+      }
+      function userName(u) { return u.display_name || u.wallet.slice(0,6)+'...'+u.wallet.slice(-4); }
       // Podium top 3 users
       const top3=users.slice(0,3);
       const podiumOrder=[top3[1],top3[0],top3[2]];
       const podiumClasses=['p-2nd','p-1st','p-3rd'];
       document.getElementById('podium').innerHTML=podiumOrder.map((u,i)=>{
         if(!u) return '';
-        const short=u.wallet.slice(0,6)+'...'+u.wallet.slice(-4);
         return `<div class="podium-item ${podiumClasses[i]}" data-delay="${[1,2,0][i]}">
-          <div class="p-emoji" style="width:60px;height:60px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:2px solid var(--border2);font-size:28px">👤</div>
-          <div class="p-name">${short}</div>
+          <div class="p-emoji" style="width:60px;height:60px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:2px solid ${wallet&&u.wallet===wallet?'var(--gb)':'var(--border2)'}">${userPfp(u)}</div>
+          <div class="p-name">${userName(u)}${wallet&&u.wallet===wallet?' ⭐':''}</div>
           <div class="p-score">${Math.floor(u.mthy_balance).toLocaleString()} $MTHY</div>
-          <div class="p-sub">${u.nft_count} NFTs</div>
+          <div class="p-sub">${u.nft_count} NFTs · ${u.catches||0} catches</div>
           <div class="p-bar"><div class="p-bar-glow"></div><div class="p-bar-inner">${i===1?'1':i===0?'2':'3'}</div></div>
         </div>`;
       }).join('');
       animatePodium();
       // Table
-      document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Player</div><div>$MTHY</div><div>NFTs</div></div>`+
+      document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Player</div><div>$MTHY</div><div>Catches</div></div>`+
         users.map((u,i)=>{
           const medals=['🥇','🥈','🥉'];
-          const short=u.wallet.slice(0,8)+'...'+u.wallet.slice(-4);
-          return `<div class="lbrow">
+          const isMe = wallet && u.wallet === wallet;
+          return `<div class="lbrow" ${isMe?'style="background:rgba(118,255,3,.06);border-left:3px solid var(--gb);"':''}>
             <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
-            <div class="lbemoji" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-size:18px">👤</div>
-            <div><div class="lbname">${short}</div></div>
+            <div class="lbemoji" style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3)">${userPfp(u)}</div>
+            <div><div class="lbname">${userName(u)}${isMe?' <span style="font-size:9px;color:var(--gb);background:rgba(118,255,3,.15);padding:2px 6px;letter-spacing:1px;margin-left:4px">YOU</span>':''}</div><div style="font-size:11px;color:var(--td);margin-top:2px">${u.nft_count} NFTs staked</div></div>
             <div class="lb-hp-col"><div class="lb-hp-val" style="color:var(--gb)">${Math.floor(u.mthy_balance).toLocaleString()}</div></div>
-            <div style="color:var(--tm);font-size:12px">${u.nft_count}</div>
+            <div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:13px;font-weight:700;text-align:right">🪤 ${u.catches||0}</div>
           </div>`;
         }).join('');
     } catch(e) {}
@@ -1853,21 +1972,20 @@ async function renderLB(sortBy){
   // Table — max 20 rows, with "See More"
   const LB_LIMIT = 20;
   const medals=['🥇','🥈','🥉'];
-  const rows=sorted.slice(0, LB_LIMIT).map((n,i)=>{
+  function renderLBRow(n, i) {
     const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':'var(--danger)';
-    const score=(n.hp*n.days).toLocaleString();
-    // Mini chart — random-ish bars for visual flair
+    const isOwn = wallet && n.ownerFull === wallet;
     const bars=Array.from({length:7},(_,j)=>{
       const h=Math.max(4,Math.min(22,n.hp*(0.3+Math.random()*0.7)/100*22));
       const delay=j*0.08+i*0.03;
       return `<div class="lb-chart-bar" style="height:${h}px;background:${hcol};animation-delay:${delay.toFixed(2)}s"></div>`;
     }).join('');
-    return `<div class="lbrow">
+    return `<div class="lbrow" ${isOwn?'style="background:rgba(118,255,3,.06);border-left:3px solid var(--gb);"':''}>
       <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
       <div class="lbemoji" style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3)">${nftImageHtml(n, 28)}</div>
       <div>
-        <div class="lbname">${n.name}</div>
-        <div style="font-size:12px;color:var(--td);margin-top:3px;font-family:'Space Mono',monospace">"${n.nick}"</div>
+        <div class="lbname">${n.name}${isOwn?' <span style="font-size:9px;color:var(--gb);background:rgba(118,255,3,.15);padding:2px 6px;letter-spacing:1px;margin-left:4px">YOU</span>':''}</div>
+        <div style="font-size:12px;color:var(--td);margin-top:3px;font-family:\'Space Mono\',monospace">"${n.nick}"</div>
       </div>
       <div class="lb-hp-col">
         <div class="lb-hp-val" style="color:${hcol}">${n.hp}%</div>
@@ -1875,7 +1993,8 @@ async function renderLB(sortBy){
       </div>
       <div class="lb-chart">${bars}</div>
     </div>`;
-  }).join('');
+  }
+  const rows=sorted.slice(0, LB_LIMIT).map((n,i)=>renderLBRow(n,i)).join('');
 
   let seeMoreBtn = '';
   if(sorted.length > LB_LIMIT){
@@ -1889,33 +2008,11 @@ async function renderLB(sortBy){
 let lbExpanded = false;
 function expandLeaderboard(){
   lbExpanded = true;
-  // Re-render with all rows
   let sorted;
   if(currentSort==='days') sorted=[...arenaData].sort((a,b)=>b.days-a.days);
   else if(currentSort==='score') sorted=[...arenaData].sort((a,b)=>(b.hp*b.days)-(a.hp*a.days));
   else sorted=[...arenaData].sort((a,b)=>b.hp!==a.hp?b.hp-a.hp:b.days-a.days);
-  const medals=['🥇','🥈','🥉'];
-  const rows=sorted.map((n,i)=>{
-    const hcol=n.hp===100?'var(--gb)':n.hp===80?'var(--amber)':'var(--danger)';
-    const bars=Array.from({length:7},(_,j)=>{
-      const h=Math.max(4,Math.min(22,n.hp*(0.3+Math.random()*0.7)/100*22));
-      const delay=j*0.08+i*0.03;
-      return `<div class="lb-chart-bar" style="height:${h}px;background:${hcol};animation-delay:${delay.toFixed(2)}s"></div>`;
-    }).join('');
-    return `<div class="lbrow">
-      <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
-      <div class="lbemoji" style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3)">${nftImageHtml(n, 28)}</div>
-      <div>
-        <div class="lbname">${n.name}</div>
-        <div style="font-size:12px;color:var(--td);margin-top:3px;font-family:'Space Mono',monospace">"${n.nick}"</div>
-      </div>
-      <div class="lb-hp-col">
-        <div class="lb-hp-val" style="color:${hcol}">${n.hp}%</div>
-        <div class="lb-hp-bar"><div class="lb-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>
-      </div>
-      <div class="lb-chart">${bars}</div>
-    </div>`;
-  }).join('');
+  const rows=sorted.map((n,i)=>renderLBRow(n,i)).join('');
   document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Manthy</div><div>HP</div><div>Chart</div></div>`+rows;
 }
 
@@ -2522,6 +2619,119 @@ try{
     })();
   }
 }catch(e){}
+
+// ===== PROFILE PAGE =====
+async function loadProfilePage() {
+  if (!wallet) return;
+  try {
+    const data = await MantyAPI.getProfile(wallet);
+    const user = data.user || {};
+    // Avatar
+    const avatarEl = document.getElementById('profile-avatar');
+    const navPfpImg = document.getElementById('nav-pfp-img');
+    if (user.avatar && user.avatar.startsWith('data:image/')) {
+      avatarEl.innerHTML = `<img src="${user.avatar}" alt="avatar">`;
+      navPfpImg.innerHTML = `<img src="${user.avatar}" alt="">`;
+    } else {
+      avatarEl.innerHTML = '<img src="default-pfp.png" alt="avatar">';
+      navPfpImg.innerHTML = '<img src="default-pfp.png" alt="">';
+    }
+    // Name
+    const name = user.display_name || 'Anonymous';
+    document.getElementById('profile-display-name').innerText = name;
+    document.getElementById('nav-pfp-name').innerText = name;
+    // Wallet
+    document.getElementById('profile-wallet').innerText = wallet.slice(0,12) + '...' + wallet.slice(-6);
+    // Stats
+    document.getElementById('pf-staked').innerText = data.staked || 0;
+    document.getElementById('pf-balance').innerText = Math.floor(user.mthy_balance || 0).toLocaleString();
+    document.getElementById('pf-feeds').innerText = data.totalFeeds || 0;
+    document.getElementById('pf-caught').innerText = data.caught || 0;
+    // Joined
+    if (user.created_at) {
+      const d = new Date(user.created_at + 'Z');
+      document.getElementById('pf-joined').innerText = d.toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+    }
+    // Badges
+    let badges = '';
+    if (data.staked > 0) badges += '<span class="profile-badge">🌿 Active Staker</span>';
+    if (data.totalFeeds >= 10) badges += '<span class="profile-badge">🍽️ Feeder x' + data.totalFeeds + '</span>';
+    if (data.winners > 0) badges += '<span class="survivor-badge"><span class="survivor-badge-icon">🏅</span> SURVIVOR</span>';
+    document.getElementById('profile-badges').innerHTML = badges;
+
+    // Mini leaderboard
+    try {
+      const lbData = await MantyAPI.getUserLeaderboard(10);
+      const users = lbData.users || [];
+      const myIdx = users.findIndex(u => u.wallet === wallet);
+      document.getElementById('pf-rank-pos').innerText = myIdx >= 0 ? '#' + (myIdx + 1) : '#—';
+      document.getElementById('pf-rank-total').innerText = users.length;
+      
+      function miniPfp(u) {
+        if (u.avatar && u.avatar.startsWith('data:image/')) return `<img src="${u.avatar}">`;
+        return `<img src="default-pfp.png">`;
+      }
+      function miniName(u) { return u.display_name || u.wallet.slice(0,6)+'...'+u.wallet.slice(-4); }
+      
+      document.getElementById('pf-mini-leaderboard').innerHTML = users.slice(0, 5).map((u, i) => {
+        const medals = ['🥇','🥈','🥉'];
+        const isMe = u.wallet === wallet;
+        return `<div class="pf-mini-row ${isMe ? 'is-me' : ''}">
+          <div class="pf-mini-rank ${i < 3 ? 'top' : ''}">${medals[i] || '#' + (i+1)}</div>
+          <div class="pf-mini-pfp">${miniPfp(u)}</div>
+          <div class="pf-mini-name">${miniName(u)}${isMe ? ' (you)' : ''}</div>
+          <div class="pf-mini-score">${Math.floor(u.mthy_balance).toLocaleString()}</div>
+        </div>`;
+      }).join('');
+    } catch(e) {}
+  } catch(e) { console.log('Profile load error:', e); }
+}
+
+function triggerAvatarUpload() {
+  document.getElementById('avatar-input').click();
+}
+
+async function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('Please select an image'); return; }
+  // Resize + compress
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = async function() {
+    canvas.width = 128;
+    canvas.height = 128;
+    // Center crop
+    const size = Math.min(img.width, img.height);
+    const sx = (img.width - size) / 2;
+    const sy = (img.height - size) / 2;
+    ctx.drawImage(img, sx, sy, size, size, 0, 0, 128, 128);
+    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+    // Upload
+    try {
+      const r = await MantyAPI.updateAvatar(wallet, base64);
+      if (r.error) { toast(r.error); return; }
+      toast('Avatar updated! ✅');
+      document.getElementById('profile-avatar').innerHTML = `<img src="${base64}" alt="avatar">`;
+      document.getElementById('nav-pfp-img').innerHTML = `<img src="${base64}" alt="">`;
+    } catch(e) { toast('Upload failed'); }
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+async function editDisplayName() {
+  const current = document.getElementById('profile-display-name').innerText;
+  const name = prompt('Enter display name (max 20 chars):', current === 'Anonymous' ? '' : current);
+  if (name === null) return;
+  try {
+    const r = await MantyAPI.updateName(wallet, name);
+    if (r.error) { toast(r.error); return; }
+    document.getElementById('profile-display-name').innerText = name || 'Anonymous';
+    document.getElementById('nav-pfp-name').innerText = name || 'Anonymous';
+    toast('Name updated! ✅');
+  } catch(e) { toast('Update failed'); }
+}
 
 // Load collection from Stargaze on page load
 loadCollection();

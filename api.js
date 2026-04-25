@@ -144,5 +144,27 @@ const MantyAPI = {
       body: JSON.stringify({ wallet, tokenId, claimWallet, claimAddress, discord, twitter })
     });
     return r.json();
+  },
+
+  // Profile
+  async getProfile(wallet) {
+    const r = await fetchWithTimeout(API_BASE + '/auth/profile?wallet=' + encodeURIComponent(wallet));
+    return r.json();
+  },
+
+  async updateAvatar(wallet, avatar) {
+    const r = await fetchWithTimeout(API_BASE + '/auth/avatar', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ wallet, avatar })
+    });
+    return r.json();
+  },
+
+  async updateName(wallet, name) {
+    const r = await fetchWithTimeout(API_BASE + '/auth/name', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ wallet, name })
+    });
+    return r.json();
   }
 };

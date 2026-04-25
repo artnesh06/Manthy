@@ -27,6 +27,8 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS users (
       wallet TEXT PRIMARY KEY,
       mthy_balance REAL DEFAULT 0,
+      avatar TEXT DEFAULT '',
+      display_name TEXT DEFAULT '',
       created_at TEXT DEFAULT (datetime('now')),
       last_seen TEXT DEFAULT (datetime('now'))
     )
@@ -122,6 +124,10 @@ async function initDB() {
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_start', '" + new Date().toISOString() + "')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('max_survivors', '20')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_ended', '0')");
+
+  // Migrate: add avatar and display_name columns if missing
+  try { db.run("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''"); } catch(e) {}
 
   saveDB();
   console.log('[DB] Database initialized');

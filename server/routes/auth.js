@@ -106,6 +106,44 @@ router.get('/nfts', async (req, res) => {
   res.json({ nfts: [], total: 0, error: 'Could not fetch from Cosmos Hub' });
 });
 
+// Profile: get public profile
+router.get('/profile', (req, res) => {
+  const { wallet } = req.query;
+  if (!wallet) return res.status(400).json({ error: 'wallet required' });
+  const user = get('SELECT wallet, mthy_balance, avatar, display_name, created_at, last_seen FROM users WHERE wallet = ?', [wallet]);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const staked = all('SELECT * FROM staked_nfts WHERE wallet = ?', [wallet]);
+  const caught = all('SELECT * FROM museum WHERE original_owner = ?', [wallet]);
+  const totalFeeds = get('SELECT COUNT(*) as count FROM feed_history WHERE wallet = ?', [wallet])?.count || 0;
+  const winners = all('SELECT * FROM winners WHERE wallet = ?', [wallet]);
+  res.json({ user, staked: staked.length, caught: caught.length, totalFeeds, winners: winners.length, earnRate: staked.length * 80 });
+});
+
+// Profile: update avatar (base64 image, max 50KB)
+router.post('/avatar', (req, res) => {
+  const { wallet, avatar } = req.body;
+  if (!wallet) return res.status(400).json({ error: 'wallet required' });
+  if (!avatar) return res.status(400).json({ error: 'avatar required' });
+  // Validate: must be base64 data URL, max ~50KB
+  if (!avatar.startsWith('data:image/')) return res.status(400).json({ error: 'Invalid image format' });
+  if (avatar.length > 70000) return res.status(400).json({ error: 'Image too large. Max 50KB.' });
+  const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  run('UPDATE users SET avatar = ? WHERE wallet = ?', [avatar, wallet]);
+  res.json({ success: true, message: 'Avatar updated' });
+});
+
+// Profile: update display name
+router.post('/name', (req, res) => {
+  const { wallet, name } = req.body;
+  if (!wallet) return res.status(400).json({ error: 'wallet required' });
+  const displayName = (name || '').trim().slice(0, 20);
+  const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  run('UPDATE users SET display_name = ? WHERE wallet = ?', [displayName, wallet]);
+  res.json({ success: true, message: 'Name updated' });
+});
+
 // Heatmap: get feed/stake activity per day for a wallet
 router.get('/heatmap', (req, res) => {
   const { wallet } = req.query;

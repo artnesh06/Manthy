@@ -44,16 +44,21 @@ router.get('/winners', (req, res) => {
   res.json({ winners, gameEnded });
 });
 
-// User leaderboard — sorted by $MTHY balance
+// User leaderboard — sorted by $MTHY balance, includes profile data + catches
 router.get('/users', (req, res) => {
   const { limit = 20 } = req.query;
-  const users = all(`SELECT u.wallet, u.mthy_balance, COUNT(s.id) as nft_count 
+  const users = all(`SELECT u.wallet, u.mthy_balance, u.avatar, u.display_name, COUNT(s.id) as nft_count 
     FROM users u LEFT JOIN staked_nfts s ON u.wallet = s.wallet 
     GROUP BY u.wallet 
     HAVING nft_count > 0 OR u.mthy_balance > 0
     ORDER BY u.mthy_balance DESC 
     LIMIT ?`, [Number(limit)]);
-  res.json({ users });
+  // Add catch count per user
+  const result = users.map(u => {
+    const catches = get('SELECT COUNT(*) as count FROM museum WHERE caught_by = ?', [u.wallet]);
+    return { ...u, catches: catches?.count || 0 };
+  });
+  res.json({ users: result });
 });
 
 module.exports = router;
