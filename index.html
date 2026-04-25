@@ -1555,7 +1555,7 @@ function renderArena(filter='all', page=1){
     const tagText=n.hp===100?'HP 100%':n.hp===80?'HP 80%':'WEAK!';
     const statusText=n.hp===100?'Full — safe':n.hp===80?'Hungry — skipped 1 day':'Weak — catchable!';
     let action='';
-    if(n.hp===50) action=`<button class="catch-btn" onclick="event.stopPropagation();catchManthy(${n.id})">🪤 CATCH NOW</button>`;
+    if(n.hp===50 && n.ownerFull !== wallet) action=`<button class="catch-btn" onclick="event.stopPropagation();catchManthy(${n.id})">🪤 CATCH NOW</button>`;
     return `<div class="ncard ${cls}" onclick="openArenaModal(${n.id})" style="cursor:pointer">
       <div class="ncard-img-wrap">
         <div class="ncard-tag${tagCls}">${tagText}</div>
@@ -2168,6 +2168,8 @@ async function feedAllStaked(){
       renderStake();
       updateBalUI();
       toast(r.fed+' Manthy fed! ✅');
+      for(let i=0;i<r.fed;i++) updateHeatmap('feed');
+      refreshGlobalData();
     }catch(e){toast('Feed failed');return;}
   } else {
     const cost=hungry.length*100;
@@ -2176,6 +2178,7 @@ async function feedAllStaked(){
     hungry.forEach(n=>{n.hp=100;const a=arenaData.find(x=>x.id===n.id);if(a)a.hp=100;});
     renderStake();
     toast(hungry.length+' Manthy fed! ✅');
+    for(let i=0;i<hungry.length;i++) updateHeatmap('feed');
   }
 }
 
