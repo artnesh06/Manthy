@@ -1533,6 +1533,11 @@ function showPage(p){
   closeNftModal();
   // Show ticker only on home page
   document.querySelectorAll('.marquee-bar').forEach(el=>{el.style.display=p==='home'?'':'none';});
+  // Re-render page data to prevent stale state
+  if(p==='stake') { renderStake(); updateBalUI(); }
+  if(p==='arena') renderArena('all', arenaPage);
+  if(p==='museum') renderMuseum(museumPage);
+  if(p==='ranks') renderLB();
   // Persist current page
   try{localStorage.setItem('manthy_page',p);}catch(e){}
 }
@@ -1678,12 +1683,54 @@ function renderPagination(containerId, currentPage, totalPages, onPageClick){
 
 // ===== RENDER LEADERBOARD =====
 let currentSort='hp';
-function renderLB(sortBy){
+async function renderLB(sortBy){
   if(sortBy) currentSort=sortBy;
-  let sorted;
-  if(currentSort==='days') sorted=[...arenaData].sort((a,b)=>b.days-a.days);
-  else if(currentSort==='score') sorted=[...arenaData].sort((a,b)=>(b.hp*b.days)-(a.hp*a.days));
-  else sorted=[...arenaData].sort((a,b)=>b.hp!==a.hp?b.hp-a.hp:b.days-a.days);
+  
+  // SCORE tab = user leaderboard by $MTHY
+  if(currentSort==='score'){
+    try {
+      const data = await MantyAPI.getUserLeaderboard(20);
+      const users = data.users || [];
+      if(users.length === 0){
+        document.getElementById('podium').innerHTML='<div style="text-align:center;padding:2rem;color:var(--tm);font-family:\'Space Mono\',monospace;font-size:14px;width:100%;">No players yet.</div>';
+        document.getElementById('lb-table').innerHTML='';
+        return;
+      }
+      // Podium top 3 users
+      const top3=users.slice(0,3);
+      const podiumOrder=[top3[1],top3[0],top3[2]];
+      const podiumClasses=['p-2nd','p-1st','p-3rd'];
+      document.getElementById('podium').innerHTML=podiumOrder.map((u,i)=>{
+        if(!u) return '';
+        const short=u.wallet.slice(0,6)+'...'+u.wallet.slice(-4);
+        return `<div class="podium-item ${podiumClasses[i]}" data-delay="${[1,2,0][i]}">
+          <div class="p-emoji" style="width:60px;height:60px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:2px solid var(--border2);font-size:28px">👤</div>
+          <div class="p-name">${short}</div>
+          <div class="p-score">${Math.floor(u.mthy_balance).toLocaleString()} $MTHY</div>
+          <div class="p-sub">${u.nft_count} NFTs</div>
+          <div class="p-bar"><div class="p-bar-glow"></div><div class="p-bar-inner">${i===1?'1':i===0?'2':'3'}</div></div>
+        </div>`;
+      }).join('');
+      animatePodium();
+      // Table
+      document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr"><div>#</div><div></div><div>Player</div><div>$MTHY</div><div>NFTs</div></div>`+
+        users.map((u,i)=>{
+          const medals=['🥇','🥈','🥉'];
+          const short=u.wallet.slice(0,8)+'...'+u.wallet.slice(-4);
+          return `<div class="lbrow">
+            <div class="lbrank ${i<3?'top':''}">${medals[i]||'#'+(i+1)}</div>
+            <div class="lbemoji" style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-size:18px">👤</div>
+            <div><div class="lbname">${short}</div></div>
+            <div class="lb-hp-col"><div class="lb-hp-val" style="color:var(--gb)">${Math.floor(u.mthy_balance).toLocaleString()}</div></div>
+            <div style="color:var(--tm);font-size:12px">${u.nft_count}</div>
+          </div>`;
+        }).join('');
+    } catch(e) {}
+    return;
+  }
+  
+  // BY HP tab = NFT leaderboard (default)
+  let sorted=[...arenaData].sort((a,b)=>b.hp!==a.hp?b.hp-a.hp:b.days-a.days);
 
   // Podium — top 3
   if(sorted.length === 0){
@@ -2067,8 +2114,8 @@ async function stakeById(id){
 
 async function stakeAll(){
   if(walletNFTs.length===0){toast('No NFTs to stake!');return;}
-  const btn=document.querySelector('[onclick="stakeAll()"]');
-  if(btn){btn.disabled=true;btn.innerText='STAKING...';}
+  const btn=document.getElementById('btn-stake-all');
+  if(btn){btn.disabled=true;btn.innerHTML='STAKING...';}
   const count=walletNFTs.length;
   
   if(USE_API && wallet){
@@ -2183,27 +2230,28 @@ function openArenaModal(id){
 async function claimReward(){
   if(stakedNFTs.length<=0){toast('No staked NFTs earning!');return;}
   
-  // Loading state
-  const claimBtn=document.querySelector('[onclick="claimReward()"]');
-  const origText=claimBtn?claimBtn.innerText:'';
-  if(claimBtn){claimBtn.disabled=true;claimBtn.innerText='CLAIMING...';}
+  const claimBtn=document.getElementById('btn-claim');
+  if(claimBtn){claimBtn.disabled=true;claimBtn.innerHTML='CLAIMING...';}
   
   if(USE_API && wallet){
     try{
       const r=await MantyAPI.claim(wallet);
-      if(r.error){toast(r.error);if(claimBtn){claimBtn.disabled=false;claimBtn.innerText=origText;}return;}
+      if(r.error){toast(r.error);if(claimBtn){claimBtn.disabled=false;}updateBalUI();return;}
       mthyBal=Math.floor(r.balance||0);
       claimAccumulator=0;
       updateBalUI();
+      updateHeatmap('claim');
       toast(r.message||'Claimed!');
-    }catch(e){toast('Claim failed');if(claimBtn){claimBtn.disabled=false;claimBtn.innerText=origText;}return;}
+    }catch(e){toast('Claim failed');if(claimBtn){claimBtn.disabled=false;}updateBalUI();return;}
   } else {
     const reward=stakedNFTs.length*80;
     mthyBal+=reward;
+    claimAccumulator=0;
     updateBalUI();
     toast(reward+' $MTHY claimed!');
   }
-  if(claimBtn){claimBtn.disabled=false;claimBtn.innerText=origText;}
+  // Reset button
+  if(claimBtn){claimBtn.disabled=false;claimBtn.innerHTML='CLAIM <span id="claim-amount">0.00</span> $MTHY';}
 }
 
 async function feedAllStaked(){

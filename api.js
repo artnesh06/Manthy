@@ -85,6 +85,11 @@ const MantyAPI = {
     return r.json();
   },
 
+  async getUserLeaderboard(limit = 20) {
+    const r = await fetch(API_BASE + `/leaderboard/users?limit=${limit}`);
+    return r.json();
+  },
+
   async getStats() {
     const r = await fetch(API_BASE + '/leaderboard/stats');
     return r.json();

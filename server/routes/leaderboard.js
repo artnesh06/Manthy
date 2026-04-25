@@ -25,4 +25,16 @@ router.get('/stats', (req, res) => {
   res.json({ alive, weak, dead, survivors, totalUsers, gameStart: config?.value });
 });
 
+// User leaderboard — sorted by $MTHY balance
+router.get('/users', (req, res) => {
+  const { limit = 20 } = req.query;
+  const users = all(`SELECT u.wallet, u.mthy_balance, COUNT(s.id) as nft_count 
+    FROM users u LEFT JOIN staked_nfts s ON u.wallet = s.wallet 
+    GROUP BY u.wallet 
+    HAVING nft_count > 0 OR u.mthy_balance > 0
+    ORDER BY u.mthy_balance DESC 
+    LIMIT ?`, [Number(limit)]);
+  res.json({ users });
+});
+
 module.exports = router;
