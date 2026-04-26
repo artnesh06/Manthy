@@ -124,10 +124,16 @@ async function initDB() {
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_start', '" + new Date().toISOString() + "')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('max_survivors', '20')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_ended', '0')");
+  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('collection_cosmos', 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a')");
+  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys')");
+  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('trait_bonuses', '[]')");
+  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('museum_earn', '16')");
 
   // Migrate: add avatar and display_name columns if missing
   try { db.run("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''"); } catch(e) {}
   try { db.run("ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''"); } catch(e) {}
+  // Migrate: add traits column to staked_nfts if missing
+  try { db.run("ALTER TABLE staked_nfts ADD COLUMN traits TEXT DEFAULT '[]'"); } catch(e) {}
 
   saveDB();
   console.log('[DB] Database initialized');
@@ -199,10 +205,16 @@ function all(sql, params = []) {
   return rows;
 }
 
-// Helper: get config value with fallback
+// Helper: get config value with fallback (numeric)
 function getConfig(key, fallback) {
   const row = get("SELECT value FROM game_config WHERE key = ?", [key]);
   return row ? Number(row.value) || fallback : fallback;
 }
 
-module.exports = { initDB, run, get, all, saveDB, getDB: () => db, getConfig };
+// Helper: get config value as string
+function getConfigStr(key, fallback) {
+  const row = get("SELECT value FROM game_config WHERE key = ?", [key]);
+  return row ? row.value : fallback;
+}
+
+module.exports = { initDB, run, get, all, saveDB, getDB: () => db, getConfig, getConfigStr };

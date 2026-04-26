@@ -1,7 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all, getConfig } = require('../db');
-const COLLECTION_ADDR = 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys';
+const { run, get, all, getConfig, getConfigStr } = require('../db');
+
+// Get collection addresses from config (dynamic)
+function getCollectionAddrs() {
+  const cosmos = getConfigStr('collection_cosmos', 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a');
+  const stars = getConfigStr('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys');
+  return { cosmos, stars };
+}
 
 // Bech32 decode/encode for cosmos1 <-> stars1 conversion
 function bech32Decode(addr) {
@@ -68,14 +74,86 @@ function cosmosToStars(cosmosAddr) {
 }
 
 const COSMOS_REST = 'https://rest.cosmos.directory/cosmoshub';
-const COSMOS_CONTRACT = 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a';
+const COSMOS_LCD_ENDPOINTS = [
+  'https://lcd-cosmoshub.keplr.app',
+  'https://cosmos-rest.publicnode.com'
+];
+
+// Fetch traits — try Stargaze GraphQL first, fallback to Cosmos Hub IPFS metadata
+async function fetchTraits(tokenId) {
+  const { stars, cosmos } = getCollectionAddrs();
+  
+  // Method 1: Stargaze GraphQL
+  try {
+    const query = `{ token(collectionAddr:"${stars}", tokenId:"${tokenId}") { traits { name value } } }`;
+    const resp = await fetch('https://graphql.mainnet.stargaze-apis.com/graphql', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+      signal: AbortSignal.timeout(5000)
+    });
+    const data = await resp.json();
+    const traits = data?.data?.token?.traits;
+    if (traits && traits.length > 0) return traits;
+  } catch(e) {}
+
+  // Method 2: Cosmos Hub contract → IPFS metadata → attributes
+  try {
+    const nftQuery = Buffer.from(JSON.stringify({all_nft_info:{token_id:tokenId}})).toString('base64');
+    for (const endpoint of COSMOS_LCD_ENDPOINTS) {
+      try {
+        const resp = await fetch(`${endpoint}/cosmwasm/wasm/v1/contract/${cosmos}/smart/${nftQuery}`, {
+          signal: AbortSignal.timeout(5000)
+        });
+        if (resp.ok) {
+          const nftData = await resp.json();
+          const tokenUri = nftData?.data?.info?.token_uri || '';
+          if (tokenUri) {
+            let metaUrl = tokenUri;
+            if (metaUrl.startsWith('ipfs://')) metaUrl = metaUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+            const metaResp = await fetch(metaUrl, { signal: AbortSignal.timeout(8000) });
+            if (metaResp.ok) {
+              const metaJson = await metaResp.json();
+              const attrs = metaJson.attributes || [];
+              // Convert {trait_type, value} to {name, value}
+              return attrs.map(a => ({ name: a.trait_type || a.name || '', value: a.value || '' }));
+            }
+          }
+        }
+      } catch(e) { continue; }
+    }
+  } catch(e) {}
+
+  console.warn('[STAKE] Trait fetch failed for token', tokenId);
+  return [];
+}
+
+// Calculate earn rate for an NFT based on base rate + trait bonuses
+function calcEarnRate(traits) {
+  const baseRate = getConfig('earn_rate_per_day', 80);
+  let bonus = 0;
+  try {
+    const rules = JSON.parse(getConfigStr('trait_bonuses', '[]'));
+    const traitArr = typeof traits === 'string' ? JSON.parse(traits) : (traits || []);
+    for (const rule of rules) {
+      for (const t of traitArr) {
+        const nameMatch = (t.name || '').toLowerCase() === (rule.trait_name || '').toLowerCase();
+        const valueMatch = rule.trait_value === '*' || (t.value || '').toLowerCase() === (rule.trait_value || '').toLowerCase();
+        if (nameMatch && valueMatch) {
+          bonus += Number(rule.bonus) || 0;
+        }
+      }
+    }
+  } catch(e) {}
+  return baseRate + bonus;
+}
 
 // Verify NFT ownership via Cosmos Hub REST API (primary) + Stargaze GraphQL (fallback)
 async function verifyOwnership(wallet, tokenId) {
-  // Method 1: Cosmos Hub REST API (most accurate post-migration)
+  const { cosmos, stars } = getCollectionAddrs();
+  // Method 1: Cosmos Hub REST API
   try {
     const query = Buffer.from(JSON.stringify({owner_of:{token_id:tokenId}})).toString('base64');
-    const resp = await fetch(`${COSMOS_REST}/cosmwasm/wasm/v1/contract/${COSMOS_CONTRACT}/smart/${query}`);
+    const resp = await fetch(`${COSMOS_REST}/cosmwasm/wasm/v1/contract/${cosmos}/smart/${query}`);
     if (resp.ok) {
       const data = await resp.json();
       const owner = data?.data?.owner;
@@ -89,7 +167,7 @@ async function verifyOwnership(wallet, tokenId) {
   // Method 2: Stargaze GraphQL fallback
   try {
     const starsAddr = cosmosToStars(wallet);
-    const query = `{ token(collectionAddr:"${COLLECTION_ADDR}", tokenId:"${tokenId}") { owner { address } } }`;
+    const query = `{ token(collectionAddr:"${stars}", tokenId:"${tokenId}") { owner { address } } }`;
     const resp = await fetch('https://graphql.mainnet.stargaze-apis.com/graphql', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query })
@@ -110,10 +188,11 @@ router.post('/', async (req, res) => {
   if (!wallet || !tokenId) return res.status(400).json({ error: 'wallet and tokenId required' });
   if (getConfig('game_ended', 0) === 1) return res.status(400).json({ error: 'Game has ended. No more staking allowed.' });
   if (!get('SELECT * FROM users WHERE wallet = ?', [wallet])) return res.status(404).json({ error: 'Login first' });
-  if (get('SELECT * FROM staked_nfts WHERE token_id = ? AND collection_addr = ?', [tokenId, COLLECTION_ADDR])) return res.status(400).json({ error: 'Already staked' });
-  if (get('SELECT * FROM museum WHERE token_id = ? AND collection_addr = ?', [tokenId, COLLECTION_ADDR])) return res.status(400).json({ error: 'In museum' });
+  const { stars } = getCollectionAddrs();
+  if (get('SELECT * FROM staked_nfts WHERE token_id = ? AND collection_addr = ?', [tokenId, stars])) return res.status(400).json({ error: 'Already staked' });
+  if (get('SELECT * FROM museum WHERE token_id = ? AND collection_addr = ?', [tokenId, stars])) return res.status(400).json({ error: 'In museum' });
 
-  // Fast path: check DB cache first (user already fetched NFTs via /nfts endpoint)
+  // Fast path: check DB cache first
   const cached = get("SELECT nfts FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
   let skipVerify = false;
   if (cached) {
@@ -130,30 +209,34 @@ router.post('/', async (req, res) => {
     }
   }
 
-  run('INSERT INTO staked_nfts (wallet, token_id, collection_addr, name, image_url) VALUES (?, ?, ?, ?, ?)', [wallet, tokenId, COLLECTION_ADDR, name||'', imageUrl||'']);
-  // Clear wallet cache immediately so next fetch gets fresh data
+  // Fetch traits from Stargaze
+  const traits = await fetchTraits(tokenId);
+  const traitsJson = JSON.stringify(traits);
+
+  run('INSERT INTO staked_nfts (wallet, token_id, collection_addr, name, image_url, traits) VALUES (?, ?, ?, ?, ?, ?)', [wallet, tokenId, stars, name||'', imageUrl||'', traitsJson]);
   run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
-  // Also clear cache for ALL wallets that might have had this NFT cached (transfer scenarios)
-  res.json({ success: true, message: `${name||tokenId} staked!` });
+  
+  const earnRate = calcEarnRate(traits);
+  res.json({ success: true, message: `${name||tokenId} staked!`, earnRate });
 });
 
 router.post('/unstake', (req, res) => {
   const { wallet, tokenId } = req.body;
   if (!wallet || !tokenId) return res.status(400).json({ error: 'wallet and tokenId required' });
-  const nft = get('SELECT * FROM staked_nfts WHERE wallet = ? AND token_id = ? AND collection_addr = ?', [wallet, tokenId, COLLECTION_ADDR]);
+  const { stars } = getCollectionAddrs();
+  const nft = get('SELECT * FROM staked_nfts WHERE wallet = ? AND token_id = ? AND collection_addr = ?', [wallet, tokenId, stars]);
   if (!nft) return res.status(404).json({ error: 'Not staked by you' });
   
-  // Auto-claim pending earnings before unstake
-  const EARN_PER_DAY = getConfig('earn_rate_per_day', 80);
+  // Auto-claim pending earnings before unstake (with trait bonus)
+  const earnPerDay = calcEarnRate(nft.traits);
   const lastEarned = new Date(nft.last_earned + 'Z');
   const diffDays = (Date.now() - lastEarned.getTime()) / 86400000;
-  const pending = diffDays * EARN_PER_DAY;
+  const pending = diffDays * earnPerDay;
   if (pending > 0) {
     run('UPDATE users SET mthy_balance = mthy_balance + ? WHERE wallet = ?', [pending, wallet]);
   }
   
-  run('DELETE FROM staked_nfts WHERE wallet = ? AND token_id = ? AND collection_addr = ?', [wallet, tokenId, COLLECTION_ADDR]);
-  // Clear wallet cache so next fetch picks up the unstaked NFT
+  run('DELETE FROM staked_nfts WHERE wallet = ? AND token_id = ? AND collection_addr = ?', [wallet, tokenId, stars]);
   run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
   const updated = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   const balance = Math.round((updated?.mthy_balance || 0) * 100) / 100;
@@ -163,7 +246,15 @@ router.post('/unstake', (req, res) => {
 router.get('/my', (req, res) => {
   const { wallet } = req.query;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
-  res.json({ staked: all('SELECT * FROM staked_nfts WHERE wallet = ?', [wallet]) });
+  const staked = all('SELECT * FROM staked_nfts WHERE wallet = ?', [wallet]);
+  const baseRate = getConfig('earn_rate_per_day', 80);
+  // Calculate earn rate per NFT including trait bonuses
+  const enriched = staked.map(n => {
+    const totalRate = calcEarnRate(n.traits);
+    const bonus = totalRate - baseRate;
+    return { ...n, earnRate: totalRate, earnBonus: bonus, baseRate };
+  });
+  res.json({ staked: enriched, baseRate });
 });
 
 router.get('/all', (req, res) => {
@@ -174,3 +265,5 @@ router.get('/all', (req, res) => {
 });
 
 module.exports = router;
+module.exports.calcEarnRate = calcEarnRate;
+module.exports.getCollectionAddrs = getCollectionAddrs;

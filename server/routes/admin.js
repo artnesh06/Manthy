@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { run, get, all, getConfig } = require('../db');
+const { run, get, all, getConfig, getConfigStr } = require('../db');
 
 // Decrypt helper (same as winners.js)
 const ENC_KEY = process.env.CLAIM_SECRET || 'manthy-claim-secret-change-me-32';
@@ -63,12 +63,56 @@ router.post('/reset', (req, res) => {
 
 // Save game config
 router.post('/config', (req, res) => {
-  const { earn_rate, feed_cost, museum_earn, max_survivors } = req.body;
+  const { earn_rate, feed_cost, museum_earn, max_survivors, trait_bonuses } = req.body;
   if (earn_rate != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('earn_rate_per_day', ?)", [String(earn_rate)]);
   if (feed_cost != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('feed_cost', ?)", [String(feed_cost)]);
   if (museum_earn != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('museum_earn', ?)", [String(museum_earn)]);
   if (max_survivors != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('max_survivors', ?)", [String(max_survivors)]);
+  if (trait_bonuses != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('trait_bonuses', ?)", [typeof trait_bonuses === 'string' ? trait_bonuses : JSON.stringify(trait_bonuses)]);
   res.json({ success: true, message: 'Config saved' });
+});
+
+// Change collection address (resets game!)
+router.post('/change-collection', (req, res) => {
+  const { cosmosAddr, confirm } = req.body;
+  if (confirm !== 'CHANGE_COLLECTION') return res.status(400).json({ error: 'Confirm with CHANGE_COLLECTION' });
+  if (!cosmosAddr || !cosmosAddr.startsWith('cosmos1')) return res.status(400).json({ error: 'Invalid Cosmos address' });
+  
+  // Auto-convert cosmos → stars
+  const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+  const sep = cosmosAddr.lastIndexOf('1');
+  const data = [];
+  for (let i = sep + 1; i < cosmosAddr.length; i++) { data.push(CHARSET.indexOf(cosmosAddr[i])); }
+  const conv = data.slice(0, -6);
+  let acc = 0, bits = 0; const bytes = [];
+  for (const v of conv) { acc = (acc << 5) | v; bits += 5; while (bits >= 8) { bits -= 8; bytes.push((acc >> bits) & 0xff); } }
+  // Encode to stars
+  acc = 0; bits = 0; const data5 = [];
+  for (const b of bytes) { acc = (acc << 8) | b; bits += 8; while (bits >= 5) { bits -= 5; data5.push((acc >> bits) & 0x1f); } }
+  if (bits > 0) data5.push((acc << (5 - bits)) & 0x1f);
+  function polymod(v) { const G = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]; let c = 1; for (const x of v) { const b = c >> 25; c = ((c & 0x1ffffff) << 5) ^ x; for (let i = 0; i < 5; i++) if ((b >> i) & 1) c ^= G[i]; } return c; }
+  const hrpE = []; for (const c of 'stars') hrpE.push(c.charCodeAt(0) >> 5); hrpE.push(0); for (const c of 'stars') hrpE.push(c.charCodeAt(0) & 31);
+  const vals = [...hrpE, ...data5, 0, 0, 0, 0, 0, 0];
+  const pm = polymod(vals) ^ 1;
+  const cs = []; for (let i = 0; i < 6; i++) cs.push((pm >> (5 * (5 - i))) & 31);
+  const starsAddr = 'stars1' + [...data5, ...cs].map(d => CHARSET[d]).join('');
+
+  // Reset game data
+  run('DELETE FROM staked_nfts');
+  run('DELETE FROM museum');
+  run('DELETE FROM feed_history');
+  run('DELETE FROM users');
+  run('DELETE FROM winners');
+  run('DELETE FROM catch_log');
+  run('DELETE FROM wallet_nft_cache');
+  run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('game_ended', '0')");
+  run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('game_start', ?)", [new Date().toISOString()]);
+  
+  // Update collection addresses
+  run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('collection_cosmos', ?)", [cosmosAddr]);
+  run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('collection_stars', ?)", [starsAddr]);
+  
+  res.json({ success: true, message: `Collection changed to ${cosmosAddr}. Game reset.`, starsAddr });
 });
 
 // Get game config

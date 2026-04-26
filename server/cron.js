@@ -1,5 +1,20 @@
 const cron = require('node-cron');
-const { run, all, get, getConfig } = require('./db');
+const { run, all, get, getConfig, getConfigStr } = require('./db');
+
+// Import calcEarnRate and getCollectionAddrs from stake route
+let calcEarnRate, getCollectionAddrs;
+try {
+  const stakeModule = require('./routes/stake');
+  calcEarnRate = stakeModule.calcEarnRate;
+  getCollectionAddrs = stakeModule.getCollectionAddrs;
+} catch(e) {
+  // Fallback if circular dependency
+  calcEarnRate = () => getConfig('earn_rate_per_day', 80);
+  getCollectionAddrs = () => ({
+    cosmos: getConfigStr('collection_cosmos', 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a'),
+    stars: getConfigStr('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys')
+  });
+}
 
 // Auto-detect game end: if staked NFTs ≤ max_survivors, declare winners
 function checkAutoEndGame() {
@@ -89,12 +104,11 @@ function startCronJobs() {
     'https://lcd-cosmoshub.keplr.app',
     'https://cosmos-rest.publicnode.com'
   ];
-  const COSMOS_CONTRACT = 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a';
 
   cron.schedule('*/30 * * * *', async () => {
     console.log('[CRON] Ownership verification...');
+    const { cosmos } = getCollectionAddrs();
     const staked = all('SELECT * FROM staked_nfts');
-    const EARN_PER_DAY = getConfig('earn_rate_per_day', 80);
     let removed = 0;
 
     for (const nft of staked) {
@@ -104,7 +118,7 @@ function startCronJobs() {
 
         for (const endpoint of COSMOS_REST_ENDPOINTS) {
           try {
-            const resp = await fetch(`${endpoint}/cosmwasm/wasm/v1/contract/${COSMOS_CONTRACT}/smart/${query}`, {
+            const resp = await fetch(`${endpoint}/cosmwasm/wasm/v1/contract/${cosmos}/smart/${query}`, {
               signal: AbortSignal.timeout(5000)
             });
             if (resp.ok) {
@@ -115,26 +129,24 @@ function startCronJobs() {
           } catch(e) { continue; }
         }
 
-        // If we couldn't verify, skip (don't punish on API failure)
         if (!currentOwner) continue;
 
-        // If owner changed, auto-unstake with pending claim
         if (currentOwner !== nft.wallet) {
+          // Use trait-based earn rate
+          const earnPerDay = calcEarnRate(nft.traits);
           const lastEarned = new Date(nft.last_earned + 'Z');
           const diffDays = (Date.now() - lastEarned.getTime()) / 86400000;
-          const pending = diffDays * EARN_PER_DAY;
+          const pending = diffDays * earnPerDay;
           if (pending > 0) {
             run('UPDATE users SET mthy_balance = mthy_balance + ? WHERE wallet = ?', [pending, nft.wallet]);
           }
           run('DELETE FROM staked_nfts WHERE id = ?', [nft.id]);
-          // Clear wallet cache so new owner can see it
           run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [nft.wallet]);
           run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [currentOwner]);
           removed++;
-          console.log(`[CRON] Auto-unstaked ${nft.name} (${nft.token_id}) — transferred from ${nft.wallet.slice(0,10)}... to ${currentOwner.slice(0,10)}...`);
+          console.log(`[CRON] Auto-unstaked ${nft.name} (${nft.token_id}) — transferred`);
         }
 
-        // Rate limit: small delay between checks
         await new Promise(r => setTimeout(r, 500));
       } catch(e) {
         console.warn(`[CRON] Ownership check failed for ${nft.token_id}:`, e.message);

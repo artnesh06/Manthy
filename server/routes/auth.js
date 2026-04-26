@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all } = require('../db');
+const { run, get, all, getConfigStr } = require('../db');
 
-const COSMOS_CONTRACT = 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a';
 const COSMOS_LCD_ENDPOINTS = [
   'https://lcd-cosmoshub.keplr.app',
   'https://cosmos-rest.publicnode.com'
@@ -64,35 +63,67 @@ router.get('/nfts', async (req, res) => {
   }
 
   // Fetch from Cosmos Hub
+  const cosmosCA = getConfigStr('collection_cosmos', 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a');
+  const starsCA = getConfigStr('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys');
   const query = Buffer.from(JSON.stringify({tokens:{owner:wallet,limit:30}})).toString('base64');
   
   for (const endpoint of COSMOS_LCD_ENDPOINTS) {
     try {
-      const resp = await fetch(`${endpoint}/cosmwasm/wasm/v1/contract/${COSMOS_CONTRACT}/smart/${query}`, {
-        signal: AbortSignal.timeout(5000) // 5s timeout
+      const resp = await fetch(`${endpoint}/cosmwasm/wasm/v1/contract/${cosmosCA}/smart/${query}`, {
+        signal: AbortSignal.timeout(5000)
       });
       if (resp.ok) {
         const data = await resp.json();
         const tokenIds = data?.data?.tokens || [];
         
-        // Fetch metadata in parallel
+        // Fetch metadata in parallel — try Stargaze GraphQL first, fallback to Cosmos Hub IPFS
         const nfts = await Promise.all(tokenIds.map(async (tokenId) => {
-          const mc = metaCache.get(tokenId);
+          const mc = metaCache.get(cosmosCA + ':' + tokenId);
           if (mc) return { tokenId, name: mc.name, imageUrl: mc.imageUrl };
+          
+          // Method 1: Stargaze GraphQL
           try {
             const gql = await fetch('https://graphql.mainnet.stargaze-apis.com/graphql', {
               method: 'POST', headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({query:`{ token(collectionAddr:"stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys", tokenId:"${tokenId}") { name imageUrl } }`}),
+              body: JSON.stringify({query:`{ token(collectionAddr:"${starsCA}", tokenId:"${tokenId}") { name imageUrl } }`}),
               signal: AbortSignal.timeout(4000)
             });
             const gqlData = await gql.json();
             const meta = gqlData?.data?.token;
-            const r = { tokenId, name: meta?.name || `Seals #${tokenId}`, imageUrl: meta?.imageUrl || '' };
-            metaCache.set(tokenId, r);
-            return r;
-          } catch(e) {
-            return { tokenId, name: `Seals #${tokenId}`, imageUrl: '' };
-          }
+            if (meta && meta.imageUrl) {
+              const r = { tokenId, name: meta.name || `#${tokenId}`, imageUrl: meta.imageUrl };
+              metaCache.set(cosmosCA + ':' + tokenId, r);
+              return r;
+            }
+          } catch(e) {}
+          
+          // Method 2: Cosmos Hub contract → IPFS metadata
+          try {
+            const nftQuery = Buffer.from(JSON.stringify({all_nft_info:{token_id:tokenId}})).toString('base64');
+            const nftResp = await fetch(`${endpoint}/cosmwasm/wasm/v1/contract/${cosmosCA}/smart/${nftQuery}`, {
+              signal: AbortSignal.timeout(4000)
+            });
+            if (nftResp.ok) {
+              const nftData = await nftResp.json();
+              const tokenUri = nftData?.data?.info?.token_uri || '';
+              if (tokenUri) {
+                // Fetch IPFS metadata
+                let metaUrl = tokenUri;
+                if (metaUrl.startsWith('ipfs://')) metaUrl = metaUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                const metaResp = await fetch(metaUrl, { signal: AbortSignal.timeout(6000) });
+                if (metaResp.ok) {
+                  const metaJson = await metaResp.json();
+                  let imgUrl = metaJson.image || '';
+                  if (imgUrl.startsWith('ipfs://')) imgUrl = imgUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                  const r = { tokenId, name: metaJson.name || `#${tokenId}`, imageUrl: imgUrl };
+                  metaCache.set(cosmosCA + ':' + tokenId, r);
+                  return r;
+                }
+              }
+            }
+          } catch(e) {}
+          
+          return { tokenId, name: `#${tokenId}`, imageUrl: '' };
         }));
 
         // Save to DB cache
@@ -144,19 +175,23 @@ router.post('/name', (req, res) => {
   res.json({ success: true, message: 'Name updated' });
 });
 
-// Heatmap: get feed/stake activity per day for a wallet
+// Heatmap: get feed/stake/catch activity per day for a wallet
 router.get('/heatmap', (req, res) => {
   const { wallet } = req.query;
-  if (!wallet) return res.json({ days: {} });
+  if (!wallet) return res.json({ days: {}, catches: {} });
   // Count feeds per day
   const feeds = all("SELECT DATE(fed_at) as day, COUNT(*) as count FROM feed_history WHERE wallet = ? GROUP BY DATE(fed_at)", [wallet]);
   // Count stakes per day
   const stakes = all("SELECT DATE(staked_at) as day, COUNT(*) as count FROM staked_nfts WHERE wallet = ? GROUP BY DATE(staked_at)", [wallet]);
+  // Count catches against this wallet per day (their NFTs got caught)
+  const catches = all("SELECT DATE(caught_at) as day, COUNT(*) as count FROM catch_log WHERE original_owner = ? GROUP BY DATE(caught_at)", [wallet]);
   const days = {};
   for (const f of feeds) { days[f.day] = (days[f.day] || 0) + f.count; }
   for (const s of stakes) { days[s.day] = (days[s.day] || 0) + s.count; }
+  const catchDays = {};
+  for (const c of catches) { catchDays[c.day] = (catchDays[c.day] || 0) + c.count; }
   const total = Object.values(days).reduce((a, b) => a + b, 0);
-  res.json({ days, total });
+  res.json({ days, catches: catchDays, total });
 });
 
 module.exports = router;

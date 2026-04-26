@@ -433,6 +433,8 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 .nft-modal-row:last-child{border-bottom:none;}
 .nft-modal-row .label{color:var(--tm);}
 .nft-modal-row .val{color:var(--gb);font-weight:700;}
+.stargaze-link{color:var(--gn);text-decoration:none;transition:color .15s;}
+.stargaze-link:hover{color:#ee0075;}
 .nft-modal-hp{height:8px;background:rgba(255,255,255,.06);margin-bottom:16px;border-radius:4px;overflow:hidden;}
 .nft-modal-hp-fill{height:100%;}
 .nft-modal-actions{display:flex;gap:10px;}
@@ -1036,14 +1038,14 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 
 <!-- ARENA -->
 <div id="page-arena" class="page">
-      <div class="shdr" style="margin-top:0;">
-        <div class="scnt" id="arena-cnt"><span class="live-dot"></span> 180 Manthys In Garden</div>
+      <div style="margin-bottom:1.5rem;">
+        <div id="arena-cnt" style="font-family:'Inconsolata',monospace;font-size:clamp(18px,3vw,28px);font-weight:900;color:var(--gb);letter-spacing:3px;text-transform:uppercase;line-height:1.3;display:flex;align-items:center;gap:10px;"><span class="live-dot"></span> 180 MANTHYS IN GARDEN</div>
       </div>
-      <div class="fbar">
-        <button class="fb active" onclick="filterArena('all',this)">All</button>
-        <button class="fb" onclick="filterArena('safe',this)">🌿 Full</button>
-        <button class="fb" onclick="filterArena('warn',this)">😮‍💨 Hungry</button>
-        <button class="fb" onclick="filterArena('danger',this)">😵 Weak</button>
+      <div class="fbar" style="font-size:14px;">
+        <button class="fb active" onclick="filterArena('all',this)" style="padding:10px 24px;font-size:13px;">All 🌿</button>
+        <button class="fb" onclick="filterArena('safe',this)" style="padding:10px 24px;font-size:13px;">Well Fed</button>
+        <button class="fb" onclick="filterArena('warn',this)" style="padding:10px 24px;font-size:13px;">Hungry</button>
+        <button class="fb" onclick="filterArena('danger',this)" style="padding:10px 24px;font-size:13px;">Catchable</button>
       </div>
       <div class="agrid" id="arena-grid"></div>
       <div class="pagination" id="arena-pagination"></div>
@@ -1416,7 +1418,7 @@ function nftImageHtml(nft, size) {
     url = url.replace('ipfs://', 'https://dweb.link/ipfs/');
   }
   if (url) {
-    return `<img src="${url}" alt="${nft.name||''}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.onerror=null;this.src=this.src.replace('dweb.link','cloudflare-ipfs.com');">`;
+    return `<img src="${url}" alt="${nft.name||''}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.onerror=null;if(this.src.includes('dweb.link'))this.src=this.src.replace('dweb.link','cloudflare-ipfs.com');else if(this.src.includes('ipfs.io'))this.src=this.src.replace('ipfs.io','dweb.link');">`;
   }
   return `<span style="font-size:${size||60}px">🦭</span>`;
 }
@@ -1508,13 +1510,18 @@ setInterval(async () => {
   try {
     // Refresh staked from server (catches auto-unstaked NFTs)
     const stakedData = await MantyAPI.getMyStaked(wallet);
+    const rBaseRate = stakedData.baseRate || 80;
     const newStaked = (stakedData.staked||[]).map(n => ({
       id: n.id, tokenId: n.token_id,
       name: n.name || 'Seals #'+n.token_id,
       imageUrl: n.image_url || '',
       hp: n.hp,
       days: Math.floor((Date.now()-new Date(n.staked_at+'Z').getTime())/86400000),
-      lastEarned: n.last_earned
+      lastEarned: n.last_earned,
+      earnRate: n.earnRate || rBaseRate,
+      earnBonus: n.earnBonus || 0,
+      baseRate: n.baseRate || rBaseRate,
+      traits: n.traits || '[]'
     }));
     // Refresh wallet NFTs (detect new purchases/transfers)
     const freshNFTs = await fetchWalletNFTs(wallet);
@@ -1663,6 +1670,7 @@ async function onConnected(addr){
       
       // Get staked NFTs from backend
       const stakedData = await MantyAPI.getMyStaked(addr);
+      const sBaseRate = stakedData.baseRate || 80;
       stakedNFTs = (stakedData.staked||[]).map((n,i) => ({
         id: n.id,
         tokenId: n.token_id,
@@ -1670,18 +1678,21 @@ async function onConnected(addr){
         imageUrl: n.image_url || '',
         hp: n.hp,
         days: Math.floor((Date.now()-new Date(n.staked_at+'Z').getTime())/86400000),
-        lastEarned: n.last_earned
+        lastEarned: n.last_earned,
+        earnRate: n.earnRate || sBaseRate,
+        earnBonus: n.earnBonus || 0,
+        baseRate: n.baseRate || sBaseRate,
+        traits: n.traits || '[]'
       }));
       
-      // Calculate initial pending from last_earned
+      // Calculate initial pending from last_earned (using per-NFT earn rate)
       const now = Date.now();
-      const EARN_PER_DAY = 80;
       let initialPending = 0;
       for(const nft of stakedNFTs){
         if(nft.lastEarned){
           const lastE = new Date(nft.lastEarned+'Z').getTime();
           const diffDays = (now - lastE) / 86400000;
-          initialPending += diffDays * EARN_PER_DAY;
+          initialPending += diffDays * nft.earnRate;
         }
       }
       claimAccumulator = initialPending;
@@ -1761,7 +1772,9 @@ function closeMobileMenu(){
 }
 
 // ===== NAV =====
-function showPage(p){
+function showPage(p, skipPush){
+  // Map /gallery URL to museum page
+  if(p==='gallery') p='museum';
   closeMobileMenu();
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
@@ -1777,8 +1790,25 @@ function showPage(p){
   if(p==='museum') renderMuseum(museumPage);
   if(p==='ranks') renderLB();
   if(p==='profile') loadProfilePage();
+  // Update URL without reload
+  if(!skipPush){
+    const urlPath = p==='home' ? '/' : '/'+p;
+    try{history.pushState({page:p}, '', urlPath);}catch(e){}
+  }
   // Persist current page
   try{localStorage.setItem('manthy_page',p);}catch(e){}
+}
+// Handle browser back/forward buttons
+window.addEventListener('popstate', function(e){
+  const p = (e.state && e.state.page) ? e.state.page : getPageFromURL();
+  showPage(p, true);
+});
+// Read page from URL path
+function getPageFromURL(){
+  const path = window.location.pathname.replace(/^\/+/,'').replace(/\/+$/,'').toLowerCase();
+  const validPages = ['stake','arena','garden','museum','gallery','ranks','rules','profile'];
+  if(path && validPages.includes(path)) return path==='garden'?'arena': path;
+  return 'home';
 }
 </script>
 
@@ -1818,7 +1848,7 @@ function renderArena(filter='all', page=1){
   const start = (page-1) * ARENA_PER_PAGE;
   const pageData = arenaFilteredData.slice(start, start + ARENA_PER_PAGE);
 
-  document.getElementById('arena-cnt').innerHTML='<span class="live-dot"></span> '+arenaFilteredData.length+' Manthys In Garden';
+  document.getElementById('arena-cnt').innerHTML='<span class="live-dot"></span> '+arenaFilteredData.length+' MANTHYS IN GARDEN';
   
   if(pageData.length === 0){
     grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--tm);font-family:\'Space Mono\',monospace;font-size:14px;">No NFTs in the garden yet. Stake your NFTs to start playing!</div>';
@@ -2203,7 +2233,7 @@ let stakeFilter='all';
   let h='';
   let cellIdx=0;
   for(let c=0;c<totalDays;c++){
-    const offset = ((c - halfDays) % totalDays + totalDays) % totalDays;
+    const offset = c - halfDays;
     const d=new Date(today);
     d.setDate(d.getDate()+offset);
     const dateStr=months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
@@ -2248,10 +2278,11 @@ async function loadHeatmapFromAPI() {
       c.style.background = '';
       c.style.borderColor = '';
       c.dataset.count = '0';
+      c.classList.remove('hm-red');
       const tip = c.querySelector('.hm-tip');
       if (tip) { const parts = tip.innerHTML.split('<br>'); tip.innerHTML = parts[0] + '<br>No activity'; }
     });
-    // Light up cells with real data
+    // Light up cells with feed/stake data (green)
     for (const [day, count] of Object.entries(data.days)) {
       const cell = document.querySelector(`.hm-cell[data-date="${day}"]`);
       if (cell) {
@@ -2260,7 +2291,31 @@ async function loadHeatmapFromAPI() {
         cell.style.background = `rgba(118,255,3,${Math.max(0.12, intensity)})`;
         cell.style.borderColor = `rgba(118,255,3,${Math.max(0.2, intensity)})`;
         const tip = cell.querySelector('.hm-tip');
-        if (tip) { const parts = tip.innerHTML.split('<br>'); tip.innerHTML = parts[0] + `<br>${count} action(s)`; }
+        if (tip) { const parts = tip.innerHTML.split('<br>'); tip.innerHTML = parts[0] + `<br>${count} feeding(s)`; }
+      }
+    }
+    // Light up cells with catch data (red — NFT got caught)
+    if (data.catches) {
+      for (const [day, count] of Object.entries(data.catches)) {
+        const cell = document.querySelector(`.hm-cell[data-date="${day}"]`);
+        if (cell) {
+          const intensity = Math.min(count * 0.2, 1);
+          // If also has green activity, show split — otherwise pure red
+          const existing = parseInt(cell.dataset.count || '0');
+          if (existing > 0) {
+            cell.style.background = `linear-gradient(135deg, rgba(118,255,3,${Math.max(0.12, existing*0.15)}) 50%, rgba(255,23,68,${Math.max(0.15, intensity)}) 50%)`;
+            cell.style.borderColor = `rgba(255,23,68,${Math.max(0.25, intensity)})`;
+          } else {
+            cell.style.background = `rgba(255,23,68,${Math.max(0.15, intensity)})`;
+            cell.style.borderColor = `rgba(255,23,68,${Math.max(0.25, intensity)})`;
+          }
+          const tip = cell.querySelector('.hm-tip');
+          if (tip) {
+            const parts = tip.innerHTML.split('<br>');
+            const feedText = existing > 0 ? `${existing} feeding(s), ` : '';
+            tip.innerHTML = parts[0] + `<br>${feedText}${count} caught`;
+          }
+        }
       }
     }
     const cntEl = document.getElementById('hm-count');
@@ -2286,13 +2341,13 @@ function renderStake(filter){
       </div>
       <div class="honor-card-name">${n.name}</div>
       <div class="honor-card-score ${hpCls}">${scoreText}</div>
-      ${n.type==='staked'?`<div class="honor-card-hp"><div class="honor-card-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>`:`<button class="honor-card-stake-btn" onclick="event.stopPropagation();stakeById(${n.id})">STAKE</button>`}
+      ${n.type==='staked'?`<div class="honor-card-hp"><div class="honor-card-hp-fill" style="width:${n.hp}%;background:${hcol}"></div></div>`:`<button class="honor-card-stake-btn" id="stake-btn-${n.id}" onclick="event.stopPropagation();stakeById(${n.id})">STAKE</button>`}
       <div class="honor-popup">
         <div class="honor-popup-name">${n.name}</div>
         <div class="honor-popup-row"><span>Status</span><span>${statusLabel}</span></div>
         ${n.type==='staked'?`
           <div class="honor-popup-row"><span>HP</span><span style="color:${hcol}">${n.hp}%</span></div>
-          <div class="honor-popup-row"><span>Earn</span><span>80/day</span></div>
+          <div class="honor-popup-row"><span>Earn</span><span>${n.earnBonus > 0 ? n.baseRate+' <span style="color:var(--gn)">+'+n.earnBonus+'</span>' : (n.earnRate||80)}/day</span></div>
         `:`<div class="honor-popup-row"><span>Action</span><span>Click to Stake</span></div>`}
       </div>
     </div>`;
@@ -2309,7 +2364,9 @@ function formatBalK(n){
 }
 
 function updateBalUI(){
-  const earnRate=stakedNFTs.length*80;
+  const totalBaseRate = stakedNFTs.reduce((s,n) => s + (n.baseRate || 80), 0);
+  const totalBonus = stakedNFTs.reduce((s,n) => s + (n.earnBonus || 0), 0);
+  const earnRate = totalBaseRate + totalBonus;
   const mbalEl=document.getElementById('mbal');
   if(mbalEl){
     mbalEl.innerText=mthyBal.toLocaleString();
@@ -2321,7 +2378,13 @@ function updateBalUI(){
   document.getElementById('ss-staked').innerText=stakedNFTs.length;
   document.getElementById('ss-unstaked').innerText=walletNFTs.length;
   const erEl=document.getElementById('ss-earnrate');
-  if(erEl) erEl.innerText=earnRate;
+  if(erEl) {
+    if(totalBonus > 0) {
+      erEl.innerHTML=totalBaseRate+' <span style="color:var(--gn);font-size:0.7em;">+'+totalBonus+'</span>';
+    } else {
+      erEl.innerText=earnRate;
+    }
+  }
   // Update button counts
   const sacEl=document.getElementById('stake-all-count');
   if(sacEl) sacEl.innerText=walletNFTs.length;
@@ -2385,7 +2448,7 @@ async function stakeById(id){
   renderStake();
   closeNftModal();
   updateHeatmap('stake');
-  toast(nft.name+' staked!\n+80 $MTHY/day ✅');
+  toast(nft.name+' staked!\n+'+(nft.earnRate||80)+' $MTHY/day ✅');
   refreshGlobalData(); // Update Garden + Ranks for all users
 }
 
@@ -2412,7 +2475,7 @@ async function stakeAll(){
   const btnAfter=document.getElementById('btn-stake-all');
   if(btnAfter){btnAfter.disabled=false;btnAfter.innerHTML='STAKE ALL (<span id="stake-all-count">0</span>)';}
   for(let i=0;i<count;i++) updateHeatmap('stake');
-  toast(count+' NFTs staked!\n+80 $MTHY/day each ✅');
+  toast(count+' NFTs staked! ✅');
   refreshGlobalData();
 }
 
@@ -2445,13 +2508,13 @@ function openNftModal(id,type){
     rows+=`<div class="nft-modal-row"><span class="label">HP</span><span class="val" style="color:${hcol}">${nft.hp}%</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val" style="color:${hcol}">${status}</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Days Staked</span><span class="val">${nft.days}d</span></div>`;
-    rows+=`<div class="nft-modal-row"><span class="label">Earn Rate</span><span class="val">80 $MTHY/day</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Earn Rate</span><span class="val">${nft.earnBonus > 0 ? nft.baseRate+' <span style="color:var(--gn)">+'+nft.earnBonus+'</span>' : (nft.earnRate||80)} $MTHY/day</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Feed Cost</span><span class="val">100 $MTHY</span></div>`;
   } else {
     rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val">Not staked</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Potential</span><span class="val">80 $MTHY/day</span></div>`;
   }
-  rows+=`<div class="nft-modal-row"><span class="label">Stargaze</span><span class="val"><a href="https://stargaze.zone/m/cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a/${nft.tokenId}" target="_blank" style="color:var(--gn);text-decoration:none;">View on Stargaze ↗</a></span></div>`;
+  rows+=`<div class="nft-modal-row"><span class="label">Stargaze</span><span class="val"><a href="https://stargaze.zone/m/cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a/${nft.tokenId}" target="_blank" class="stargaze-link">View on Stargaze ↗</a></span></div>`;
   document.getElementById('nm-rows').innerHTML=rows;
 
   let actions='';
@@ -2493,7 +2556,7 @@ function openArenaModal(id){
   rows+=`<div class="nft-modal-row"><span class="label">HP</span><span class="val" style="color:${hcol}">${nft.hp}%</span></div>`;
   rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val" style="color:${hcol}">${status}</span></div>`;
   rows+=`<div class="nft-modal-row"><span class="label">Days Survived</span><span class="val">${nft.days}d</span></div>`;
-  rows+=`<div class="nft-modal-row"><span class="label">Stargaze</span><span class="val"><a href="https://stargaze.zone/m/cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a/${nft.tokenId}" target="_blank" style="color:var(--gn);text-decoration:none;">View on Stargaze ↗</a></span></div>`;
+  rows+=`<div class="nft-modal-row"><span class="label">Stargaze</span><span class="val"><a href="https://stargaze.zone/m/cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a/${nft.tokenId}" target="_blank" class="stargaze-link">View on Stargaze ↗</a></span></div>`;
   document.getElementById('nm-rows').innerHTML=rows;
 
   let actions='';
@@ -2627,8 +2690,9 @@ updateGameTimer();
 let claimAccumulator = 0;
 setInterval(function(){
   if(stakedNFTs.length > 0){
-    // 80 $MTHY per day per staked NFT = 80/86400 per second
-    const perSecond = (stakedNFTs.length * 80) / 86400;
+    // Use per-NFT earn rate for accurate pending calculation
+    const totalEarnPerDay = stakedNFTs.reduce((s,n) => s + (n.earnRate || 80), 0);
+    const perSecond = totalEarnPerDay / 86400;
     claimAccumulator += perSecond;
     const caEl = document.getElementById('claim-amount');
     if(caEl) caEl.innerText = claimAccumulator.toFixed(2);
@@ -2666,11 +2730,16 @@ function showSkeletons(){
 // ===== INIT =====
 showSkeletons();
 
-// Restore saved page
+// Restore page from URL first, then fallback to localStorage
 try{
-  const savedPage = localStorage.getItem('manthy_page');
-  if(savedPage && document.getElementById('page-'+savedPage)){
-    showPage(savedPage);
+  const urlPage = getPageFromURL();
+  if(urlPage !== 'home'){
+    showPage(urlPage, true);
+  } else {
+    const savedPage = localStorage.getItem('manthy_page');
+    if(savedPage && document.getElementById('page-'+savedPage)){
+      showPage(savedPage, true);
+    }
   }
 }catch(e){}
 
@@ -3176,12 +3245,13 @@ document.querySelectorAll('.rule-card').forEach((el,i)=>{
 
 // Re-apply staggers on page switch
 const origShowPage=showPage;
-showPage=function(p){
-  origShowPage(p);
+showPage=function(p, skipPush){
+  origShowPage(p, skipPush);
   setTimeout(()=>{
     applyAllAnimations();
-    // Count-up for stake stats
+    // Count-up for stake stats (skip decimal values like balance/pending)
     document.querySelectorAll('.stake-stat-val').forEach(el=>{
+      if(el.id==='ss-balance'||el.id==='ss-pending'||el.id==='claim-amount') return;
       const val=parseInt(el.innerText.replace(/[^0-9]/g,''));
       if(!isNaN(val)&&val>0&&!el.dataset.counted){
         el.dataset.counted='1';
