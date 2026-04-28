@@ -1,12 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+
+// Load .env file if dotenv is available
+try { require('dotenv').config({ path: path.join(__dirname, '..', '.env') }); } catch(e) {}
+
 const { initDB } = require('./db');
 const { startCronJobs } = require('./cron');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'manthy-admin-2026';
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'Manthy)(*';
 
 app.use(cors({
   origin: ['https://manthy.fun', 'https://www.manthy.fun', 'https://manthy.vercel.app', 'http://localhost:3001', 'http://localhost:3000'],
@@ -50,6 +56,14 @@ function adminAuth(req, res, next) {
 }
 
 // Admin HTML — served normally (has its own login page)
+// Admin login endpoint — validates credentials, returns admin key
+app.post('/api/admin-login', express.json(), (req, res) => {
+  const { id, pw } = req.body;
+  if (id === ADMIN_USER && pw === ADMIN_PASS) {
+    return res.json({ success: true, key: ADMIN_KEY });
+  }
+  res.status(401).json({ error: 'Invalid credentials' });
+});
 // API endpoints still protected by X-Admin-Key header
 app.use(express.static(path.join(__dirname, '..'), {
   index: 'index.html'

@@ -152,6 +152,12 @@ const MantyAPI = {
     return r.json();
   },
 
+  // Get public config (collection addresses)
+  async getConfig() {
+    const r = await fetchWithTimeout(API_BASE + '/leaderboard/config');
+    return r.json();
+  },
+
   // Profile
   async getProfile(wallet) {
     const r = await fetchWithTimeout(API_BASE + '/auth/profile?wallet=' + encodeURIComponent(wallet));

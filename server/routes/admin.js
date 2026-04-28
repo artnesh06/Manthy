@@ -148,7 +148,7 @@ router.post('/end-game', (req, res) => {
   const { confirm } = req.body;
   if (confirm !== 'END_GAME') return res.status(400).json({ error: 'Send confirm: "END_GAME"' });
   
-  const maxSurvivors = getConfig('max_survivors', 20);
+  const maxSurvivors = getConfig('max_survivors', 50);
   const survivors = all('SELECT * FROM staked_nfts ORDER BY hp DESC, staked_at ASC LIMIT ?', [maxSurvivors]);
   
   if (survivors.length === 0) return res.status(400).json({ error: 'No staked NFTs to declare as winners' });

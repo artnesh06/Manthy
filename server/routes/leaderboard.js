@@ -1,6 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { get, all, getConfig } = require('../db');
+const { get, all, getConfig, getConfigStr } = require('../db');
+
+// Public config — frontend asks here for current collection addresses
+router.get('/config', (req, res) => {
+  const cosmos = getConfigStr('collection_cosmos', 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a');
+  const stars = getConfigStr('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys');
+  const survivors = getConfig('max_survivors', 50);
+  res.json({ cosmos, stars, survivors });
+});
 
 router.get('/', (req, res) => {
   const { sort = 'hp', limit = 20, offset = 0 } = req.query;
@@ -18,7 +26,7 @@ router.get('/stats', (req, res) => {
   const alive = get('SELECT COUNT(*) as count FROM staked_nfts')?.count || 0;
   const weak = get('SELECT COUNT(*) as count FROM staked_nfts WHERE hp <= 50')?.count || 0;
   const dead = get('SELECT COUNT(*) as count FROM museum')?.count || 0;
-  const survivors = getConfig('max_survivors', 20);
+  const survivors = getConfig('max_survivors', 50);
   const totalUsers = get('SELECT COUNT(*) as count FROM users')?.count || 0;
   const config = get("SELECT value FROM game_config WHERE key = 'game_start'");
   const gameEnded = getConfig('game_ended', 0);

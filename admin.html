@@ -227,7 +227,7 @@ input:focus,select:focus{outline:none;border-color:var(--gb);box-shadow:0 0 0 3p
       </div>
       <div class="stat-card green">
         <div class="stat-card-label">Win Slots</div>
-        <div class="stat-card-value" id="s-survivors">20</div>
+        <div class="stat-card-value" id="s-survivors">50</div>
         <div class="stat-card-sub">Last standing</div>
       </div>
     </div>
@@ -350,7 +350,7 @@ input:focus,select:focus{outline:none;border-color:var(--gb);box-shadow:0 0 0 3p
       </div>
       <div class="form-row">
         <div><label>Museum Earn / Day</label><input id="cfg-museum" type="number" value="16"></div>
-        <div><label>Max Survivors</label><input id="cfg-survivors" type="number" value="20"></div>
+        <div><label>Max Survivors</label><input id="cfg-survivors" type="number" value="50"></div>
       </div>
       <button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
     </div>
@@ -399,33 +399,23 @@ function showSection(name) {
 async function doLogin() {
   const id = document.getElementById('login-id').value.trim();
   const pw = document.getElementById('login-pw').value;
-  const testKey = btoa(id + ':' + pw).replace(/=/g, '');
-  ADMIN_KEY = testKey;
   try {
-    const r = await fetch(API + '/admin/config', { headers: { 'X-Admin-Key': testKey } });
-    if (r.status === 401) {
-      ADMIN_KEY = 'manthy-admin-2026';
-      const r2 = await fetch(API + '/admin/config', { headers: { 'X-Admin-Key': ADMIN_KEY } });
-      if (r2.status === 401 && !(id === 'admin' && pw === 'Manthy)(*')) {
-        document.getElementById('login-error').style.display = 'block';
-        ADMIN_KEY = '';
-        return;
-      }
+    const r = await fetch(API.replace('/api','') + '/api/admin-login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ id, pw })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.key) {
+      document.getElementById('login-error').style.display = 'block';
+      return;
     }
+    ADMIN_KEY = d.key;
     try { sessionStorage.setItem('manthy_admin', '1'); sessionStorage.setItem('manthy_admin_key', ADMIN_KEY); } catch (e) {}
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-panel').style.display = 'block';
     loadAll();
   } catch (e) {
-    if (id === 'admin' && pw === 'Manthy)(*') {
-      ADMIN_KEY = 'manthy-admin-2026';
-      try { sessionStorage.setItem('manthy_admin', '1'); sessionStorage.setItem('manthy_admin_key', ADMIN_KEY); } catch (e2) {}
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin-panel').style.display = 'block';
-      loadAll();
-    } else {
-      document.getElementById('login-error').style.display = 'block';
-    }
+    document.getElementById('login-error').style.display = 'block';
   }
 }
 function doLogout() {
@@ -436,10 +426,12 @@ function doLogout() {
   document.getElementById('login-pw').value = '';
 }
 if (sessionStorage.getItem('manthy_admin') === '1') {
-  ADMIN_KEY = sessionStorage.getItem('manthy_admin_key') || 'manthy-admin-2026';
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-panel').style.display = 'block';
-  setTimeout(() => loadAll(), 100);
+  ADMIN_KEY = sessionStorage.getItem('manthy_admin_key') || '';
+  if (ADMIN_KEY) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    setTimeout(() => loadAll(), 100);
+  }
 }
 document.getElementById('login-pw').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
 

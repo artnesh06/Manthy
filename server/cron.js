@@ -19,7 +19,7 @@ try {
 // Auto-detect game end: if staked NFTs ≤ max_survivors, declare winners
 function checkAutoEndGame() {
   if (getConfig('game_ended', 0) === 1) return;
-  const maxSurvivors = getConfig('max_survivors', 20);
+  const maxSurvivors = getConfig('max_survivors', 50);
   const alive = get('SELECT COUNT(*) as count FROM staked_nfts')?.count || 0;
   const dead = get('SELECT COUNT(*) as count FROM museum')?.count || 0;
   const totalPlayed = alive + dead;

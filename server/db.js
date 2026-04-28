@@ -122,7 +122,7 @@ async function initDB() {
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('earn_rate_per_day', '80')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('feed_cost', '100')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_start', '" + new Date().toISOString() + "')");
-  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('max_survivors', '20')");
+  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('max_survivors', '50')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('game_ended', '0')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('collection_cosmos', 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys')");

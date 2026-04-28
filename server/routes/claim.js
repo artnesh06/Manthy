@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { run, get, all, getConfig } = require('../db');
+const { calcEarnRate } = require('./stake');
 
 router.post('/', (req, res) => {
   const { wallet } = req.body;
@@ -10,14 +11,14 @@ router.post('/', (req, res) => {
   const staked = all('SELECT * FROM staked_nfts WHERE wallet = ?', [wallet]);
   if (staked.length === 0) return res.status(400).json({ error: 'No staked NFTs' });
 
-  const EARN_PER_DAY = getConfig('earn_rate_per_day', 80);
   const now = new Date();
   let totalEarned = 0;
   for (const nft of staked) {
+    const earnPerDay = calcEarnRate(nft.traits);
     const lastEarned = new Date(nft.last_earned + 'Z');
     const diffMs = now - lastEarned;
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    totalEarned += diffDays * EARN_PER_DAY;
+    totalEarned += diffDays * earnPerDay;
     run("UPDATE staked_nfts SET last_earned = datetime('now') WHERE id = ?", [nft.id]);
   }
   run('UPDATE users SET mthy_balance = mthy_balance + ? WHERE wallet = ?', [totalEarned, wallet]);
