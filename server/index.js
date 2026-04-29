@@ -292,7 +292,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // SPA fallback — serve index.html for client-side routes
-const SPA_ROUTES = ['/stake', '/garden', '/gallery', '/museum', '/ranks', '/rules', '/profile'];
+const SPA_ROUTES = ['/stake', '/arena', '/garden', '/gallery', '/museum', '/ranks', '/rules', '/profile'];
 SPA_ROUTES.forEach(route => {
   app.get(route, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'index.html'));
