@@ -279,6 +279,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// SPA fallback — serve index.html for client-side routes
+const SPA_ROUTES = ['/stake', '/garden', '/gallery', '/museum', '/ranks', '/rules', '/profile'];
+SPA_ROUTES.forEach(route => {
+  app.get(route, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+  });
+});
+
 // Init DB then start server
 initDB().then(() => {
   server.listen(PORT, () => {

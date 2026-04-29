@@ -2,10 +2,22 @@
 // Vercel rewrites /api/* to Railway backend. Works on both Vercel and Railway.
 const API_BASE = window.location.origin + '/api';
 
-// Fetch with timeout (15 seconds default)
+// Session token — set after login, sent with all write requests
+let _sessionToken = sessionStorage.getItem('manthy_session') || '';
+function setSessionToken(token) {
+  _sessionToken = token || '';
+  if (token) sessionStorage.setItem('manthy_session', token);
+  else sessionStorage.removeItem('manthy_session');
+}
+
+// Fetch with timeout + auto-attach session token for POST requests
 function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
+  // Auto-attach session token to all POST requests
+  if (options.method === 'POST' && _sessionToken) {
+    options.headers = { ...options.headers, 'X-Session-Token': _sessionToken };
+  }
   return fetch(url, { ...options, signal: controller.signal })
     .finally(() => clearTimeout(timer));
 }
@@ -17,7 +29,10 @@ const MantyAPI = {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ wallet })
     });
-    return r.json();
+    const data = await r.json();
+    // Save session token from login response
+    if (data.sessionToken) setSessionToken(data.sessionToken);
+    return data;
   },
 
   async getMe(wallet) {
