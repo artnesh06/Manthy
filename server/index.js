@@ -87,22 +87,27 @@ app.use(cors({
   credentials: true
 }));
 
-// === SOCKET.IO — real-time game events ===
-const { Server: SocketServer } = require('socket.io');
-const io = new SocketServer(server, {
-  cors: { origin: allowedOrigins, credentials: true },
-  pingTimeout: 60000,
-  pingInterval: 25000
-});
-
-io.on('connection', (socket) => {
-  // Optional: client can join a wallet-specific room for targeted events
-  socket.on('join', (wallet) => {
-    if (wallet && typeof wallet === 'string') {
-      socket.join(`wallet:${wallet}`);
-    }
+// === SOCKET.IO — real-time game events (optional — works without it) ===
+let io = null;
+try {
+  const { Server: SocketServer } = require('socket.io');
+  io = new SocketServer(server, {
+    cors: { origin: allowedOrigins, credentials: true },
+    pingTimeout: 60000,
+    pingInterval: 25000
   });
-});
+
+  io.on('connection', (socket) => {
+    socket.on('join', (wallet) => {
+      if (wallet && typeof wallet === 'string') {
+        socket.join(`wallet:${wallet}`);
+      }
+    });
+  });
+  console.log('[WS] Socket.io enabled');
+} catch(e) {
+  console.log('[WS] Socket.io not installed — running without WebSocket');
+}
 
 // Make io accessible from routes via app.locals
 app.locals.io = io;
@@ -266,14 +271,21 @@ const writeLimit = rateLimit(60, 60000);
 const readLimit = rateLimit(120, 60000);
 
 app.use('/api/auth', readLimit, require('./routes/auth'));
-app.use('/api/stake', writeLimit, requireSession, require('./routes/stake'));
+// Stake: GET routes are public reads, POST routes need session
+const stakeRouter = require('./routes/stake');
+app.get('/api/stake/my', readLimit, stakeRouter);
+app.get('/api/stake/all', readLimit, stakeRouter);
+app.use('/api/stake', writeLimit, requireSession, stakeRouter);
 app.use('/api/feed', writeLimit, requireSession, require('./routes/feed'));
 app.use('/api/catch', writeLimit, requireSession, require('./routes/catch'));
 app.use('/api/claim', writeLimit, requireSession, require('./routes/claim'));
 app.use('/api/leaderboard', readLimit, require('./routes/leaderboard'));
 app.use('/api/museum', readLimit, require('./routes/museum'));
 app.use('/api/admin', adminAuth, require('./routes/admin'));
-app.use('/api/winners', readLimit, require('./routes/winners'));
+// Winners: GET routes are public, POST claim needs session
+const winnersRouter = require('./routes/winners');
+app.get('/api/winners/my', readLimit, winnersRouter);
+app.use('/api/winners', readLimit, winnersRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

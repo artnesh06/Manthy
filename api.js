@@ -10,12 +10,12 @@ function setSessionToken(token) {
   else sessionStorage.removeItem('manthy_session');
 }
 
-// Fetch with timeout + auto-attach session token for POST requests
+// Fetch with timeout + auto-attach session token for all requests
 function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
-  // Auto-attach session token to all POST requests
-  if (options.method === 'POST' && _sessionToken) {
+  // Auto-attach session token to all requests if available
+  if (_sessionToken) {
     options.headers = { ...options.headers, 'X-Session-Token': _sessionToken };
   }
   return fetch(url, { ...options, signal: controller.signal })
