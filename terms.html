@@ -190,5 +190,26 @@ li{margin-bottom:6px;font-size:15px;color:var(--text);opacity:0.9;}
 <p style="text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--td);letter-spacing:1px;margin-top:2rem;">© 2026 MANTHY.FUN — ALL RIGHTS RESERVED</p>
 
 </div>
+
+<script>
+// Dynamic token name — fetch from backend config and replace all $MTHY references
+(async function() {
+  try {
+    const API_BASE = window.location.origin + '/api';
+    const r = await fetch(API_BASE + '/leaderboard/config');
+    const cfg = await r.json();
+    if (cfg.tokenName && cfg.tokenName !== '$MTHY') {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) {
+        if (node.nodeValue && node.nodeValue.includes('$MTHY')) {
+          node.nodeValue = node.nodeValue.replace(/\$MTHY/g, cfg.tokenName);
+        }
+      }
+    }
+  } catch(e) {}
+})();
+</script>
 </body>
 </html>

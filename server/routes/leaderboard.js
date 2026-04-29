@@ -7,15 +7,20 @@ router.get('/config', (req, res) => {
   const cosmos = getConfigStr('collection_cosmos', 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a');
   const stars = getConfigStr('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys');
   const survivors = getConfig('max_survivors', 50);
-  res.json({ cosmos, stars, survivors });
+  const tokenName = getConfigStr('token_name', '$MTHY');
+  res.json({ cosmos, stars, survivors, tokenName });
 });
 
 router.get('/', (req, res) => {
   const { sort = 'hp', limit = 20, offset = 0 } = req.query;
-  let orderBy = 'hp DESC, staked_at ASC';
-  if (sort === 'score') {
-    orderBy = "(hp + CAST((julianday('now') - julianday(staked_at)) AS INTEGER)) DESC, staked_at ASC";
-  }
+  // FIX: Whitelist sort parameter to prevent SQL injection
+  const VALID_SORTS = {
+    hp: 'hp DESC, staked_at ASC',
+    score: "(hp + CAST((julianday('now') - julianday(staked_at)) AS INTEGER)) DESC, staked_at ASC",
+    newest: 'staked_at DESC',
+    oldest: 'staked_at ASC'
+  };
+  const orderBy = VALID_SORTS[sort] || VALID_SORTS.hp;
   const nfts = all(`SELECT *, CAST((julianday('now') - julianday(staked_at)) AS INTEGER) as days_alive FROM staked_nfts ORDER BY ${orderBy} LIMIT ? OFFSET ?`, [Number(limit), Number(offset)]);
   const total = get('SELECT COUNT(*) as count FROM staked_nfts');
   const totalUsers = get('SELECT COUNT(DISTINCT wallet) as count FROM staked_nfts');

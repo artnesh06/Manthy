@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { run, get, all, getConfigStr } = require('../db');
+const walletRateLimit = require('../middleware/walletRateLimit');
 
 // === XSS Sanitization — strip HTML/script tags ===
 function sanitizeText(str) {
@@ -13,30 +14,6 @@ function sanitizeText(str) {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;');
 }
-
-// === Anti-spam: per-wallet action cooldown ===
-const walletCooldowns = new Map();
-function walletRateLimit(action, cooldownMs = 3000) {
-  return (req, res, next) => {
-    const wallet = req.body?.wallet || req.query?.wallet;
-    if (!wallet) return next();
-    const key = `${wallet}:${action}`;
-    const now = Date.now();
-    const last = walletCooldowns.get(key) || 0;
-    if (now - last < cooldownMs) {
-      return res.status(429).json({ error: 'Too fast. Please wait a moment.' });
-    }
-    walletCooldowns.set(key, now);
-    next();
-  };
-}
-// Clean cooldowns every 5 min
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, time] of walletCooldowns) {
-    if (now - time > 60000) walletCooldowns.delete(key);
-  }
-}, 300000);
 
 const COSMOS_LCD_ENDPOINTS = [
   'https://lcd-cosmoshub.keplr.app',
@@ -69,14 +46,21 @@ const metaCache = new Map();
 router.post('/login', (req, res) => {
   const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'Wallet address required' });
+  // Validate wallet format
+  if (!/^(cosmos1|stars1)[a-z0-9]{38,}$/.test(wallet)) {
+    return res.status(400).json({ error: 'Invalid wallet address format' });
+  }
   const existing = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
+  // Generate session token (sign once, use for all subsequent requests)
+  const createSessionToken = req.app.locals.createSessionToken;
+  const sessionToken = createSessionToken(wallet);
   if (existing) {
     run("UPDATE users SET last_seen = datetime('now') WHERE wallet = ?", [wallet]);
-    return res.json({ user: existing, isNew: false });
+    return res.json({ user: existing, isNew: false, sessionToken });
   }
   run('INSERT INTO users (wallet, mthy_balance) VALUES (?, ?)', [wallet, 0]);
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
-  res.json({ user, isNew: true });
+  res.json({ user, isNew: true, sessionToken });
 });
 
 router.get('/me', (req, res) => {
@@ -186,10 +170,17 @@ router.get('/profile', (req, res) => {
   res.json({ user, staked: staked.length, caught: caught.length, totalFeeds, winners: winners.length, earnRate: staked.length * 80 });
 });
 
-// Profile: update avatar (base64 image, max 50KB) — with anti-spam + SVG block
+// Profile: update avatar (base64 image, max 50KB) — with anti-spam + SVG block + session check
 router.post('/avatar', walletRateLimit('avatar', 5000), (req, res) => {
+  // Session verification for write operations
+  const verifySessionToken = req.app.locals.verifySessionToken;
+  const token = req.headers['x-session-token'];
+  const sessionWallet = verifySessionToken(token);
+  if (!sessionWallet) return res.status(401).json({ error: 'Invalid or expired session. Please reconnect your wallet.' });
+
   const { wallet, avatar } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
+  if (wallet !== sessionWallet) return res.status(403).json({ error: 'Session wallet mismatch' });
   if (!avatar) return res.status(400).json({ error: 'avatar required' });
   // Validate: must be base64 data URL, max ~50KB
   if (!avatar.startsWith('data:image/')) return res.status(400).json({ error: 'Invalid image format' });
@@ -203,10 +194,17 @@ router.post('/avatar', walletRateLimit('avatar', 5000), (req, res) => {
   res.json({ success: true, message: 'Avatar updated' });
 });
 
-// Profile: update display name — sanitized + anti-spam
+// Profile: update display name — sanitized + anti-spam + session check
 router.post('/name', walletRateLimit('name', 3000), (req, res) => {
+  // Session verification for write operations
+  const verifySessionToken = req.app.locals.verifySessionToken;
+  const token = req.headers['x-session-token'];
+  const sessionWallet = verifySessionToken(token);
+  if (!sessionWallet) return res.status(401).json({ error: 'Invalid or expired session. Please reconnect your wallet.' });
+
   const { wallet, name } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
+  if (wallet !== sessionWallet) return res.status(403).json({ error: 'Session wallet mismatch' });
   const displayName = sanitizeText((name || '').trim().slice(0, 20));
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   if (!user) return res.status(404).json({ error: 'User not found' });

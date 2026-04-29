@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all, getConfig, getConfigStr } = require('../db');
+const { run, get, all, getConfig, getConfigStr, auditLog } = require('../db');
+const walletRateLimit = require('../middleware/walletRateLimit');
 
 // Get collection addresses from config (dynamic)
 function getCollectionAddrs() {
@@ -183,7 +184,7 @@ async function verifyOwnership(wallet, tokenId) {
   }
 }
 
-router.post('/', async (req, res) => {
+router.post('/', walletRateLimit('stake', 5000), async (req, res) => {
   const { wallet, tokenId, name, imageUrl } = req.body;
   if (!wallet || !tokenId) return res.status(400).json({ error: 'wallet and tokenId required' });
   if (getConfig('game_ended', 0) === 1) return res.status(400).json({ error: 'Game has ended. No more staking allowed.' });
@@ -192,21 +193,10 @@ router.post('/', async (req, res) => {
   if (get('SELECT * FROM staked_nfts WHERE token_id = ? AND collection_addr = ?', [tokenId, stars])) return res.status(400).json({ error: 'Already staked' });
   if (get('SELECT * FROM museum WHERE token_id = ? AND collection_addr = ?', [tokenId, stars])) return res.status(400).json({ error: 'In museum' });
 
-  // Fast path: check DB cache first
-  const cached = get("SELECT nfts FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
-  let skipVerify = false;
-  if (cached) {
-    try {
-      const nfts = JSON.parse(cached.nfts);
-      if (nfts.some(n => n.tokenId === tokenId)) skipVerify = true;
-    } catch(e) {}
-  }
-
-  if (!skipVerify) {
-    const ownership = await verifyOwnership(wallet, tokenId);
-    if (!ownership.verified) {
-      return res.status(403).json({ error: ownership.reason || 'Not your NFT' });
-    }
+  // FIX: Always verify ownership on-chain — never skip via cache
+  const ownership = await verifyOwnership(wallet, tokenId);
+  if (!ownership.verified) {
+    return res.status(403).json({ error: ownership.reason || 'Not your NFT' });
   }
 
   // Fetch traits from Stargaze
@@ -217,10 +207,16 @@ router.post('/', async (req, res) => {
   run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
   
   const earnRate = calcEarnRate(traits);
+  auditLog('stake', { wallet, tokenId, detail: name || tokenId });
+
+  // Broadcast real-time stake event
+  const io = req.app.locals.io;
+  if (io) io.emit('nft:staked', { tokenId, name: name || tokenId, wallet });
+
   res.json({ success: true, message: `${name||tokenId} staked!`, earnRate });
 });
 
-router.post('/unstake', (req, res) => {
+router.post('/unstake', walletRateLimit('unstake', 5000), (req, res) => {
   const { wallet, tokenId } = req.body;
   if (!wallet || !tokenId) return res.status(400).json({ error: 'wallet and tokenId required' });
   const { stars } = getCollectionAddrs();
@@ -240,6 +236,12 @@ router.post('/unstake', (req, res) => {
   run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
   const updated = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   const balance = Math.round((updated?.mthy_balance || 0) * 100) / 100;
+  auditLog('unstake', { wallet, tokenId, amount: Math.round(pending * 100) / 100, detail: 'Auto-claimed pending earnings' });
+
+  // Broadcast real-time unstake event
+  const io = req.app.locals.io;
+  if (io) io.emit('nft:unstaked', { tokenId, wallet });
+
   res.json({ success: true, message: 'Unstaked', claimed: Math.round(pending * 100) / 100, balance });
 });
 

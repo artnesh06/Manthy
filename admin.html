@@ -345,8 +345,9 @@ input:focus,select:focus{outline:none;border-color:var(--gb);box-shadow:0 0 0 3p
     <div class="form-card">
       <h3>Game Configuration</h3>
       <div class="form-row">
+        <div><label>Token Name</label><input id="cfg-token-name" type="text" value="$MTHY" placeholder="e.g. $MTHY, $POINTS, $GOLD" style="font-weight:700;color:var(--gb);"></div>
         <div><label>Base Earn Rate / Day</label><input id="cfg-earn" type="number" value="80"></div>
-        <div><label>Feed Cost ($MTHY)</label><input id="cfg-feed" type="number" value="100"></div>
+        <div><label id="lbl-feed-cost">Feed Cost ($MTHY)</label><input id="cfg-feed" type="number" value="100"></div>
       </div>
       <div class="form-row">
         <div><label>Museum Earn / Day</label><input id="cfg-museum" type="number" value="16"></div>
@@ -560,6 +561,11 @@ async function loadConfig() {
       if (d.config.feed_cost) document.getElementById('cfg-feed').value = d.config.feed_cost;
       if (d.config.museum_earn) document.getElementById('cfg-museum').value = d.config.museum_earn;
       if (d.config.max_survivors) document.getElementById('cfg-survivors').value = d.config.max_survivors;
+      // Token name
+      if (d.config.token_name) {
+        document.getElementById('cfg-token-name').value = d.config.token_name;
+        updateAdminTokenLabels(d.config.token_name);
+      }
       // Collection addresses
       if (d.config.collection_cosmos) document.getElementById('cfg-cosmos-ca').value = d.config.collection_cosmos;
       if (d.config.collection_stars) document.getElementById('cfg-stars-ca').value = d.config.collection_stars;
@@ -569,6 +575,43 @@ async function loadConfig() {
     }
   } catch (e) {}
 }
+
+// Update all admin panel labels when token name changes
+function updateAdminTokenLabels(name) {
+  document.getElementById('lbl-feed-cost').textContent = 'Feed Cost (' + name + ')';
+  // Update stat card label
+  const mthyLabel = document.querySelector('.stat-card.green .stat-card-label');
+  if (mthyLabel) mthyLabel.textContent = name + ' in Circulation';
+  // Update table header
+  const headers = document.querySelectorAll('thead th');
+  headers.forEach(th => { if (th.textContent.includes('Balance')) th.textContent = name + ' Balance'; });
+  // Update add-mthy section
+  const addSection = document.querySelector('.form-card h3');
+  document.querySelectorAll('.form-card h3').forEach(h => {
+    if (h.textContent.includes('$MTHY') || h.textContent.includes('Add ')) h.textContent = 'Add ' + name + ' to User';
+  });
+  // Update buttons
+  document.querySelectorAll('.btn.btn-primary').forEach(btn => {
+    if (btn.textContent.includes('$MTHY') || btn.textContent.includes('Add ')) {
+      if (btn.onclick && btn.getAttribute('onclick')?.includes('addMthy')) btn.textContent = 'Add ' + name;
+    }
+  });
+  // Update trait bonus description
+  const traitDesc = document.querySelector('.form-card p');
+  document.querySelectorAll('.form-card p').forEach(p => {
+    if (p.textContent.includes('/day on top of')) {
+      p.textContent = 'NFTs with matching traits earn extra ' + name + '/day on top of the base rate. Traits are fetched from Stargaze metadata when staked. Use * as value to match any value for that trait.';
+    }
+  });
+}
+
+// Live preview: update labels when token name input changes
+document.addEventListener('DOMContentLoaded', () => {
+  const tokenInput = document.getElementById('cfg-token-name');
+  if (tokenInput) {
+    tokenInput.addEventListener('input', () => updateAdminTokenLabels(tokenInput.value || '$MTHY'));
+  }
+});
 
 async function loadFeedHistory() {
   try {
@@ -711,10 +754,12 @@ async function saveConfig() {
   const feed_cost = Number(document.getElementById('cfg-feed').value);
   const museum_earn = Number(document.getElementById('cfg-museum').value);
   const max_survivors = Number(document.getElementById('cfg-survivors').value);
+  const token_name = document.getElementById('cfg-token-name').value.trim() || '$MTHY';
   try {
-    const r = await fetch(API + '/admin/config', { method: 'POST', headers: adminH(), body: JSON.stringify({ earn_rate, feed_cost, museum_earn, max_survivors }) });
+    const r = await fetch(API + '/admin/config', { method: 'POST', headers: adminH(), body: JSON.stringify({ earn_rate, feed_cost, museum_earn, max_survivors, token_name }) });
     const d = await r.json();
     toast(d.message || 'Saved');
+    updateAdminTokenLabels(token_name);
   } catch (e) { toast('Error: ' + e.message); }
 }
 

@@ -6,6 +6,46 @@ const DB_PATH = path.join(__dirname, 'manthy.db');
 const BACKUP_DIR = path.join(__dirname, 'backups');
 let db = null;
 
+// S3/R2 external backup (optional — set env vars to enable)
+let s3Client = null;
+const S3_BUCKET = process.env.BACKUP_S3_BUCKET;
+const S3_REGION = process.env.BACKUP_S3_REGION || 'auto';
+const S3_ENDPOINT = process.env.BACKUP_S3_ENDPOINT; // For R2: https://<account_id>.r2.cloudflarestorage.com
+const S3_KEY = process.env.BACKUP_S3_KEY;
+const S3_SECRET = process.env.BACKUP_S3_SECRET;
+
+if (S3_BUCKET && S3_KEY && S3_SECRET) {
+  try {
+    const { S3Client } = require('@aws-sdk/client-s3');
+    s3Client = new S3Client({
+      region: S3_REGION,
+      endpoint: S3_ENDPOINT || undefined,
+      credentials: { accessKeyId: S3_KEY, secretAccessKey: S3_SECRET },
+      forcePathStyle: true
+    });
+    console.log('[DB] S3/R2 external backup enabled →', S3_BUCKET);
+  } catch(e) {
+    console.warn('[DB] S3/R2 backup disabled — @aws-sdk/client-s3 not installed:', e.message);
+  }
+}
+
+async function uploadBackupToS3(filePath, fileName) {
+  if (!s3Client || !S3_BUCKET) return;
+  try {
+    const { PutObjectCommand } = require('@aws-sdk/client-s3');
+    const fileBuffer = fs.readFileSync(filePath);
+    await s3Client.send(new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: `manthy-backups/${fileName}`,
+      Body: fileBuffer,
+      ContentType: 'application/octet-stream'
+    }));
+    console.log(`[DB] Backup uploaded to S3/R2: ${fileName}`);
+  } catch(e) {
+    console.error('[DB] S3/R2 upload failed:', e.message);
+  }
+}
+
 async function initDB() {
   const SQL = await initSqlJs();
   
@@ -118,6 +158,21 @@ async function initDB() {
     )
   `);
 
+  // Audit log — immutable, append-only record of all game actions
+  db.run(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      action TEXT NOT NULL,
+      wallet TEXT,
+      token_id TEXT,
+      target_wallet TEXT,
+      amount REAL,
+      detail TEXT,
+      result TEXT DEFAULT 'success',
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
   // Default config
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('earn_rate_per_day', '80')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('feed_cost', '100')");
@@ -128,6 +183,7 @@ async function initDB() {
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('collection_stars', 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('trait_bonuses', '[]')");
   db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('museum_earn', '16')");
+  db.run("INSERT OR IGNORE INTO game_config (key, value) VALUES ('token_name', '$MTHY')");
 
   // Migrate: add avatar and display_name columns if missing
   try { db.run("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''"); } catch(e) {}
@@ -150,17 +206,18 @@ function saveDB() {
 // Auto-save every 30 seconds
 setInterval(() => { if(db) saveDB(); }, 30000);
 
-// Auto-backup every 6 hours (keep last 10 backups)
+// Auto-backup every 6 hours (keep last 10 backups + upload to S3/R2)
 setInterval(() => {
   if (!db) return;
   try {
     const data = db.export();
     const buffer = Buffer.from(data);
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupPath = path.join(BACKUP_DIR, `manthy-${timestamp}.db`);
+    const fileName = `manthy-${timestamp}.db`;
+    const backupPath = path.join(BACKUP_DIR, fileName);
     fs.writeFileSync(backupPath, buffer);
     
-    // Keep only last 10 backups
+    // Keep only last 10 backups locally
     const files = fs.readdirSync(BACKUP_DIR)
       .filter(f => f.startsWith('manthy-') && f.endsWith('.db'))
       .sort()
@@ -169,6 +226,9 @@ setInterval(() => {
       fs.unlinkSync(path.join(BACKUP_DIR, files[i]));
     }
     console.log('[DB] Backup created:', backupPath);
+
+    // Upload to S3/R2 (async, non-blocking)
+    uploadBackupToS3(backupPath, fileName);
   } catch (e) {
     console.error('[DB] Backup failed:', e.message);
   }
@@ -217,4 +277,31 @@ function getConfigStr(key, fallback) {
   return row ? row.value : fallback;
 }
 
-module.exports = { initDB, run, get, all, saveDB, getDB: () => db, getConfig, getConfigStr };
+// Helper: run multiple operations in a transaction (prevents race conditions)
+function transaction(fn) {
+  db.run('BEGIN TRANSACTION');
+  try {
+    const result = fn();
+    db.run('COMMIT');
+    saveDB();
+    return result;
+  } catch (e) {
+    db.run('ROLLBACK');
+    throw e;
+  }
+}
+
+// Helper: append to immutable audit log (never delete/update these)
+function auditLog(action, { wallet, tokenId, targetWallet, amount, detail, result } = {}) {
+  try {
+    db.run(
+      "INSERT INTO audit_log (action, wallet, token_id, target_wallet, amount, detail, result) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [action, wallet || null, tokenId || null, targetWallet || null, amount || null, detail || null, result || 'success']
+    );
+    saveDB(); // Persist immediately — audit logs are critical
+  } catch(e) {
+    console.warn('[AUDIT] Log failed:', e.message);
+  }
+}
+
+module.exports = { initDB, run, get, all, saveDB, getDB: () => db, getConfig, getConfigStr, transaction, auditLog };

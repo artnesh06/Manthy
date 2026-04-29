@@ -1232,6 +1232,8 @@ nav{position:sticky;top:0;z-index:500;display:flex;align-items:stretch;justify-c
 // ===== STATE =====
 let wallet = null, pendingPage = null;
 let mthyBal = 0;
+let TOKEN_NAME = '$MTHY'; // Dynamic token name — loaded from backend config
+let sessionToken = null; // Session token for authenticated requests
 let COLLECTION_ADDR = 'stars1sxcf8dghtq9qprulmfy4f898d0rn0xzmhle83rqmtpm00j0smhes93wsys';
 let COLLECTION_ADDR_COSMOS = 'cosmos1ptcdmtejupzy4nj5jx5mld9fvn98psk096mdrn820j7dj3xdmu6sy3vr7a';
 const COSMOS_REST = 'https://rest.cosmos.directory/cosmoshub';
@@ -1254,6 +1256,30 @@ function generateRandomName(){
 let arenaData = [];
 let museumData = [];
 let walletNFTs = [];
+
+// ===== DYNAMIC TOKEN NAME =====
+// Replace all hardcoded $MTHY references in the DOM with the configured token name
+function applyTokenName(name) {
+  if (!name || name === '$MTHY') return;
+  // Replace in all elements with data-token attribute (for dynamic content)
+  document.querySelectorAll('[data-token]').forEach(el => {
+    el.textContent = el.textContent.replace(/\$MTHY/g, name);
+  });
+  // Walk all text nodes in the document body and replace $MTHY
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  for (const node of nodes) {
+    if (node.nodeValue && node.nodeValue.includes('$MTHY')) {
+      node.nodeValue = node.nodeValue.replace(/\$MTHY/g, name);
+    }
+  }
+  // Also replace in input placeholders and labels
+  document.querySelectorAll('input[placeholder*="MTHY"], label').forEach(el => {
+    if (el.placeholder) el.placeholder = el.placeholder.replace(/\$MTHY/g, name);
+    if (el.textContent.includes('$MTHY')) el.textContent = el.textContent.replace(/\$MTHY/g, name);
+  });
+}
 
 // HP color helper — gradual from green to amber to red
 function hpColor(hp) {
@@ -1428,11 +1454,15 @@ function nftImageHtml(nft, size) {
 async function loadCollection() {
   toast('Loading data...');
   
-  // Load collection addresses from backend (so admin panel changes take effect)
+  // Load collection addresses + token name from backend
   try {
     const cfg = await MantyAPI.getConfig();
     if (cfg.stars) COLLECTION_ADDR = cfg.stars;
     if (cfg.cosmos) COLLECTION_ADDR_COSMOS = cfg.cosmos;
+    if (cfg.tokenName) {
+      TOKEN_NAME = cfg.tokenName;
+      applyTokenName(TOKEN_NAME);
+    }
     // Update footer Stargaze link
     const fLink = document.getElementById('footer-stargaze-link');
     if (fLink) fLink.href = 'https://stargaze.zone/m/' + COLLECTION_ADDR_COSMOS;
@@ -1923,7 +1953,7 @@ function renderMuseum(page=1){
       <div class="dcard-plaque">
         <div class="dcard-plaque-name">${n.name} — "${n.nick}"</div>
         <div class="dcard-plaque-reason">${n.reason}</div>
-        <div class="dcard-plaque-earn">+16 $MTHY/day (−80%)</div>
+        <div class="dcard-plaque-earn">+16 ${TOKEN_NAME}/day (−80%)</div>
         <div class="dcard-plaque-day">Fell: ${n.day}</div>
       </div>
     </div>`;
@@ -2006,14 +2036,14 @@ async function renderLB(sortBy){
         return `<div class="podium-item ${podiumClasses[i]}" data-delay="${[1,2,0][i]}">
           <div class="p-emoji" style="width:60px;height:60px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:2px solid ${wallet&&u.wallet===wallet?'var(--gb)':'var(--border2)'}">${userPfp(u)}</div>
           <div class="p-name">${userName(u)}${wallet&&u.wallet===wallet?' ⭐':''}</div>
-          <div class="p-score">${Math.floor(u.mthy_balance).toLocaleString()} $MTHY</div>
+          <div class="p-score">${Math.floor(u.mthy_balance).toLocaleString()} ${TOKEN_NAME}</div>
           <div class="p-sub">${u.nft_count} NFTs · ${u.catches||0} catches</div>
           <div class="p-bar"><div class="p-bar-glow"></div><div class="p-bar-inner">${i===1?'1':i===0?'2':'3'}</div></div>
         </div>`;
       }).join('');
       animatePodium();
       // Table
-      document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr" style="grid-template-columns:50px 44px 1fr 80px 60px 72px;"><div>#</div><div></div><div>Player</div><div style="text-align:right">$MTHY</div><div style="text-align:right">Hold</div><div style="text-align:right">Catches</div></div>`+
+      document.getElementById('lb-table').innerHTML=`<div class="lbrow lhdr" style="grid-template-columns:50px 44px 1fr 80px 60px 72px;"><div>#</div><div></div><div>Player</div><div style="text-align:right">${TOKEN_NAME}</div><div style="text-align:right">Hold</div><div style="text-align:right">Catches</div></div>`+
         users.map((u,i)=>{
           const medals=['🥇','🥈','🥉'];
           const isMe = wallet && u.wallet === wallet;
@@ -2382,7 +2412,7 @@ function updateBalUI(){
     mbalEl.innerText=mthyBal.toLocaleString();
   }
   const ttEl=document.getElementById('bal-tooltip');
-  if(ttEl) ttEl.innerText=mthyBal.toLocaleString()+' $MTHY';
+  if(ttEl) ttEl.innerText=mthyBal.toLocaleString()+' '+TOKEN_NAME;
   document.getElementById('ss-balance').innerText=mthyBal.toLocaleString();
   document.getElementById('ss-pending').innerText='+'+claimAccumulator.toFixed(2);
   document.getElementById('ss-staked').innerText=stakedNFTs.length;
@@ -2424,7 +2454,7 @@ async function feedOne(id){
       mthyBal=Math.round((r.balance||mthyBal-100)*100)/100;
     }catch(e){toast('Feed failed');closeNftModal();return;}
   } else {
-    if(mthyBal<100){toast('Not enough $MTHY!');return;}
+    if(mthyBal<100){toast('Not enough '+TOKEN_NAME+'!');return;}
     mthyBal-=100;
   }
   
@@ -2458,7 +2488,7 @@ async function stakeById(id){
   renderStake();
   closeNftModal();
   updateHeatmap('stake');
-  toast(nft.name+' staked!\n+'+(nft.earnRate||80)+' $MTHY/day ✅');
+  toast(nft.name+' staked!\n+'+(nft.earnRate||80)+' '+TOKEN_NAME+'/day ✅');
   refreshGlobalData(); // Update Garden + Ranks for all users
 }
 
@@ -2518,18 +2548,18 @@ function openNftModal(id,type){
     rows+=`<div class="nft-modal-row"><span class="label">HP</span><span class="val" style="color:${hcol}">${nft.hp}%</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val" style="color:${hcol}">${status}</span></div>`;
     rows+=`<div class="nft-modal-row"><span class="label">Days Staked</span><span class="val">${nft.days}d</span></div>`;
-    rows+=`<div class="nft-modal-row"><span class="label">Earn Rate</span><span class="val">${nft.earnBonus > 0 ? nft.baseRate+' <span style="color:var(--gn)">+'+nft.earnBonus+'</span>' : (nft.earnRate||80)} $MTHY/day</span></div>`;
-    rows+=`<div class="nft-modal-row"><span class="label">Feed Cost</span><span class="val">100 $MTHY</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Earn Rate</span><span class="val">${nft.earnBonus > 0 ? nft.baseRate+' <span style="color:var(--gn)">+'+nft.earnBonus+'</span>' : (nft.earnRate||80)} ${TOKEN_NAME}/day</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Feed Cost</span><span class="val">100 ${TOKEN_NAME}</span></div>`;
   } else {
     rows+=`<div class="nft-modal-row"><span class="label">Status</span><span class="val">Not staked</span></div>`;
-    rows+=`<div class="nft-modal-row"><span class="label">Potential</span><span class="val">80 $MTHY/day</span></div>`;
+    rows+=`<div class="nft-modal-row"><span class="label">Potential</span><span class="val">80 ${TOKEN_NAME}/day</span></div>`;
   }
   rows+=`<div class="nft-modal-row"><span class="label">Stargaze</span><span class="val"><a href="https://stargaze.zone/m/${COLLECTION_ADDR_COSMOS}/${nft.tokenId}" target="_blank" class="stargaze-link">View on Stargaze ↗</a></span></div>`;
   document.getElementById('nm-rows').innerHTML=rows;
 
   let actions='';
   if(type==='staked'){
-    if(nft.hp<100) actions+=`<button class="btn-pri" onclick="feedOne(${nft.id})">FEED (100 $MTHY)</button>`;
+    if(nft.hp<100) actions+=`<button class="btn-pri" onclick="feedOne(${nft.id})">FEED (100 ${TOKEN_NAME})</button>`;
     else actions+=`<button class="btn-sec" style="border-color:var(--gb);color:var(--gb);cursor:default;flex:1;text-align:center;padding:10px">ALREADY FED</button>`;
   } else {
     actions+=`<button class="btn-pri" onclick="stakeById(${nft.id})">STAKE NOW</button>`;
@@ -2599,10 +2629,10 @@ async function claimReward(){
     mthyBal+=reward;
     claimAccumulator=0;
     updateBalUI();
-    toast(reward+' $MTHY claimed!');
+    toast(reward+' '+TOKEN_NAME+' claimed!');
   }
   // Reset button
-  if(claimBtn){claimBtn.disabled=false;claimBtn.innerHTML='CLAIM <span id="claim-amount">0.00</span> $MTHY';}
+  if(claimBtn){claimBtn.disabled=false;claimBtn.innerHTML='CLAIM <span id="claim-amount">0.00</span> '+TOKEN_NAME;}
 }
 
 async function feedAllStaked(){
@@ -2623,7 +2653,7 @@ async function feedAllStaked(){
     }catch(e){toast('Feed failed');return;}
   } else {
     const cost=hungry.length*100;
-    if(mthyBal<cost){toast('Not enough $MTHY!\nNeed '+cost);return;}
+    if(mthyBal<cost){toast('Not enough '+TOKEN_NAME+'!\nNeed '+cost);return;}
     mthyBal-=cost;
     hungry.forEach(n=>{n.hp=100;const a=arenaData.find(x=>x.id===n.id);if(a)a.hp=100;});
     renderStake();

@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all, getConfig } = require('../db');
+const { run, get, all, getConfig, getConfigStr, auditLog } = require('../db');
+const walletRateLimit = require('../middleware/walletRateLimit');
 const { calcEarnRate } = require('./stake');
 
-router.post('/', (req, res) => {
+router.post('/', walletRateLimit('claim', 5000), (req, res) => {
+  const TOKEN_NAME = getConfigStr('token_name', '$MTHY');
   const { wallet } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
@@ -26,7 +28,8 @@ router.post('/', (req, res) => {
   const updated = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   const earned = Math.round(totalEarned * 100) / 100;
   const balance = Math.round((updated.mthy_balance || 0) * 100) / 100;
-  res.json({ success: true, earned, balance, message: `Claimed ${earned} $MTHY` });
+  auditLog('claim', { wallet, amount: earned, detail: `Claimed from ${staked.length} NFTs` });
+  res.json({ success: true, earned, balance, message: `Claimed ${earned} ${TOKEN_NAME}` });
 });
 
 module.exports = router;

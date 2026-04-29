@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { run, get, all } = require('../db');
+const { run, get, all, auditLog } = require('../db');
 
 // Simple AES-256 encryption for sensitive claim data — NO DEFAULT KEY
 const ENC_KEY = process.env.CLAIM_SECRET;
@@ -52,10 +52,17 @@ router.get('/my', (req, res) => {
   res.json({ winners: safe });
 });
 
-// Claim prize — submit wallet address + shipping address + contacts
+// Claim prize — submit wallet address + shipping address + contacts (session protected)
 router.post('/claim', (req, res) => {
+  // Session verification for write operations
+  const verifySessionToken = req.app.locals.verifySessionToken;
+  const token = req.headers['x-session-token'];
+  const sessionWallet = verifySessionToken(token);
+  if (!sessionWallet) return res.status(401).json({ error: 'Invalid or expired session. Please reconnect your wallet.' });
+
   const { wallet, tokenId, claimWallet, claimAddress, discord, twitter } = req.body;
   if (!wallet || !tokenId) return res.status(400).json({ error: 'wallet and tokenId required' });
+  if (wallet !== sessionWallet) return res.status(403).json({ error: 'Session wallet mismatch' });
   if (!claimWallet || !claimWallet.trim()) return res.status(400).json({ error: 'Wallet address is required for receiving 1/1 art' });
   if (!claimAddress || !claimAddress.trim()) return res.status(400).json({ error: 'Shipping address is required for merchandise' });
 
@@ -91,6 +98,7 @@ router.post('/claim', (req, res) => {
   run("UPDATE winners SET claim_wallet = ?, claim_address = ?, claim_discord = ?, claim_twitter = ?, claimed_at = datetime('now') WHERE wallet = ? AND token_id = ?",
     [encWallet, encAddress, encDiscord, encTwitter, wallet, tokenId]);
 
+  auditLog('prize-claim', { wallet, tokenId, detail: winner.name });
   res.json({ success: true, message: `Prize claimed for ${winner.name}!` });
 });
 

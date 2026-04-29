@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { run, get, all, getConfig, getConfigStr } = require('../db');
+const { run, get, all, getConfig, getConfigStr, auditLog } = require('../db');
 
 // Decrypt helper (same as winners.js) — NO DEFAULT KEY
 const ENC_KEY = process.env.CLAIM_SECRET;
@@ -27,6 +27,7 @@ router.get('/users', (req, res) => {
 });
 
 router.post('/add-mthy', (req, res) => {
+  const TOKEN_NAME = getConfigStr('token_name', '$MTHY');
   const { wallet, amount } = req.body;
   if (!wallet || !amount) return res.status(400).json({ error: 'wallet and amount required' });
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
@@ -35,7 +36,8 @@ router.post('/add-mthy', (req, res) => {
   } else {
     run('UPDATE users SET mthy_balance = mthy_balance + ? WHERE wallet = ?', [amount, wallet]);
   }
-  res.json({ success: true, message: `Added ${amount} $MTHY` });
+  res.json({ success: true, message: `Added ${amount} ${TOKEN_NAME}` });
+  auditLog('admin:add-mthy', { wallet, amount, detail: `Admin added ${amount} ${TOKEN_NAME}` });
 });
 
 router.post('/force-catch', (req, res) => {
@@ -48,6 +50,7 @@ router.post('/force-catch', (req, res) => {
   run('INSERT INTO catch_log (token_id, name, caught_by, original_owner) VALUES (?, ?, ?, ?)',
     [nft.token_id, nft.name, 'ADMIN', nft.wallet]);
   run('DELETE FROM staked_nfts WHERE token_id = ? AND collection_addr = ?', [nft.token_id, nft.collection_addr]);
+  auditLog('admin:force-catch', { tokenId, targetWallet: nft.wallet, detail: nft.name });
   res.json({ success: true, message: `Caught ${nft.name}` });
 });
 
@@ -62,17 +65,20 @@ router.post('/reset', (req, res) => {
   run('DELETE FROM catch_log');
   run('DELETE FROM wallet_nft_cache');
   run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('game_ended', '0')");
+  auditLog('admin:reset', { detail: 'Full game reset — all data cleared' });
   res.json({ success: true, message: 'Game reset — all data cleared' });
 });
 
 // Save game config
 router.post('/config', (req, res) => {
-  const { earn_rate, feed_cost, museum_earn, max_survivors, trait_bonuses } = req.body;
+  const { earn_rate, feed_cost, museum_earn, max_survivors, trait_bonuses, token_name } = req.body;
   if (earn_rate != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('earn_rate_per_day', ?)", [String(earn_rate)]);
   if (feed_cost != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('feed_cost', ?)", [String(feed_cost)]);
   if (museum_earn != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('museum_earn', ?)", [String(museum_earn)]);
   if (max_survivors != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('max_survivors', ?)", [String(max_survivors)]);
   if (trait_bonuses != null) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('trait_bonuses', ?)", [typeof trait_bonuses === 'string' ? trait_bonuses : JSON.stringify(trait_bonuses)]);
+  if (token_name != null && token_name.trim()) run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('token_name', ?)", [token_name.trim()]);
+  auditLog('admin:config', { detail: JSON.stringify(req.body) });
   res.json({ success: true, message: 'Config saved' });
 });
 
@@ -117,6 +123,7 @@ router.post('/change-collection', (req, res) => {
   run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('collection_stars', ?)", [starsAddr]);
   
   res.json({ success: true, message: `Collection changed to ${cosmosAddr}. Game reset.`, starsAddr });
+  auditLog('admin:change-collection', { detail: `Changed to ${cosmosAddr} / ${starsAddr}` });
 });
 
 // Get game config
@@ -168,6 +175,7 @@ router.post('/end-game', (req, res) => {
   // Mark game as ended
   run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('game_ended', '1')");
   
+  auditLog('admin:end-game', { detail: `${survivors.length} winners declared` });
   res.json({ success: true, message: `Game ended! ${survivors.length} winners declared.`, winners: survivors.length });
 });
 
@@ -201,7 +209,22 @@ router.post('/undo-end-game', (req, res) => {
   run('DELETE FROM winners');
   run("INSERT OR REPLACE INTO game_config (key, value) VALUES ('game_ended', '0')");
   
+  auditLog('admin:undo-end-game', { detail: 'Game un-ended, winners cleared' });
   res.json({ success: true, message: 'Game un-ended. Winners cleared. Game is running again.' });
+});
+
+// Audit log — view all game actions (immutable, read-only)
+router.get('/audit-log', (req, res) => {
+  const { limit = 100, action, wallet } = req.query;
+  let sql = 'SELECT * FROM audit_log';
+  const params = [];
+  const conditions = [];
+  if (action) { conditions.push('action = ?'); params.push(action); }
+  if (wallet) { conditions.push('(wallet = ? OR target_wallet = ?)'); params.push(wallet, wallet); }
+  if (conditions.length > 0) sql += ' WHERE ' + conditions.join(' AND ');
+  sql += ' ORDER BY id DESC LIMIT ?';
+  params.push(Number(limit));
+  res.json({ logs: all(sql, params) });
 });
 
 module.exports = router;
