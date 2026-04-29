@@ -3,8 +3,12 @@ const router = express.Router();
 const crypto = require('crypto');
 const { run, get, all } = require('../db');
 
-// Simple AES-256 encryption for sensitive claim data
-const ENC_KEY = process.env.CLAIM_SECRET || 'manthy-claim-secret-change-me-32';
+// Simple AES-256 encryption for sensitive claim data — NO DEFAULT KEY
+const ENC_KEY = process.env.CLAIM_SECRET;
+if (!ENC_KEY) {
+  console.error('FATAL: CLAIM_SECRET must be set in .env');
+  process.exit(1);
+}
 const ENC_ALGO = 'aes-256-cbc';
 
 function encrypt(text) {

@@ -178,8 +178,8 @@ async function verifyOwnership(wallet, tokenId) {
     if (owner === starsAddr || owner === wallet) return { verified: true };
     return { verified: false, reason: `NFT owned by ${owner.slice(0,12)}..., not you` };
   } catch (e) {
-    console.warn('[STAKE] All ownership checks failed, allowing:', e.message);
-    return { verified: true, warning: 'Ownership check unavailable' };
+    console.warn('[STAKE] All ownership checks failed, REJECTING for safety:', e.message);
+    return { verified: false, reason: 'Ownership verification unavailable. Please try again later.' };
   }
 }
 

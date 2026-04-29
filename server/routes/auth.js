@@ -2,6 +2,42 @@ const express = require('express');
 const router = express.Router();
 const { run, get, all, getConfigStr } = require('../db');
 
+// === XSS Sanitization — strip HTML/script tags ===
+function sanitizeText(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
+// === Anti-spam: per-wallet action cooldown ===
+const walletCooldowns = new Map();
+function walletRateLimit(action, cooldownMs = 3000) {
+  return (req, res, next) => {
+    const wallet = req.body?.wallet || req.query?.wallet;
+    if (!wallet) return next();
+    const key = `${wallet}:${action}`;
+    const now = Date.now();
+    const last = walletCooldowns.get(key) || 0;
+    if (now - last < cooldownMs) {
+      return res.status(429).json({ error: 'Too fast. Please wait a moment.' });
+    }
+    walletCooldowns.set(key, now);
+    next();
+  };
+}
+// Clean cooldowns every 5 min
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, time] of walletCooldowns) {
+    if (now - time > 60000) walletCooldowns.delete(key);
+  }
+}, 300000);
+
 const COSMOS_LCD_ENDPOINTS = [
   'https://lcd-cosmoshub.keplr.app',
   'https://cosmos-rest.publicnode.com'
@@ -150,13 +186,16 @@ router.get('/profile', (req, res) => {
   res.json({ user, staked: staked.length, caught: caught.length, totalFeeds, winners: winners.length, earnRate: staked.length * 80 });
 });
 
-// Profile: update avatar (base64 image, max 50KB)
-router.post('/avatar', (req, res) => {
+// Profile: update avatar (base64 image, max 50KB) — with anti-spam + SVG block
+router.post('/avatar', walletRateLimit('avatar', 5000), (req, res) => {
   const { wallet, avatar } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
   if (!avatar) return res.status(400).json({ error: 'avatar required' });
   // Validate: must be base64 data URL, max ~50KB
   if (!avatar.startsWith('data:image/')) return res.status(400).json({ error: 'Invalid image format' });
+  // Block SVG (can contain scripts) — only allow png, jpg, gif, webp
+  const mimeMatch = avatar.match(/^data:image\/(png|jpeg|jpg|gif|webp);/);
+  if (!mimeMatch) return res.status(400).json({ error: 'Only PNG, JPG, GIF, WEBP allowed. No SVG.' });
   if (avatar.length > 70000) return res.status(400).json({ error: 'Image too large. Max 50KB.' });
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -164,11 +203,11 @@ router.post('/avatar', (req, res) => {
   res.json({ success: true, message: 'Avatar updated' });
 });
 
-// Profile: update display name
-router.post('/name', (req, res) => {
+// Profile: update display name — sanitized + anti-spam
+router.post('/name', walletRateLimit('name', 3000), (req, res) => {
   const { wallet, name } = req.body;
   if (!wallet) return res.status(400).json({ error: 'wallet required' });
-  const displayName = (name || '').trim().slice(0, 20);
+  const displayName = sanitizeText((name || '').trim().slice(0, 20));
   const user = get('SELECT * FROM users WHERE wallet = ?', [wallet]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   run('UPDATE users SET display_name = ? WHERE wallet = ?', [displayName, wallet]);

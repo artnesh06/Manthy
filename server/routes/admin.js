@@ -3,8 +3,12 @@ const router = express.Router();
 const crypto = require('crypto');
 const { run, get, all, getConfig, getConfigStr } = require('../db');
 
-// Decrypt helper (same as winners.js)
-const ENC_KEY = process.env.CLAIM_SECRET || 'manthy-claim-secret-change-me-32';
+// Decrypt helper (same as winners.js) — NO DEFAULT KEY
+const ENC_KEY = process.env.CLAIM_SECRET;
+if (!ENC_KEY) {
+  console.error('FATAL: CLAIM_SECRET must be set in .env');
+  process.exit(1);
+}
 function decrypt(data) {
   if (!data || !data.includes(':')) return data || '';
   try {
