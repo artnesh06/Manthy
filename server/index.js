@@ -241,8 +241,12 @@ app.post('/api/admin-login', adminLoginLimit, express.json(), (req, res) => {
     return res.status(400).json({ error: 'ID and password required' });
   }
   // Constant-time comparison to prevent timing attacks
-  const idMatch = id.length === ADMIN_USER.length && crypto.timingSafeEqual(Buffer.from(id), Buffer.from(ADMIN_USER));
-  const pwMatch = pw.length === ADMIN_PASS.length && crypto.timingSafeEqual(Buffer.from(pw), Buffer.from(ADMIN_PASS));
+  const trimId = id.trim();
+  const trimPw = pw.trim();
+  const trimUser = ADMIN_USER.trim();
+  const trimPass = ADMIN_PASS.trim();
+  const idMatch = trimId.length === trimUser.length && crypto.timingSafeEqual(Buffer.from(trimId), Buffer.from(trimUser));
+  const pwMatch = trimPw.length === trimPass.length && crypto.timingSafeEqual(Buffer.from(trimPw), Buffer.from(trimPass));
   if (idMatch && pwMatch) {
     // If TOTP is enabled, verify the code
     if (ADMIN_TOTP_SECRET) {
