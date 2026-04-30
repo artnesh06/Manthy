@@ -379,6 +379,10 @@ input:focus,select:focus{outline:none;border-color:var(--gb);box-shadow:0 0 0 3p
 </div><!-- /panel -->
 
 <script>
+// Ensure we're on www to avoid Vercel redirect issues with POST requests
+if (window.location.hostname === 'manthy.fun') {
+  window.location.href = window.location.href.replace('://manthy.fun', '://www.manthy.fun');
+}
 const API = window.location.origin + '/api';
 let ADMIN_KEY = '';
 let hpChart = null, statusChart = null, catchChart = null;
