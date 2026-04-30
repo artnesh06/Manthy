@@ -383,7 +383,8 @@ input:focus,select:focus{outline:none;border-color:var(--gb);box-shadow:0 0 0 3p
 if (window.location.hostname === 'manthy.fun') {
   window.location.href = window.location.href.replace('://manthy.fun', '://www.manthy.fun');
 }
-const API = window.location.origin + '/api';
+// Use Railway backend directly to bypass Vercel proxy redirect issues
+const API = 'https://web-production-b08f9.up.railway.app/api';
 let ADMIN_KEY = '';
 let hpChart = null, statusChart = null, catchChart = null;
 
