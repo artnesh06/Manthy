@@ -2536,24 +2536,42 @@ async function stakeAll(){
   const count=walletNFTs.length;
   
   if(USE_API && wallet){
-    // Stake all in parallel
-    await Promise.all([...walletNFTs].map(async nft=>{
-      try{await MantyAPI.stake(wallet, nft.tokenId, nft.name, nft.imageUrl);}catch(e){}
-      stakedNFTs.push({id:nft.id,tokenId:nft.tokenId,name:nft.name,imageUrl:nft.imageUrl,days:0,hp:100});
-    }));
+    try{
+      const nfts = walletNFTs.map(n => ({ tokenId: n.tokenId, name: n.name, imageUrl: n.imageUrl }));
+      const r = await MantyAPI.stakeBatch(wallet, nfts);
+      if(r.error){toast(r.error);const btnR=document.getElementById('btn-stake-all');if(btnR){btnR.disabled=false;btnR.innerHTML='STAKE ALL (<span id="stake-all-count">'+walletNFTs.length+'</span>)';}return;}
+      // Move only successfully staked NFTs
+      const successIds = new Set((r.results||[]).filter(x=>x.success).map(x=>String(x.tokenId)));
+      const staked = [];
+      const remaining = [];
+      for(const nft of walletNFTs){
+        if(successIds.has(String(nft.tokenId))){
+          stakedNFTs.push({id:nft.id,tokenId:nft.tokenId,name:nft.name,imageUrl:nft.imageUrl,days:0,hp:100});
+          staked.push(nft);
+        } else {
+          remaining.push(nft);
+        }
+      }
+      walletNFTs = remaining;
+      renderStake();
+      const btnAfter=document.getElementById('btn-stake-all');
+      if(btnAfter){btnAfter.disabled=false;btnAfter.innerHTML='STAKE ALL (<span id="stake-all-count">'+walletNFTs.length+'</span>)';}
+      for(let i=0;i<staked.length;i++) updateHeatmap('stake');
+      toast(staked.length+' NFTs staked! ✅');
+      refreshGlobalData();
+    }catch(e){toast('Stake failed');const btnR=document.getElementById('btn-stake-all');if(btnR){btnR.disabled=false;btnR.innerHTML='STAKE ALL (<span id="stake-all-count">'+walletNFTs.length+'</span>)';}return;}
   } else {
     for(const nft of [...walletNFTs]){
       stakedNFTs.push({id:nft.id,tokenId:nft.tokenId,name:nft.name,imageUrl:nft.imageUrl,days:0,hp:100});
     }
+    walletNFTs=[];
+    renderStake();
+    const btnAfter=document.getElementById('btn-stake-all');
+    if(btnAfter){btnAfter.disabled=false;btnAfter.innerHTML='STAKE ALL (<span id="stake-all-count">0</span>)';}
+    for(let i=0;i<count;i++) updateHeatmap('stake');
+    toast(count+' NFTs staked! ✅');
+    refreshGlobalData();
   }
-  walletNFTs=[];
-  renderStake();
-  // Reset button
-  const btnAfter=document.getElementById('btn-stake-all');
-  if(btnAfter){btnAfter.disabled=false;btnAfter.innerHTML='STAKE ALL (<span id="stake-all-count">0</span>)';}
-  for(let i=0;i<count;i++) updateHeatmap('stake');
-  toast(count+' NFTs staked! ✅');
-  refreshGlobalData();
 }
 
 // ===== NFT MODAL =====

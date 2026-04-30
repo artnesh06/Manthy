@@ -259,6 +259,50 @@ router.get('/my', (req, res) => {
   res.json({ staked: enriched, baseRate });
 });
 
+// Batch stake — stake multiple NFTs in one request (used by STAKE ALL)
+router.post('/batch', walletRateLimit('stake-batch', 5000), async (req, res) => {
+  const { wallet, nfts } = req.body;
+  if (!wallet || !Array.isArray(nfts) || nfts.length === 0) return res.status(400).json({ error: 'wallet and nfts[] required' });
+  if (getConfig('game_ended', 0) === 1) return res.status(400).json({ error: 'Game has ended. No more staking allowed.' });
+  if (!get('SELECT * FROM users WHERE wallet = ?', [wallet])) return res.status(404).json({ error: 'Login first' });
+  const { stars } = getCollectionAddrs();
+
+  const results = [];
+  for (const nft of nfts) {
+    const { tokenId, name, imageUrl } = nft;
+    if (!tokenId) { results.push({ tokenId, success: false, error: 'Missing tokenId' }); continue; }
+    if (get('SELECT * FROM staked_nfts WHERE token_id = ? AND collection_addr = ?', [tokenId, stars])) { results.push({ tokenId, success: false, error: 'Already staked' }); continue; }
+    if (get('SELECT * FROM museum WHERE token_id = ? AND collection_addr = ?', [tokenId, stars])) { results.push({ tokenId, success: false, error: 'In museum' }); continue; }
+
+    try {
+      const ownership = await verifyOwnership(wallet, tokenId);
+      if (!ownership.verified) { results.push({ tokenId, success: false, error: ownership.reason || 'Not your NFT' }); continue; }
+
+      const traits = await fetchTraits(tokenId);
+      const traitsJson = JSON.stringify(traits);
+      run('INSERT INTO staked_nfts (wallet, token_id, collection_addr, name, image_url, traits) VALUES (?, ?, ?, ?, ?, ?)', [wallet, tokenId, stars, name||'', imageUrl||'', traitsJson]);
+      const earnRate = calcEarnRate(traits);
+      auditLog('stake', { wallet, tokenId, detail: name || tokenId });
+      results.push({ tokenId, success: true, earnRate });
+    } catch(e) {
+      results.push({ tokenId, success: false, error: e.message || 'Stake failed' });
+    }
+  }
+
+  run("DELETE FROM wallet_nft_cache WHERE wallet = ?", [wallet]);
+  const staked = results.filter(r => r.success).length;
+
+  // Broadcast real-time stake events
+  const io = req.app.locals.io;
+  if (io) {
+    for (const r of results.filter(r => r.success)) {
+      io.emit('nft:staked', { tokenId: r.tokenId, wallet });
+    }
+  }
+
+  res.json({ success: true, staked, total: nfts.length, results });
+});
+
 router.get('/all', (req, res) => {
   const { limit = 20, offset = 0 } = req.query;
   const staked = all('SELECT * FROM staked_nfts ORDER BY hp DESC, staked_at ASC LIMIT ? OFFSET ?', [Number(limit), Number(offset)]);

@@ -57,6 +57,14 @@ const MantyAPI = {
     return r.json();
   },
 
+  async stakeBatch(wallet, nfts) {
+    const r = await fetchWithTimeout(API_BASE + '/stake/batch', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ wallet, nfts })
+    }, 60000); // 60s timeout for batch
+    return r.json();
+  },
+
   async unstake(wallet, tokenId) {
     const r = await fetchWithTimeout(API_BASE + '/stake/unstake', {
       method: 'POST', headers: {'Content-Type':'application/json'},
