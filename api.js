@@ -19,7 +19,15 @@ function fetchWithTimeout(url, options = {}, timeout = 15000) {
     options.headers = { ...options.headers, 'X-Session-Token': _sessionToken };
   }
   return fetch(url, { ...options, signal: controller.signal })
-    .finally(() => clearTimeout(timer));
+    .then(async r => {
+      clearTimeout(timer);
+      // Silently handle rate limit on GET requests (don't show popup)
+      if (r.status === 429 && (!options.method || options.method === 'GET')) {
+        return new Response(JSON.stringify({ error: null, _rateLimited: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      return r;
+    })
+    .catch(e => { clearTimeout(timer); throw e; });
 }
 
 const MantyAPI = {

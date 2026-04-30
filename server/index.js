@@ -265,10 +265,10 @@ app.use(express.static(path.join(__dirname, '..'), {
   index: 'index.html'
 }));
 
-// Rate limit: 60 requests per minute for write APIs
-const writeLimit = rateLimit(60, 60000);
-// Rate limit: 120 requests per minute for read APIs
-const readLimit = rateLimit(120, 60000);
+// Rate limit: 200 requests per minute for write APIs
+const writeLimit = rateLimit(200, 60000);
+// Rate limit: 400 requests per minute for read APIs
+const readLimit = rateLimit(400, 60000);
 
 app.use('/api/auth', readLimit, require('./routes/auth'));
 // Stake: GET routes are public reads, POST routes need session
