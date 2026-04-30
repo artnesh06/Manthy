@@ -245,6 +245,10 @@ app.post('/api/admin-login', adminLoginLimit, express.json(), (req, res) => {
   const trimPw = pw.trim();
   const trimUser = ADMIN_USER.trim();
   const trimPass = ADMIN_PASS.trim();
+  
+  // Debug: log lengths to diagnose mismatch (remove after fixing)
+  console.log(`[ADMIN LOGIN] input id len=${trimId.length}, env user len=${trimUser.length}, input pw len=${trimPw.length}, env pass len=${trimPass.length}`);
+  
   const idMatch = trimId.length === trimUser.length && crypto.timingSafeEqual(Buffer.from(trimId), Buffer.from(trimUser));
   const pwMatch = trimPw.length === trimPass.length && crypto.timingSafeEqual(Buffer.from(trimPw), Buffer.from(trimPass));
   if (idMatch && pwMatch) {
